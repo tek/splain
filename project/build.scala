@@ -13,10 +13,7 @@ extends Deps
 object Build
 extends MultiBuild("splain", deps = SplainDeps)
 {
-  lazy val splain = "splain"
-    .settingsV(
-      crossScalaVersions := Seq(scalaVersion.value, "2.10.6")
-    )
+  lazy val splain = "splain".settingsV(name := "splain")
 
   lazy val unit = "unit"
     .settingsV(
