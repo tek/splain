@@ -134,7 +134,7 @@ with Formatting
   {
     override def failure(what: Any, reason: String, pos: Position = this.pos)
     : SearchResult = {
-      implicitErrors += (ImpError(pt, what, reason))
+      ImpError(pt, what, reason) +=: implicitErrors
       super.failure(what, reason, pos)
     }
   }
@@ -151,9 +151,9 @@ with Formatting
   override def NoImplicitFoundError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
     def errMsg = {
+      val hasExtra = implicitNesting == 0 && !implicitErrors.isEmpty
       val extra =
-        if (implicitNesting == 0 && !implicitErrors.isEmpty)
-          implicitErrors.distinct flatMap formatNestedImplicit
+        if (hasExtra) implicitErrors.distinct flatMap formatNestedImplicit
         else Nil
       val paramName = param.name
       val paramTp = param.tpe
@@ -166,7 +166,8 @@ with Formatting
           val ptp = dealias(paramTp)
           val nl = if (extra.isEmpty) "" else "\n"
           val ex = extra.mkString("\n")
-          s"${RED}!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
+          val pre = if (hasExtra) "implicit error;\n" else ""
+          s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
       }
     }
     ErrorUtils.issueNormalTypeError(tree, errMsg)
