@@ -1,0 +1,2 @@
+# splain
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fb67825fd08d4fa0a962a55fa4ead88c)](https://www.codacy.com/app/torstenschmits/splain?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tek/splain&amp;utm_campaign=badger)
