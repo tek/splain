@@ -1,13 +1,14 @@
 package tryp
 
-import tools.nsc._, plugins.Plugin
-import reflect.internal.util.Statistics
-import collection.mutable.Buffer
+import tools.nsc._
+import collection.mutable.{Buffer, Map}
 
 trait Formatting
 { self: Analyzer =>
   import global._
   import Console._
+
+  def featureInfix: Boolean
 
   object DealiasedType
   extends TypeMap
@@ -64,7 +65,8 @@ trait Formatting
 
   def formatInfix(tpe: Type, top: Boolean): String = {
     val rec = (tp: Type) => (t: Boolean) => formatInfix(tp, t)
-    formatType(tpe, tpe.typeArgs, top, rec)
+    if (featureInfix) formatType(tpe, tpe.typeArgs, top, rec)
+    else tpe.toLongString
   }
 
   def formatDiff(found: Type, req: Type, top: Boolean): String = {
@@ -114,9 +116,12 @@ trait Formatting
 
 trait Implicits
 extends typechecker.Implicits
+with typechecker.ContextErrors
 with Formatting
 { self: Analyzer =>
   import global._
+
+  def featureImplicits: Boolean
 
   case class ImpError(tpe: Type, what: Any, reason: String)
   {
@@ -131,12 +136,14 @@ with Formatting
   var implicitNesting = 0
   val implicitErrors = Buffer[ImpError]()
 
-  override def inferImplicit(tree: Tree, pt: Type, reportAmbiguous: Boolean,
+  def inferImplicit2(tree: Tree, pt: Type, reportAmbiguous: Boolean,
     isView: Boolean, context: Context, saveAmbiguousDivergent: Boolean,
-    pos: Position): SearchResult = {
-      if (implicitNesting == 0) implicitErrors.clear()
-      implicitNesting += 1
-      import typechecker.ImplicitsStats._
+    pos: Position)
+  : SearchResult = {
+    import typechecker.ImplicitsStats._
+    import reflect.internal.util.Statistics
+    if (implicitNesting == 0) implicitErrors.clear()
+    implicitNesting += 1
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     val rawTypeStart =
       if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
@@ -167,9 +174,14 @@ with Formatting
     if (Statistics.canEnable)
       Statistics.stopCounter(findMemberImpl, findMemberStart)
     if (Statistics.canEnable) Statistics.stopCounter(subtypeImpl, subtypeStart)
-
     implicitNesting -= 1
     result
+  }
+
+  override def inferImplicit(tree: Tree, pt: Type, r: Boolean, v: Boolean,
+    context: Context, s: Boolean, pos: Position): SearchResult = {
+      if (featureImplicits) inferImplicit2(tree, pt, r, v, context, s, pos)
+      else super.inferImplicit(tree, pt, r, v, context, s, pos)
   }
 
   class ImplicitSearch2(tree: Tree, pt: Type, isView: Boolean,
@@ -183,7 +195,7 @@ with Formatting
     }
   }
 
-  override def NoImplicitFoundError(tree: Tree, param: Symbol)
+  def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
     def errMsg = {
       val hasExtra = implicitNesting == 0 && !implicitErrors.isEmpty
@@ -201,6 +213,12 @@ with Formatting
     }
     ErrorUtils.issueNormalTypeError(tree, errMsg)
   }
+
+  override def NoImplicitFoundError(tree: Tree, param: Symbol)
+  (implicit context: Context): Unit = {
+    if (featureImplicits) noImplicitError(tree, param)
+    else super.NoImplicitFoundError(tree, param)
+  }
 }
 
 trait TypeDiagnostics
@@ -208,6 +226,8 @@ extends typechecker.TypeDiagnostics
 with Formatting
 { self: Analyzer =>
   import global._
+
+  def featureFoundReq: Boolean
 
   def foundReqMsgShort(found: Type, req: Type): String =
     formatDiff(found, req, true)
@@ -219,7 +239,8 @@ with Formatting
   }
 
   override def foundReqMsg(found: Type, req: Type): String =
-    ";\n  " + foundReqMsgShort(found, req)
+    if (featureFoundReq) ";\n  " + foundReqMsgShort(found, req)
+    else super.foundReqMsg(found, req)
 }
 
 trait Analyzer
@@ -228,9 +249,14 @@ with Implicits
 with TypeDiagnostics
 
 class SplainPlugin(val global: Global)
-extends Plugin
+extends plugins.Plugin
 { plugin =>
-  val analyzer = new { val global = plugin.global } with Analyzer
+  val analyzer = new { val global = plugin.global } with Analyzer {
+    def featureImplicits = boolean(keyImplicits)
+    def featureFoundReq = boolean(keyFoundReq)
+    def featureInfix = boolean(keyInfix)
+    def featurePaths = boolean(keyPaths)
+  }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
@@ -257,7 +283,37 @@ extends Plugin
     phasesSet ++= newScs
   }
 
+  override def processOptions(options: List[String], error: String => Unit) = {
+    println(options)
+    def invalid(opt: String) = error(s"splain: invalid option `$opt`")
+    def setopt(key: String, value: String) = {
+      if (opts.contains(key)) opts.update(key, value)
+      else invalid(key)
+    }
+    options foreach { opt =>
+      opt.split(":").toList match {
+        case key :: value :: Nil => setopt(key, value)
+        case key :: Nil => setopt(key, "true")
+        case _ => invalid(opt)
+      }
+    }
+  }
+
   val name = "splain"
   val description = "better types and implicit errors"
   val components = Nil
+
+  val keyImplicits = "implicits"
+  val keyFoundReq = "foundreq"
+  val keyInfix = "infix"
+  val keyPaths = "paths"
+
+  val opts: Map[String, String] = Map(
+    keyImplicits -> "true",
+    keyFoundReq -> "true",
+    keyInfix -> "true",
+    keyPaths -> "true"
+  )
+
+  def boolean(key: String) = opts.get(key).map(_ == "true").getOrElse(true)
 }
