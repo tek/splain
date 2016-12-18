@@ -284,7 +284,6 @@ extends plugins.Plugin
   }
 
   override def processOptions(options: List[String], error: String => Unit) = {
-    println(options)
     def invalid(opt: String) = error(s"splain: invalid option `$opt`")
     def setopt(key: String, value: String) = {
       if (opts.contains(key)) opts.update(key, value)
