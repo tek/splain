@@ -28,7 +28,7 @@ Instead of `shapeless.::[A, HNil]`, prints `A :: HNil`.
 # found/required types
 Rather than printing up to four types, only the dealiased types are shown as a
 colored diff:
-[foundreq](img/foundreq.jpg)
+![foundreq](img/foundreq.jpg)
 
 # implicit resolution chains
 When an implicit is not found, only the outermost error at the invocation point
@@ -36,4 +36,4 @@ is printed. This can be expanded with the compiler flag `-Xlog-implicits`, but
 that also shows all invalid implicits for parameters that have been resolved
 successfully.
 This feature prints a compact list of all involved implicits:
-[implicits](img/implicits.jpg)
+![implicits](img/implicits.jpg)
