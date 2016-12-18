@@ -22,6 +22,12 @@ The plugin can be configured via compiler plugin parameters with the format:
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
 
+The parameters can be applied like this:
+
+```sbt
+scalacOptions += "-P:splain:implicits:false"
+```
+
 # infix types
 Instead of `shapeless.::[A, HNil]`, prints `A :: HNil`.
 
