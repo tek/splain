@@ -251,12 +251,12 @@ with TypeDiagnostics
 class SplainPlugin(val global: Global)
 extends plugins.Plugin
 { plugin =>
-  val analyzer = new { val global = plugin.global } with Analyzer {
-    def featureImplicits = boolean(keyImplicits)
-    def featureFoundReq = boolean(keyFoundReq)
-    def featureInfix = boolean(keyInfix)
-    def featurePaths = boolean(keyPaths)
-  }
+  val analyzer =
+    new { val global = plugin.global } with Analyzer {
+      def featureImplicits = boolean(keyImplicits)
+      def featureFoundReq = boolean(keyFoundReq)
+      def featureInfix = boolean(keyInfix)
+    }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
@@ -306,14 +306,14 @@ extends plugins.Plugin
   val keyImplicits = "implicits"
   val keyFoundReq = "foundreq"
   val keyInfix = "infix"
-  val keyPaths = "paths"
 
   val opts: Map[String, String] = Map(
     keyImplicits -> "true",
     keyFoundReq -> "true",
-    keyInfix -> "true",
-    keyPaths -> "true"
+    keyInfix -> "true"
   )
 
-  def boolean(key: String) = opts.get(key).map(_ == "true").getOrElse(true)
+  def opt(key: String, default: String) = opts.getOrElse(key, default)
+
+  def boolean(key: String) = opt(key, "true") == "true"
 }
