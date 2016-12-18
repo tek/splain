@@ -1,6 +1,6 @@
 package tryp
 
-import tools.nsc._, plugins.Plugin, typechecker._
+import tools.nsc._, plugins.Plugin
 import reflect.internal.util.Statistics
 import collection.mutable.Buffer
 
@@ -92,7 +92,7 @@ with Formatting
     pos: Position): SearchResult = {
       if (implicitNesting == 0) implicitErrors.clear()
       implicitNesting += 1
-      import ImplicitsStats._
+      import typechecker.ImplicitsStats._
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     val rawTypeStart =
       if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
@@ -173,10 +173,10 @@ with Formatting
   }
 }
 
-trait Analyzer
-extends typechecker.Analyzer
-with Implicits
-{
+trait TypeDiagnostics
+extends typechecker.TypeDiagnostics
+with Formatting
+{ self: Analyzer =>
   import global._
 
   def foundReqMsgShort(found: Type, req: Type): String =
@@ -191,6 +191,11 @@ with Implicits
   override def foundReqMsg(found: Type, req: Type): String =
     ";\n  " + foundReqMsgShort(found, req)
 }
+
+trait Analyzer
+extends typechecker.Analyzer
+with Implicits
+with TypeDiagnostics
 
 class SplainPlugin(val global: Global)
 extends Plugin
