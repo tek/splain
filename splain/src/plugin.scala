@@ -7,6 +7,7 @@ import collection.mutable.Buffer
 trait Formatting
 { self: Analyzer =>
   import global._
+  import Console._
 
   object DealiasedType
   extends TypeMap
@@ -80,6 +81,35 @@ trait Formatting
       s"$RED$l$RESET|$GREEN$r$RESET"
     }
   }
+
+  val candidateRegex = """.*\.this\.(.*)""".r
+
+  def formatCandidate(what: Any) =
+    what.toString match {
+      case candidateRegex(suf) => suf
+      case a => a
+    }
+
+  def formatNestedImplicit(err: ImpError): List[String] = {
+    val candidate = formatCandidate(err.what)
+    val tpe = dealias(err.tpe)
+    val problem =
+      s"$RED$candidate$RESET invalid for $GREEN${tpe}$RESET because"
+    val hasMatching = "hasMatchingSymbol reported error: "
+    List(problem, err.reason.stripPrefix(hasMatching))
+  }
+
+  def formatImplicitParam(sym: Symbol) = sym.name
+
+  def formatImplicitMessage(param: Symbol, hasExtra: Boolean,
+    extra: Seq[String]) = {
+      val paramName = formatImplicitParam(param)
+      val ptp = dealias(param.tpe)
+      val nl = if (extra.isEmpty) "" else "\n"
+      val ex = extra.mkString("\n")
+      val pre = if (hasExtra) "implicit error;\n" else ""
+      s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
+    }
 }
 
 trait Implicits
@@ -87,7 +117,6 @@ extends typechecker.Implicits
 with Formatting
 { self: Analyzer =>
   import global._
-  import Console._
 
   case class ImpError(tpe: Type, what: Any, reason: String)
   {
@@ -154,15 +183,6 @@ with Formatting
     }
   }
 
-  def formatNestedImplicit(err: ImpError)
-  : List[String] = {
-    val tpe = dealias(err.tpe)
-    val problem =
-      s"$RED${err.what}$RESET invalid for $GREEN${tpe}$RESET because"
-    val hasMatching = "hasMatchingSymbol reported error: "
-    List(problem, err.reason.stripPrefix(hasMatching))
-  }
-
   override def NoImplicitFoundError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
     def errMsg = {
@@ -170,19 +190,13 @@ with Formatting
       val extra =
         if (hasExtra) implicitErrors.distinct flatMap formatNestedImplicit
         else Nil
-      val paramName = param.name
-      val paramTp = param.tpe
-      val symbol = paramTp.typeSymbolDirect
+      val symbol = param.tpe.typeSymbolDirect
       symbol match {
         case ImplicitNotFoundMsg(msg) =>
           def typeArgsAtSym(ptp: Type) = ptp.baseType(symbol).typeArgs
-          msg.format(typeArgsAtSym(paramTp).map(formatInfix(_, true)))
+          msg.format(typeArgsAtSym(param.tpe).map(formatInfix(_, true)))
         case _ =>
-          val ptp = dealias(paramTp)
-          val nl = if (extra.isEmpty) "" else "\n"
-          val ex = extra.mkString("\n")
-          val pre = if (hasExtra) "implicit error;\n" else ""
-          s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
+          formatImplicitMessage(param, hasExtra, extra)
       }
     }
     ErrorUtils.issueNormalTypeError(tree, errMsg)
