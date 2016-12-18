@@ -4,7 +4,7 @@ import tools.nsc._, plugins.Plugin, typechecker._
 import reflect.internal.util.Statistics
 import collection.mutable.Buffer
 
-trait Formatter
+trait Formatting
 { self: Analyzer =>
   import global._
 
@@ -20,7 +20,7 @@ trait Formatter
     }
   }
 
-  def dealiased(tpe: Type) = formatInfix(DealiasedType(tpe), true)
+  def dealias(tpe: Type) = formatInfix(DealiasedType(tpe), true)
 
   def isSymbolic(sym: Symbol) =
     sym.name.encodedName.toString != sym.name.decodedName.toString
@@ -67,20 +67,12 @@ trait Formatter
   }
 }
 
-class SplainPlugin(val global: Global)
-extends Plugin
-{ plugin =>
-  val analyzer = new {
-    val global = plugin.global
-  } with Analyzer with Formatter {
-    import global._
-
-    override def foundReqMsg(found: Type, req: Type): String = {
-      ";\n  " +
-        withDisambiguation(Nil, found, req)(formatDiff(found, req, true)) +
-        explainVariance(found, req) +
-        explainAnyVsAnyRef(found, req)
-    }
+trait Implicits
+extends typechecker.Implicits
+with Formatting
+{ self: Analyzer =>
+  import global._
+  import Console._
 
   case class ImpError(tpe: Type, what: Any, reason: String)
   {
@@ -136,52 +128,74 @@ extends Plugin
     result
   }
 
-    class ImplicitSearch2(tree: Tree, pt: Type, isView: Boolean,
-      context0: Context, pos0: Position = NoPosition)
-    extends super.ImplicitSearch(tree, pt, isView, context0, pos0)
-    {
-      override def failure(what: Any, reason: String, pos: Position = this.pos)
-      : SearchResult = {
-        implicitErrors += (ImpError(pt, what, reason))
-        super.failure(what, reason, pos)
-      }
-    }
-
-    import Console._
-
-    def formatNestedImplicit(err: ImpError)
-    : List[String] = {
-      val tpe = dealiased(err.tpe)
-      val problem =
-        s"$RED${err.what}$RESET invalid for $GREEN${tpe}$RESET because"
-      val hasMatching = "hasMatchingSymbol reported error: "
-      List(problem, err.reason.stripPrefix(hasMatching))
-    }
-
-    override def NoImplicitFoundError(tree: Tree, param: Symbol)
-    (implicit context: Context): Unit = {
-      def errMsg = {
-        val extra =
-          if (implicitNesting == 0 && !implicitErrors.isEmpty)
-            implicitErrors.distinct flatMap formatNestedImplicit
-          else Nil
-        val paramName = param.name
-        val paramTp = param.tpe
-        val symbol = paramTp.typeSymbolDirect
-        symbol match {
-          case ImplicitNotFoundMsg(msg) =>
-            def typeArgsAtSym(ptp: Type) = ptp.baseType(symbol).typeArgs
-            msg.format(typeArgsAtSym(paramTp).map(formatInfix(_, true)))
-          case _ =>
-            val ptp = dealiased(paramTp)
-            val nl = if (extra.isEmpty) "" else "\n"
-            val ex = extra.mkString("\n")
-            s"${RED}!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
-        }
-      }
-      ErrorUtils.issueNormalTypeError(tree, errMsg)
+  class ImplicitSearch2(tree: Tree, pt: Type, isView: Boolean,
+    context0: Context, pos0: Position = NoPosition)
+  extends super.ImplicitSearch(tree, pt, isView, context0, pos0)
+  {
+    override def failure(what: Any, reason: String, pos: Position = this.pos)
+    : SearchResult = {
+      implicitErrors += (ImpError(pt, what, reason))
+      super.failure(what, reason, pos)
     }
   }
+
+  def formatNestedImplicit(err: ImpError)
+  : List[String] = {
+    val tpe = dealias(err.tpe)
+    val problem =
+      s"$RED${err.what}$RESET invalid for $GREEN${tpe}$RESET because"
+    val hasMatching = "hasMatchingSymbol reported error: "
+    List(problem, err.reason.stripPrefix(hasMatching))
+  }
+
+  override def NoImplicitFoundError(tree: Tree, param: Symbol)
+  (implicit context: Context): Unit = {
+    def errMsg = {
+      val extra =
+        if (implicitNesting == 0 && !implicitErrors.isEmpty)
+          implicitErrors.distinct flatMap formatNestedImplicit
+        else Nil
+      val paramName = param.name
+      val paramTp = param.tpe
+      val symbol = paramTp.typeSymbolDirect
+      symbol match {
+        case ImplicitNotFoundMsg(msg) =>
+          def typeArgsAtSym(ptp: Type) = ptp.baseType(symbol).typeArgs
+          msg.format(typeArgsAtSym(paramTp).map(formatInfix(_, true)))
+        case _ =>
+          val ptp = dealias(paramTp)
+          val nl = if (extra.isEmpty) "" else "\n"
+          val ex = extra.mkString("\n")
+          s"${RED}!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
+      }
+    }
+    ErrorUtils.issueNormalTypeError(tree, errMsg)
+  }
+}
+
+trait Analyzer
+extends typechecker.Analyzer
+with Implicits
+{
+  import global._
+
+  def foundReqMsgShort(found: Type, req: Type): String =
+    formatDiff(found, req, true)
+
+  def foundReqMsgNormal(found: Type, req: Type): String = {
+    withDisambiguation(Nil, found, req)(formatDiff(found, req, true)) +
+    explainVariance(found, req) +
+    explainAnyVsAnyRef(found, req)
+  }
+
+  override def foundReqMsg(found: Type, req: Type): String =
+    ";\n  " + foundReqMsgShort(found, req)
+}
+
+class SplainPlugin(val global: Global)
+extends Plugin
+{ plugin =>
+  val analyzer = new { val global = plugin.global } with Analyzer
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
