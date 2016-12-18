@@ -41,23 +41,38 @@ trait Formatting
       val simple = a.parents.map(formatInfix(_, true)).mkString(" with ")
       val refine = a.decls.map(formatRefinement).mkString("; ")
       s"$simple {$refine}"
-    case a => a.typeSymbol.name.decodedName.toString
+    case a =>
+      a.typeSymbol.name.decodedName.toString
   }
 
   def formatTypeApply(simple: String, args: List[String]) =
     args.mkString(s"$simple[", ",", "]")
 
+  def formatTuple(args: List[String]) =
+    args match {
+      case head :: Nil => head
+      case _ => args.mkString("(", ",", ")")
+    }
+
+  def formatFunction(args: List[String]) = {
+    val (params, returnt) = args.splitAt(args.length - 1)
+    s"${formatTuple(params)} => ${formatTuple(returnt)}"
+  }
+
   def formatType[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => String): String = {
     val simple = formatSimpleType(tpe)
-    args match {
+    def formattedArgs = args.map(rec(_)(true))
+    if (simple.startsWith("Function")) formatFunction(formattedArgs)
+    else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
+    else args match {
       case left :: right :: Nil if isSymbolic(tpe) =>
         val l = rec(left)(false)
         val r = rec(right)(false)
         val t = s"$l $simple $r"
         if (top) t else s"($t)"
-      case a @ (head :: tail) =>
-        formatTypeApply(simple, a.map(rec(_)(true)))
+      case head :: tail =>
+        formatTypeApply(simple, formattedArgs)
       case _ =>
         simple
     }
