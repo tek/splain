@@ -1,4 +1,4 @@
-# A scala compiler plugin for more concise errors
+# A scala 2.11 compiler plugin for more concise errors
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
 
