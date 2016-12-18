@@ -1,0 +1,4 @@
+<plugin>
+    <name>splain</name>
+    <classname>tryp.SplainPlugin</classname>
+</plugin>
