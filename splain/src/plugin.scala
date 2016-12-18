@@ -22,27 +22,42 @@ trait Formatting
 
   def dealias(tpe: Type) = formatInfix(DealiasedType(tpe), true)
 
-  def isSymbolic(sym: Symbol) =
-    sym.name.encodedName.toString != sym.name.decodedName.toString
+  def isSymbolic(tpe: Type) =
+    tpe.typeSymbol.name.encodedName.toString !=
+      tpe.typeSymbol.name.decodedName.toString
 
-  def printSym(sym: Symbol) = sym.name.decodedName.toString
+  def formatRefinement(sym: Symbol) = {
+    if (sym.hasRawInfo) {
+      val rhs = formatInfix(sym.rawInfo, true)
+      s"$sym = $rhs"
+    }
+    else sym.toString
+  }
 
-  def formatTypeApply(sym: String, args: List[String]) =
-    args.mkString(s"$sym[", ",", "]")
+  def formatSimpleType(tpe: Type) = tpe match {
+    case a: RefinedType =>
+      val simple = a.parents.map(formatInfix(_, true)).mkString(" with ")
+      val refine = a.decls.map(formatRefinement).mkString("; ")
+      s"$simple {$refine}"
+    case a => a.typeSymbol.name.decodedName.toString
+  }
+
+  def formatTypeApply(simple: String, args: List[String]) =
+    args.mkString(s"$simple[", ",", "]")
 
   def formatType[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => String): String = {
-    val sym = printSym(tpe.typeSymbol)
+    val simple = formatSimpleType(tpe)
     args match {
-      case left :: right :: Nil if isSymbolic(tpe.typeSymbol) =>
+      case left :: right :: Nil if isSymbolic(tpe) =>
         val l = rec(left)(false)
         val r = rec(right)(false)
-        val t = s"$l $sym $r"
+        val t = s"$l $simple $r"
         if (top) t else s"($t)"
       case a @ (head :: tail) =>
-        formatTypeApply(sym, a.map(rec(_)(true)))
+        formatTypeApply(simple, a.map(rec(_)(true)))
       case _ =>
-        sym
+        simple
     }
   }
 

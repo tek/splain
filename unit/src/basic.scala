@@ -7,7 +7,7 @@ package object bp
   trait C
   trait D
 
-  type T1 = C *** D *** C
+  type T1 = C *** D *** (C with D { type A = D; type B = C })
   type T2 = D *** ((C *** C) *** D)
   type T3 = (D *** (C *** String)) *** (C *** D)
 
@@ -18,10 +18,10 @@ package object bp
 
 object A
 {
-  import bp._
+  import bp.{C, D, T1, ***}
   val a = new (Int *** ((C *** String) *** D))
   def b(arg: Int *** ((String *** C) *** D)) = null
-  def c(implicit implicitD: T1) = null
+  def c(implicit impPar0: T1) = null
   a.attr
   b(a)
   c
