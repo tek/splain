@@ -6,7 +6,7 @@ additional info for implicit resolution errors.
 
 ```sbt
 resolvers += Resolver.url("bintray-tek", url("https://dl.bintray.com/tek/maven"))(Resolver.ivyStylePatterns)
-addCompilerPlugin("tryp" %% "splain" % "0.1.0")
+addCompilerPlugin("tryp" %% "splain" % "0.1.1")
 ```
 
 # Configuration
