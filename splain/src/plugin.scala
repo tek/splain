@@ -1,4 +1,4 @@
-package tryp
+package splain
 
 import tools.nsc._
 import collection.mutable.{Buffer, Map}
