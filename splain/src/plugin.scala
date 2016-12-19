@@ -59,7 +59,7 @@ trait Formatting
     s"${formatTuple(params)} => ${formatTuple(returnt)}"
   }
 
-  def parens(expr: String, top: Boolean) =
+  def wrapParens(expr: String, top: Boolean) =
     if (top) expr else s"($expr)"
 
   def formatType[A](tpe: Type, args: List[A], top: Boolean,
@@ -67,14 +67,14 @@ trait Formatting
     val simple = formatSimpleType(tpe)
     def formattedArgs = args.map(rec(_)(true))
     if (simple.startsWith("Function"))
-      parens(formatFunction(formattedArgs), top)
+      wrapParens(formatFunction(formattedArgs), top)
     else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
     else args match {
       case left :: right :: Nil if isSymbolic(tpe) =>
         val l = rec(left)(false)
         val r = rec(right)(false)
         val t = s"$l $simple $r"
-        parens(t, top)
+        wrapParens(t, top)
       case head :: tail =>
         formatTypeApply(simple, formattedArgs)
       case _ =>
@@ -205,7 +205,7 @@ with Formatting
 
   class ImplicitSearch2(tree: Tree, pt: Type, isView: Boolean,
     context0: Context, pos0: Position = NoPosition)
-  extends super.ImplicitSearch(tree, pt, isView, context0, pos0)
+  extends ImplicitSearch(tree, pt, isView, context0, pos0)
   {
     override def failure(what: Any, reason: String, pos: Position = this.pos)
     : SearchResult = {
