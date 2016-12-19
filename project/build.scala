@@ -15,6 +15,10 @@ extends Deps
 object Build
 extends MultiBuild("splain", deps = SplainDeps)
 {
+  override def defaultBuilder =
+    super.defaultBuilder(_)
+      .settingsV(crossScalaVersions += "2.12.1")
+
   lazy val splain = "splain"
     .bintray
     .settingsV(
