@@ -2,6 +2,8 @@ package tryp
 
 import sbt._, Keys._
 
+import bintray.BintrayKeys._
+
 object SplainDeps
 extends Deps
 {
@@ -13,7 +15,14 @@ extends Deps
 object Build
 extends MultiBuild("splain", deps = SplainDeps)
 {
-  lazy val splain = "splain".settingsV(name := "splain")
+  lazy val splain = "splain"
+    .bintray
+    .settingsV(
+      name := "splain",
+      licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+      bintrayRepository in bintray := "releases",
+      publishMavenStyle := true
+  )
 
   lazy val unit = "unit"
     .settingsV(
