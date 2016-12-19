@@ -59,18 +59,22 @@ trait Formatting
     s"${formatTuple(params)} => ${formatTuple(returnt)}"
   }
 
+  def parens(expr: String, top: Boolean) =
+    if (top) expr else s"($expr)"
+
   def formatType[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => String): String = {
     val simple = formatSimpleType(tpe)
     def formattedArgs = args.map(rec(_)(true))
-    if (simple.startsWith("Function")) formatFunction(formattedArgs)
+    if (simple.startsWith("Function"))
+      parens(formatFunction(formattedArgs), top)
     else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
     else args match {
       case left :: right :: Nil if isSymbolic(tpe) =>
         val l = rec(left)(false)
         val r = rec(right)(false)
         val t = s"$l $simple $r"
-        if (top) t else s"($t)"
+        parens(t, top)
       case head :: tail =>
         formatTypeApply(simple, formattedArgs)
       case _ =>
