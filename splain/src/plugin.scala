@@ -2,11 +2,19 @@ package splain
 
 import tools.nsc._
 import collection.mutable.{Buffer, Map}
+import Console._
+
+object Messages
+{
+  val hasMatching = "hasMatchingSymbol reported error: "
+
+  val typingTypeApply =
+    "typing TypeApply reported errors for the implicit tree: "
+}
 
 trait Formatting
 { self: Analyzer =>
   import global._
-  import Console._
 
   def featureInfix: Boolean
 
@@ -54,6 +62,8 @@ trait Formatting
       case _ => args.mkString("(", ",", ")")
     }
 
+  def bracket[A](params: List[A]) = params.mkString("[", ", ", "]")
+
   def formatFunction(args: List[String]) = {
     val (params, returnt) = args.splitAt(args.length - 1)
     s"${formatTuple(params)} => ${formatTuple(returnt)}"
@@ -89,7 +99,6 @@ trait Formatting
   }
 
   def formatDiff(found: Type, req: Type, top: Boolean): String = {
-    import Console._
     if (found.typeSymbol == req.typeSymbol) {
       val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
       val recT = rec.tupled
@@ -116,8 +125,7 @@ trait Formatting
     val tpe = dealias(err.tpe)
     val problem =
       s"$RED$candidate$RESET invalid for $GREEN${tpe}$RESET because"
-    val hasMatching = "hasMatchingSymbol reported error: "
-    List(problem, err.reason.stripPrefix(hasMatching))
+    List(problem, err.cleanReason)
   }
 
   def formatImplicitParam(sym: Symbol) = sym.name
@@ -150,6 +158,11 @@ with Formatting
     }
 
     override def hashCode = tpe.hashCode
+
+    def cleanReason =
+      reason
+        .stripPrefix(Messages.typingTypeApply)
+        .stripPrefix(Messages.hasMatching)
   }
 
   var implicitNesting = 0
@@ -211,6 +224,39 @@ with Formatting
     : SearchResult = {
       ImpError(pt, what, reason) +=: implicitErrors
       super.failure(what, reason, pos)
+    }
+
+    override val infer = new Inferencer {
+      import InferErrorGen._
+
+      def context = ImplicitSearch2.this.context
+
+      override def checkBounds(tree: Tree, pre: Type, owner: Symbol,
+        tparams: List[Symbol], targs: List[Type], prefix: String): Boolean = {
+        def issueBoundsError() = {
+          notWithinBounds(tree, prefix, targs, tparams, Nil)
+          false
+        }
+        def issueKindBoundErrors(errs: List[String]) = {
+          KindBoundErrors(tree, prefix, targs, tparams, errs)
+          false
+        }
+        def check() = checkKindBounds(tparams, targs, pre, owner) match {
+          case Nil  =>
+            isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
+          case errs =>
+            (targs contains WildcardType) || issueKindBoundErrors(errs)
+        }
+        targs.exists(_.isErroneous) || tparams.exists(_.isErroneous) || check()
+      }
+
+      def notWithinBounds(tree: Tree, prefix: String, targs: List[Type],
+        tparams: List[Symbol], kindErrors: List[String]) = {
+          val params = bracket(tparams.map(_.defString))
+          val tpes = bracket(targs.map(formatInfix(_, true)))
+          val msg = s"nonconformant bounds;\n$RED$tpes\n$GREEN$params$RESET"
+          ErrorUtils.issueNormalTypeError(tree, msg)
+      }
     }
   }
 
