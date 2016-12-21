@@ -2,7 +2,6 @@ package splain
 
 import tools.nsc._
 import collection.mutable
-import Console._
 
 object Messages
 {
@@ -11,6 +10,19 @@ object Messages
   val typingTypeApply =
     "typing TypeApply reported errors for the implicit tree: "
 }
+
+object StringColor
+{
+  implicit class StringColorOps(s: String)
+  {
+    import Console._
+    def red = RED + s + RESET
+    def green = GREEN + s + RESET
+    def yellow = YELLOW + s + RESET
+    def blue = BLUE + s + RESET
+  }
+}
+import StringColor._
 
 trait Formatting
 { self: Analyzer =>
@@ -120,7 +132,7 @@ trait Formatting
     else {
       val l = formatInfix(found, true)
       val r = formatInfix(req, true)
-      s"$RED$l$RESET|$GREEN$r$RESET"
+      s"${l.red}|${r.green}"
     }
   }
 
@@ -137,8 +149,8 @@ trait Formatting
     val tpe = dealias(err.tpe)
     val extraInfo =
       if (tpe == dealias(prev)) ""
-      else s" for $GREEN$tpe$RESET"
-    val problem = s"$RED$candidate$RESET invalid$extraInfo because"
+      else s" as ${tpe.green}"
+    val problem = s"${candidate.red} invalid$extraInfo because"
     List(problem, err.cleanReason)
   }
 
@@ -146,7 +158,7 @@ trait Formatting
     errors.distinct zip types flatMap (formatNestedImplicit _).tupled
   }
 
-  def formatImplicitParam(sym: Symbol) = sym.name
+  def formatImplicitParam(sym: Symbol) = sym.name.toString
 
   def formatImplicitMessage(param: Symbol, hasExtra: Boolean,
     extra: Seq[String]) = {
@@ -156,7 +168,9 @@ trait Formatting
       val nl = if (extra.isEmpty) "" else "\n"
       val ex = extra.mkString("\n")
       val pre = if (hasExtra) "implicit error;\n" else ""
-      s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $GREEN$ptp$RESET$nl$ex"
+      val bang = "!"
+      val i = "I"
+      s"${pre}${bang.red}${i.blue} ${paramName.yellow}: ${ptp.green}$nl$ex"
     }
 }
 
@@ -288,7 +302,7 @@ with Formatting
         tparams: List[Symbol], kindErrors: List[String]) = {
           val params = bracket(tparams.map(_.defString))
           val tpes = bracket(targs.map(formatInfix(_, true)))
-          val msg = s"nonconformant bounds;\n$RED$tpes\n$GREEN$params$RESET"
+          val msg = s"nonconformant bounds;\n${tpes.red}\n${params.green}"
           ErrorUtils.issueNormalTypeError(tree, msg)
       }
     }

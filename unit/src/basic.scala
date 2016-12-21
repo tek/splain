@@ -76,6 +76,7 @@ object Aux
 {
   trait F
   object F { type Aux[A] = F { type B = A } }
+  implicit def f[A](implicit impPar10: C): F { type B = A }
   implicitly[F.Aux[C]]
 }
 
