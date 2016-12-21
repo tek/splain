@@ -1,67 +1,86 @@
 package splain
 
-package object bp
+package object types
 {
   class ***[A, B]
   class >:<[A, B]
-
   class C
   trait D
-  trait E
-  object F
-  trait G[A]
+}
 
-  object D
-  {
-    type Aux[A] = D { type B = A }
-  }
+import types._
 
-  type CAux[B] = C { type A = B }
+trait Low
+{
+  trait I1
+  trait I2
+  trait I3
+  trait I4
+  implicit def lowI1: I1 = ???
+  implicit def lowI2: I2 = ???
+}
 
+object ImplicitChain
+extends Low
+{
   type T1 = C *** D >:< (C with D { type A = D; type B = C })
   type T2 = D *** ((C >:< C) *** (D => Unit))
   type T3 = (D *** (C *** String)) >:< ((C, D, C) *** D)
-
-  implicit val c1: C = ???
-
-  implicit val c2: C = ???
-
-  implicit def e(implicit impPar2: T3): T2 = ???
-
-  implicit def d(implicit impPar1: T2): T1 = ???
-
-  implicit def f1: D = ???
-
-  implicit def f2: D = ???
-
-  implicit def h(implicit impPar4: D): E = ???
-
-  implicit def j[A <: String, B]: G[A] = ???
-
-  def k[A](implicit impPar5: G[A]) = ???
-
-  implicit def l[A](implicit impPar5: D.Aux[A]) = ???
+  implicit def i1(implicit impPar7: I3): I1 = ???
+  implicit def i2a(implicit impPar8: I3): I2 = ???
+  implicit def i2b(implicit impPar8: I3): I2 = ???
+  implicit def i4(implicit impPar9: I2): I4 = ???
+  implicit def f(implicit impPar4: I4, impPar2: T3): T2 = ???
+  implicit def g(implicit impPar3: I1, impPar1: T2): T1 = ???
+  implicitly[T1]
 }
 
-object A
+object Ambiguous
 {
-  import bp.{C, CAux, D, F, T1, ***, >:<, j, k, l}
-  val a = new (Int *** ((C *** String) >:< D))
-  def b(arg: Int *** ((String *** C { type A = F.type }) >:< D)) = ???
-  def c(implicit impPar0: T1) = ???
-  def i(arg1: CAux[D]) = ???
-  a.attr
-  b(a)
-  c
-  val p1 = new C { type A = C }
-  i(p1)
-  k[D *** C]
-  l
+  implicit val c1: C = ???
+  implicit val c2: C = ???
+  implicit def f1: D = ???
+  implicit def f2: D = ???
+  implicitly[D]
 }
 
-object B {
-  trait C[T]
-  implicit def c[A, B](implicit tpeS: C[A], tpeT: C[B]): C[A with B] = ???
-  def as[A](implicit tpe: C[A]) = ???
-  as[Any]
+object NotAMember
+{
+  val a = new (C *** D >:< D *** C)
+  a.attr
+}
+
+object FoundReq
+{
+  object F
+  val a = new (Int *** ((C *** String) >:< D))
+  def f(arg: Int *** ((String *** C { type A = F.type }) >:< D)) = ???
+  f(a)
+}
+
+object RefinementDiff
+{
+  type CAux[A] = C { type X = A }
+  def f(arg1: CAux[D]) = ???
+  f(new C { type X = C })
+}
+
+object NonconformantBounds
+{
+  trait F[A]
+  implicit def f[A <: C, B]: F[A] = ???
+  implicitly[F[D *** C]]
+}
+
+object Aux
+{
+  trait F
+  object F { type Aux[A] = F { type B = A } }
+  implicitly[F.Aux[C]]
+}
+
+object Diverging
+{
+  implicit def f(implicit c: C): C = ???
+  implicitly[C]
 }
