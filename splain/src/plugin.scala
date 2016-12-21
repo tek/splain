@@ -55,7 +55,7 @@ trait Formatting
 
   def formatAux(tpe: Type) = {
     val ctorNames = tpe.typeConstructor.toString.split('.')
-    val ctor = ctorNames.drop(ctorNames.length - 2).mkString(".")
+    val ctor = ctorNames.takeRight(2).mkString(".")
     val args = bracket(tpe.typeArgs.map(formatInfix(_, true)))
     s"$ctor$args"
   }
@@ -74,7 +74,9 @@ trait Formatting
       val refine = a.decls.map(formatRefinement).mkString("; ")
       s"$simple {$refine}"
     case a =>
-      a.typeSymbol.name.decodedName.toString
+      val name = a.typeSymbol.name.decodedName.toString
+      if (a.typeSymbol.isModuleClass) s"$name.type"
+      else name
   }
 
   def formatTypeApply(simple: String, args: List[String]) =
