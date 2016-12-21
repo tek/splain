@@ -36,6 +36,7 @@ extends MultiBuild("splain", deps = SplainDeps)
         val addPlugin = "-Xplugin:" + jar.getAbsolutePath
         val dummy = "-Jdummy=" + jar.lastModified
         Seq(addPlugin, dummy)
-      }
+      },
+      scalacOptions in Compile += "-P:splain:bounds"
     )
 }

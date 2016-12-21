@@ -19,6 +19,7 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `infix`
 * `foundreq`
 * `implicits`
+* `bounds` (default off)
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
