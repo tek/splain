@@ -182,6 +182,7 @@ with Formatting
   import global._
 
   def featureImplicits: Boolean
+  def featureBounds: Boolean
 
   case class ImpError(tpe: Type, what: Any, reason: String)
   {
@@ -274,10 +275,24 @@ with Formatting
       super.failure(what, reason, pos)
     }
 
-    override val infer = new Inferencer {
+    override val infer =
+      if (featureBounds) new Inferencer2
+      else new Inferencer {
+        def context = ImplicitSearch2.this.context
+
+        override def isCoercible(tp: Type, pt: Type) =
+          undoLog undo viewExists(tp, pt)
+      }
+
+    class Inferencer2
+    extends Inferencer
+    {
       import InferErrorGen._
 
       def context = ImplicitSearch2.this.context
+
+      override def isCoercible(tp: Type, pt: Type) =
+        undoLog undo viewExists(tp, pt)
 
       override def checkBounds(tree: Tree, pre: Type, owner: Symbol,
         tparams: List[Symbol], targs: List[Type], prefix: String): Boolean = {
@@ -370,6 +385,7 @@ extends plugins.Plugin
       def featureImplicits = boolean(keyImplicits)
       def featureFoundReq = boolean(keyFoundReq)
       def featureInfix = boolean(keyInfix)
+      def featureBounds = boolean(keyBounds)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
@@ -420,12 +436,14 @@ extends plugins.Plugin
   val keyImplicits = "implicits"
   val keyFoundReq = "foundreq"
   val keyInfix = "infix"
+  val keyBounds = "bounds"
 
   val opts: mutable.Map[String, String] = mutable.Map(
     keyAll -> "true",
     keyImplicits -> "true",
     keyFoundReq -> "true",
-    keyInfix -> "true"
+    keyInfix -> "true",
+    keyBounds -> "false"
   )
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)
