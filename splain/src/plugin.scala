@@ -136,16 +136,8 @@ trait Formatting
     }
   }
 
-  val candidateRegex = """.*\.this\.(.*)""".r
-
-  def formatCandidate(what: Any) =
-    what.toString match {
-      case candidateRegex(suf) => suf
-      case a => a
-    }
-
   def formatNestedImplicit(err: ImpError, prev: Type): List[String] = {
-    val candidate = formatCandidate(err.what)
+    val candidate = err.cleanCandidate
     val tpe = dealias(err.tpe)
     val extraInfo =
       if (tpe == dealias(prev)) ""
@@ -184,25 +176,39 @@ with Formatting
   def featureImplicits: Boolean
   def featureBounds: Boolean
 
-  case class ImpError(tpe: Type, what: Any, reason: String)
+  val candidateRegex = """.*\.this\.(.*)""".r
+
+  case class ImpError(tpe: Type, candidate: Any, reason: String)
   {
-    def whatName = what match {
+    def candidateName = candidate match {
       case Select(_, name) => name
       case Ident(name) => name
       case a => a
     }
 
+    lazy val cleanCandidate =
+      candidate.toString match {
+        case candidateRegex(suf) => suf
+        case a => a
+      }
+
     override def equals(other: Any) = other match {
-      case o @ ImpError(t, _, _) => t == tpe && whatName == o.whatName
+      case o @ ImpError(t, _, _) =>
+        t == tpe && candidateName == o.candidateName
       case _ => false
     }
 
     override def hashCode = tpe.hashCode
 
-    def cleanReason =
-      reason
+    lazy val cleanReason = {
+      val clean = reason
         .stripPrefix(Messages.typingTypeApply)
         .stripPrefix(Messages.hasMatching)
+      if (cleanCandidate == "Lazy.mkLazy" &&
+        clean.startsWith("Unable to derive"))
+          "Unable to derive lazy implicit"
+      else clean
+    }
   }
 
   var implicitNesting = 0
