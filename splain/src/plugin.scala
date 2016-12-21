@@ -30,15 +30,16 @@ trait Formatting
     }
   }
 
-  def dealias(tpe: Type) = formatInfix(DealiasedType(tpe), true)
+  def dealias(tpe: Type) =
+    if (isAux(tpe)) formatAux(tpe)
+    else formatInfix(DealiasedType(tpe), true)
 
   def isSymbolic(tpe: Type) =
     tpe.typeSymbol.name.encodedName.toString !=
       tpe.typeSymbol.name.decodedName.toString
 
-  def isAux(tpe: Type) = {
+  def isAux(tpe: Type) =
     tpe.typeConstructor.toString.split('.').lastOption.contains("Aux")
-  }
 
   def formatAux(tpe: Type) = {
     val ctorNames = tpe.typeConstructor.toString.split('.')
@@ -131,12 +132,18 @@ trait Formatting
       case a => a
     }
 
-  def formatNestedImplicit(err: ImpError): List[String] = {
+  def formatNestedImplicit(err: ImpError, prev: Type): List[String] = {
     val candidate = formatCandidate(err.what)
     val tpe = dealias(err.tpe)
-    val problem =
-      s"$RED$candidate$RESET invalid for $GREEN${tpe}$RESET because"
+    val extraInfo =
+      if (tpe == dealias(prev)) ""
+      else s" for $GREEN$tpe$RESET"
+    val problem = s"$RED$candidate$RESET invalid$extraInfo because"
     List(problem, err.cleanReason)
+  }
+
+  def formatNestedImplicits(errors: List[ImpError], types: List[Type]) = {
+    errors.distinct zip types flatMap (formatNestedImplicit _).tupled
   }
 
   def formatImplicitParam(sym: Symbol) = sym.name
@@ -145,11 +152,11 @@ trait Formatting
     extra: Seq[String]) = {
       val tpe = param.tpe
       val paramName = formatImplicitParam(param)
-      val ptp = if (isAux(tpe)) formatAux(tpe) else dealias(tpe)
+      val ptp = dealias(tpe)
       val nl = if (extra.isEmpty) "" else "\n"
       val ex = extra.mkString("\n")
       val pre = if (hasExtra) "implicit error;\n" else ""
-      s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $ptp$nl$ex"
+      s"$pre$RED!${BLUE}I$RESET $YELLOW$paramName$RESET: $GREEN$ptp$RESET$nl$ex"
     }
 }
 
@@ -184,6 +191,7 @@ with Formatting
   }
 
   var implicitNesting = 0
+  var implicitTypes = List[Type]()
   var implicitErrors = List[ImpError]()
 
   def inferImplicit2(tree: Tree, pt: Type, reportAmbiguous: Boolean,
@@ -192,7 +200,10 @@ with Formatting
   : SearchResult = {
     import typechecker.ImplicitsStats._
     import reflect.internal.util.Statistics
-    if (implicitNesting == 0) implicitErrors = List()
+    if (implicitNesting == 0) {
+      implicitTypes = List()
+      implicitErrors = List()
+    }
     implicitNesting += 1
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     val rawTypeStart =
@@ -212,8 +223,11 @@ with Formatting
     val result =
       new ImplicitSearch2(tree, pt, isView, implicitSearchContext, pos)
         .bestImplicit
-    if (result.isSuccess)
+    if (result.isSuccess) {
       implicitErrors = implicitErrors.dropWhile(_.tpe == pt)
+      implicitTypes =
+        implicitTypes.drop(implicitTypes.length - implicitErrors.length)
+    }
     if (result.isFailure && saveAmbiguousDivergent &&
       implicitSearchContext.reporter.hasErrors)
       implicitSearchContext.reporter
@@ -282,10 +296,11 @@ with Formatting
 
   def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
+    implicitTypes = param.tpe :: implicitTypes
     def errMsg = {
       val hasExtra = implicitNesting == 0 && !implicitErrors.isEmpty
       val extra =
-        if (hasExtra) implicitErrors.distinct flatMap formatNestedImplicit
+        if (hasExtra) formatNestedImplicits(implicitErrors, implicitTypes)
         else Nil
       val symbol = param.tpe.typeSymbolDirect
       symbol match {
