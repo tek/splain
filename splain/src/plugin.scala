@@ -1,7 +1,7 @@
 package splain
 
 import tools.nsc._
-import collection.mutable.{Buffer, Map}
+import collection.mutable.Map
 import Console._
 
 object Messages
@@ -164,8 +164,14 @@ with Formatting
 
   case class ImpError(tpe: Type, what: Any, reason: String)
   {
+    def whatName = what match {
+      case Select(_, name) => name
+      case Ident(name) => name
+      case a => a
+    }
+
     override def equals(other: Any) = other match {
-      case ImpError(t, _, _) => t == tpe
+      case o @ ImpError(t, _, _) => t == tpe && whatName == o.whatName
       case _ => false
     }
 
@@ -178,7 +184,7 @@ with Formatting
   }
 
   var implicitNesting = 0
-  val implicitErrors = Buffer[ImpError]()
+  var implicitErrors = List[ImpError]()
 
   def inferImplicit2(tree: Tree, pt: Type, reportAmbiguous: Boolean,
     isView: Boolean, context: Context, saveAmbiguousDivergent: Boolean,
@@ -186,7 +192,7 @@ with Formatting
   : SearchResult = {
     import typechecker.ImplicitsStats._
     import reflect.internal.util.Statistics
-    if (implicitNesting == 0) implicitErrors.clear()
+    if (implicitNesting == 0) implicitErrors = List()
     implicitNesting += 1
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     val rawTypeStart =
@@ -206,6 +212,8 @@ with Formatting
     val result =
       new ImplicitSearch2(tree, pt, isView, implicitSearchContext, pos)
         .bestImplicit
+    if (result.isSuccess)
+      implicitErrors = implicitErrors.dropWhile(_.tpe == pt)
     if (result.isFailure && saveAmbiguousDivergent &&
       implicitSearchContext.reporter.hasErrors)
       implicitSearchContext.reporter
@@ -234,7 +242,7 @@ with Formatting
   {
     override def failure(what: Any, reason: String, pos: Position = this.pos)
     : SearchResult = {
-      ImpError(pt, what, reason) +=: implicitErrors
+      implicitErrors = ImpError(pt, what, reason) :: implicitErrors
       super.failure(what, reason, pos)
     }
 
