@@ -60,9 +60,9 @@ object FoundReq
 
 object RefinementDiff
 {
-  type CAux[A] = C { type X = A }
+  type CAux[A] = (C *** D) { type X = A }
   def f(arg1: CAux[D]) = ???
-  f(new C { type X = C })
+  f(new (C *** D) { type X = C })
 }
 
 object NonconformantBounds
@@ -76,7 +76,7 @@ object Aux
 {
   trait F
   object F { type Aux[A] = F { type B = A } }
-  implicit def f[A](implicit impPar10: C): F { type B = A }
+  implicit def f[A](implicit impPar10: C): F { type B = A } = ???
   implicitly[F.Aux[C]]
 }
 

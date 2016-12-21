@@ -30,32 +30,22 @@ trait Formatting
 
   def featureInfix: Boolean
 
-  object DealiasedType
-  extends TypeMap
-  {
-    def apply(tp: Type): Type = tp match {
-      case TypeRef(pre, sym, args)
-      if sym.isAliasType && !sym.isInDefaultNamespace =>
-        mapOver(tp.dealias)
-      case _ =>
-        mapOver(tp)
-    }
-  }
-
   def dealias(tpe: Type) =
-    if (isAux(tpe)) formatAux(tpe)
-    else formatInfix(DealiasedType(tpe), true)
+    if (isAux(tpe)) tpe
+    else tpe.dealias
 
   def isSymbolic(tpe: Type) =
     tpe.typeSymbol.name.encodedName.toString !=
       tpe.typeSymbol.name.decodedName.toString
 
+  def ctorNames(tpe: Type) =
+    tpe.typeConstructor.toString.split('.')
+
   def isAux(tpe: Type) =
-    tpe.typeConstructor.toString.split('.').lastOption.contains("Aux")
+    ctorNames(tpe).lastOption.contains("Aux")
 
   def formatAux(tpe: Type) = {
-    val ctorNames = tpe.typeConstructor.toString.split('.')
-    val ctor = ctorNames.takeRight(2).mkString(".")
+    val ctor = formatAuxSimple(tpe)
     val args = bracket(tpe.typeArgs.map(formatInfix(_, true)))
     s"$ctor$args"
   }
@@ -68,7 +58,11 @@ trait Formatting
     else sym.toString
   }
 
-  def formatSimpleType(tpe: Type) = tpe match {
+  def formatAuxSimple(tpe: Type) =
+    ctorNames(tpe).takeRight(2).mkString(".")
+
+  def formatNormalSimple(tpe: Type) =
+    tpe match {
     case a: RefinedType =>
       val simple = a.parents.map(formatInfix(_, true)).mkString(" with ")
       val refine = a.decls.map(formatRefinement).mkString("; ")
@@ -77,6 +71,11 @@ trait Formatting
       val name = a.typeSymbol.name.decodedName.toString
       if (a.typeSymbol.isModuleClass) s"$name.type"
       else name
+  }
+
+  def formatSimpleType(tpe: Type) = {
+    if (isAux(tpe)) formatAuxSimple(tpe)
+    else formatNormalSimple(tpe)
   }
 
   def formatTypeApply(simple: String, args: List[String]) =
@@ -119,30 +118,32 @@ trait Formatting
   }
 
   def formatInfix(tpe: Type, top: Boolean): String = {
+    val dtpe = dealias(tpe)
     val rec = (tp: Type) => (t: Boolean) => formatInfix(tp, t)
-    if (featureInfix) formatType(tpe, tpe.typeArgs, top, rec)
-    else tpe.toLongString
+    if (featureInfix) formatType(dtpe, dtpe.typeArgs, top, rec)
+    else dtpe.toLongString
   }
 
   def formatDiff(found: Type, req: Type, top: Boolean): String = {
-    if (found.typeSymbol == req.typeSymbol) {
+    val (left, right) = dealias(found) -> dealias(req)
+    if (left.typeSymbol == right.typeSymbol) {
       val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
       val recT = rec.tupled
-      val args = found.typeArgs zip req.typeArgs
-      formatType(found, args, top, recT)
+      val args = left.typeArgs zip right.typeArgs
+      formatType(left, args, top, recT)
     }
     else {
-      val l = formatInfix(found, true)
-      val r = formatInfix(req, true)
+      val l = formatInfix(left, true)
+      val r = formatInfix(right, true)
       s"${l.red}|${r.green}"
     }
   }
 
   def formatNestedImplicit(err: ImpError): List[String] = {
     val candidate = err.cleanCandidate
-    val tpe = dealias(err.tpe)
+    val tpe = formatInfix(err.tpe, true)
     val extraInfo =
-      if (tpe == dealias(err.prev)) ""
+      if (tpe == formatInfix(err.prev, true)) ""
       else s" as ${tpe.green}"
     val problem = s"${candidate.red} invalid$extraInfo because"
     List(problem, err.cleanReason)
@@ -159,7 +160,7 @@ trait Formatting
     def stack = formatNestedImplicits(errors)
     val tpe = param.tpe
     val paramName = formatImplicitParam(param)
-    val ptp = dealias(tpe)
+    val ptp = formatInfix(tpe, true)
     val nl = if (showStack && errors.nonEmpty) "\n" else ""
     val ex = if(showStack) stack.mkString("\n") else ""
     val pre = if (showStack) "implicit error;\n" else ""
