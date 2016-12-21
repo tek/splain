@@ -36,6 +36,17 @@ trait Formatting
     tpe.typeSymbol.name.encodedName.toString !=
       tpe.typeSymbol.name.decodedName.toString
 
+  def isAux(tpe: Type) = {
+    tpe.typeConstructor.toString.split('.').lastOption.contains("Aux")
+  }
+
+  def formatAux(tpe: Type) = {
+    val ctorNames = tpe.typeConstructor.toString.split('.')
+    val ctor = ctorNames.drop(ctorNames.length - 2).mkString(".")
+    val args = bracket(tpe.typeArgs.map(formatInfix(_, true)))
+    s"$ctor$args"
+  }
+
   def formatRefinement(sym: Symbol) = {
     if (sym.hasRawInfo) {
       val rhs = formatInfix(sym.rawInfo, true)
@@ -132,8 +143,9 @@ trait Formatting
 
   def formatImplicitMessage(param: Symbol, hasExtra: Boolean,
     extra: Seq[String]) = {
+      val tpe = param.tpe
       val paramName = formatImplicitParam(param)
-      val ptp = dealias(param.tpe)
+      val ptp = if (isAux(tpe)) formatAux(tpe) else dealias(tpe)
       val nl = if (extra.isEmpty) "" else "\n"
       val ex = extra.mkString("\n")
       val pre = if (hasExtra) "implicit error;\n" else ""

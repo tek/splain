@@ -11,6 +11,11 @@ package object bp
   object F
   trait G[A]
 
+  object D
+  {
+    type Aux[A] = D { type B = A }
+  }
+
   type CAux[B] = C { type A = B }
 
   type T1 = C *** D >:< (C with D { type A = D; type B = C })
@@ -34,21 +39,24 @@ package object bp
   implicit def j[A <: String, B]: G[A] = ???
 
   def k[A](implicit impPar5: G[A]) = ???
+
+  implicit def l[A](implicit impPar5: D.Aux[A]) = ???
 }
 
 object A
 {
-  import bp.{C, CAux, D, F, T1, ***, >:<, j, k}
+  import bp.{C, CAux, D, F, T1, ***, >:<, j, k, l}
   val a = new (Int *** ((C *** String) >:< D))
   def b(arg: Int *** ((String *** C { type A = F.type }) >:< D)) = ???
   def c(implicit impPar0: T1) = ???
-  def i(arg: CAux[D]) = ???
+  def i(arg1: CAux[D]) = ???
   a.attr
   b(a)
   c
   val p1 = new C { type A = C }
   i(p1)
   k[D *** C]
+  l
 }
 
 object B {
