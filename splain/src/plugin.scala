@@ -1,7 +1,7 @@
 package splain
 
 import tools.nsc._
-import collection.mutable.Map
+import collection.mutable
 import Console._
 
 object Messages
@@ -387,11 +387,13 @@ extends plugins.Plugin
   val description = "better types and implicit errors"
   val components = Nil
 
+  val keyAll = "all"
   val keyImplicits = "implicits"
   val keyFoundReq = "foundreq"
   val keyInfix = "infix"
 
-  val opts: Map[String, String] = Map(
+  val opts: mutable.Map[String, String] = mutable.Map(
+    keyAll -> "true",
     keyImplicits -> "true",
     keyFoundReq -> "true",
     keyInfix -> "true"
@@ -399,5 +401,7 @@ extends plugins.Plugin
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)
 
-  def boolean(key: String) = opt(key, "true") == "true"
+  def enabled = opt("all", "true") == "true"
+
+  def boolean(key: String) = enabled && opt(key, "true") == "true"
 }

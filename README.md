@@ -15,12 +15,15 @@ The plugin can be configured via compiler plugin parameters with the format:
 -P:splain:<param>[:<value>]
 ```
 `param` can be one of the following:
+* `all`
 * `infix`
 * `foundreq`
 * `implicits`
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
+
+The parameter `all` can be used to deactivate all features.
 
 The parameters can be applied like this:
 
