@@ -136,34 +136,35 @@ trait Formatting
     }
   }
 
-  def formatNestedImplicit(err: ImpError, prev: Type): List[String] = {
+  def formatNestedImplicit(err: ImpError): List[String] = {
     val candidate = err.cleanCandidate
     val tpe = dealias(err.tpe)
     val extraInfo =
-      if (tpe == dealias(prev)) ""
+      if (tpe == dealias(err.prev)) ""
       else s" as ${tpe.green}"
     val problem = s"${candidate.red} invalid$extraInfo because"
     List(problem, err.cleanReason)
   }
 
-  def formatNestedImplicits(errors: List[ImpError], types: List[Type]) = {
-    errors.distinct zip types flatMap (formatNestedImplicit _).tupled
+  def formatNestedImplicits(errors: List[ImpError]) = {
+    errors.distinct flatMap formatNestedImplicit
   }
 
   def formatImplicitParam(sym: Symbol) = sym.name.toString
 
-  def formatImplicitMessage(param: Symbol, hasExtra: Boolean,
-    extra: Seq[String]) = {
-      val tpe = param.tpe
-      val paramName = formatImplicitParam(param)
-      val ptp = dealias(tpe)
-      val nl = if (extra.isEmpty) "" else "\n"
-      val ex = extra.mkString("\n")
-      val pre = if (hasExtra) "implicit error;\n" else ""
-      val bang = "!"
-      val i = "I"
-      s"${pre}${bang.red}${i.blue} ${paramName.yellow}: ${ptp.green}$nl$ex"
-    }
+  def formatImplicitMessage
+  (param: Symbol, showStack: Boolean, errors: List[ImpError]) = {
+    def stack = formatNestedImplicits(errors)
+    val tpe = param.tpe
+    val paramName = formatImplicitParam(param)
+    val ptp = dealias(tpe)
+    val nl = if (showStack && errors.nonEmpty) "\n" else ""
+    val ex = if(showStack) stack.mkString("\n") else ""
+    val pre = if (showStack) "implicit error;\n" else ""
+    val bang = "!"
+    val i = "I"
+    s"${pre}${bang.red}${i.blue} ${paramName.yellow}: ${ptp.green}$nl$ex"
+  }
 }
 
 trait Implicits
@@ -178,7 +179,7 @@ with Formatting
 
   val candidateRegex = """.*\.this\.(.*)""".r
 
-  case class ImpError(tpe: Type, candidate: Any, reason: String)
+  case class ImpError(tpe: Type, candidate: Any, reason: String, prev: Type)
   {
     def candidateName = candidate match {
       case Select(_, name) => name
@@ -193,7 +194,7 @@ with Formatting
       }
 
     override def equals(other: Any) = other match {
-      case o @ ImpError(t, _, _) =>
+      case o @ ImpError(t, _, _, _) =>
         t == tpe && candidateName == o.candidateName
       case _ => false
     }
@@ -211,9 +212,22 @@ with Formatting
     }
   }
 
-  var implicitNesting = 0
   var implicitTypes = List[Type]()
   var implicitErrors = List[ImpError]()
+
+  def nestedImplicit = implicitTypes.nonEmpty
+
+  def search
+  (tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
+    if (!nestedImplicit) implicitErrors = List()
+    implicitTypes = pt :: implicitTypes
+    val result =
+      new ImplicitSearch2(tree, pt, isView, context, pos).bestImplicit
+    if (result.isSuccess)
+      implicitErrors = implicitErrors.dropWhile(_.tpe == pt)
+    implicitTypes = implicitTypes.tail
+    result
+  }
 
   def inferImplicit2(tree: Tree, pt: Type, reportAmbiguous: Boolean,
     isView: Boolean, context: Context, saveAmbiguousDivergent: Boolean,
@@ -221,11 +235,6 @@ with Formatting
   : SearchResult = {
     import typechecker.ImplicitsStats._
     import reflect.internal.util.Statistics
-    if (implicitNesting == 0) {
-      implicitTypes = List()
-      implicitErrors = List()
-    }
-    implicitNesting += 1
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     val rawTypeStart =
       if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
@@ -241,14 +250,7 @@ with Formatting
       typingStack.printTyping(tree, "typing implicit: %s %s"
         .format(tree, context.undetparamsString))
     val implicitSearchContext = context.makeImplicit(reportAmbiguous)
-    val result =
-      new ImplicitSearch2(tree, pt, isView, implicitSearchContext, pos)
-        .bestImplicit
-    if (result.isSuccess) {
-      implicitErrors = implicitErrors.dropWhile(_.tpe == pt)
-      implicitTypes =
-        implicitTypes.drop(implicitTypes.length - implicitErrors.length)
-    }
+    val result = search(tree, pt, isView, implicitSearchContext, pos)
     if (result.isFailure && saveAmbiguousDivergent &&
       implicitSearchContext.reporter.hasErrors)
       implicitSearchContext.reporter
@@ -261,7 +263,6 @@ with Formatting
     if (Statistics.canEnable)
       Statistics.stopCounter(findMemberImpl, findMemberStart)
     if (Statistics.canEnable) Statistics.stopCounter(subtypeImpl, subtypeStart)
-    implicitNesting -= 1
     result
   }
 
@@ -277,7 +278,8 @@ with Formatting
   {
     override def failure(what: Any, reason: String, pos: Position = this.pos)
     : SearchResult = {
-      implicitErrors = ImpError(pt, what, reason) :: implicitErrors
+      val prev = implicitTypes.headOption.getOrElse(typeOf[Unit])
+      implicitErrors = ImpError(pt, what, reason, prev) :: implicitErrors
       super.failure(what, reason, pos)
     }
 
@@ -331,27 +333,17 @@ with Formatting
 
   def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
-    implicitTypes = param.tpe :: implicitTypes
-    def errMsg = {
-      val hasExtra = implicitNesting == 0 && !implicitErrors.isEmpty
-      val extra =
-        if (hasExtra) formatNestedImplicits(implicitErrors, implicitTypes)
-        else Nil
-      val symbol = param.tpe.typeSymbolDirect
-      symbol match {
-        case ImplicitNotFoundMsg(msg) =>
-          def typeArgsAtSym(ptp: Type) = ptp.baseType(symbol).typeArgs
-          msg.format(typeArgsAtSym(param.tpe).map(formatInfix(_, true)))
-        case _ =>
-          formatImplicitMessage(param, hasExtra, extra)
-      }
-    }
-    ErrorUtils.issueNormalTypeError(tree, errMsg)
+    val err = formatImplicitMessage(param, !nestedImplicit, implicitErrors)
+    ErrorUtils.issueNormalTypeError(tree, err)
   }
 
   override def NoImplicitFoundError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
-    if (featureImplicits) noImplicitError(tree, param)
+    val msg = param.tpe.typeSymbolDirect match {
+      case ImplicitNotFoundMsg(_) => true
+      case _ => false
+    }
+    if (featureImplicits && !msg) noImplicitError(tree, param)
     else super.NoImplicitFoundError(tree, param)
   }
 }
