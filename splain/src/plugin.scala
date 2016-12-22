@@ -63,9 +63,9 @@ trait Formatting
 
   def formatNormalSimple(tpe: Type) =
     tpe match {
-    case a @ RefinedType(_, _) => true
-      val simple = a.parents.map(formatInfix(_, true)).mkString(" with ")
-      val refine = a.decls.map(formatRefinement).mkString("; ")
+    case RefinedType(parents, decls) =>
+      val simple = parents.map(formatInfix(_, true)).mkString(" with ")
+      val refine = decls.map(formatRefinement).mkString("; ")
       s"$simple {$refine}"
     case a =>
       val name = a.typeSymbol.name.decodedName.toString
