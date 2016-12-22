@@ -75,9 +75,10 @@ object NonconformantBounds
 object Aux
 {
   trait F
-  object F { type Aux[A] = F { type B = A } }
-  implicit def f[A](implicit impPar10: C): F { type B = A } = ???
-  implicitly[F.Aux[C]]
+  object F { type Aux[A, B] = F { type X = A; type Y = B } }
+  implicit def f[A, B](implicit impPar10: C): F { type X = A; type Y = B } =
+    ???
+  implicitly[F.Aux[C, D]]
 }
 
 object Diverging

@@ -34,21 +34,21 @@ trait Formatting
     if (isAux(tpe)) tpe
     else tpe.dealias
 
-  def isSymbolic(tpe: Type) =
-    tpe.typeSymbol.name.encodedName.toString !=
-      tpe.typeSymbol.name.decodedName.toString
+  def isRefined(tpe: Type) = tpe.dealias match {
+    case RefinedType(_, _) => true
+    case _ => false
+  }
+
+  def isSymbolic(tpe: Type) = {
+    val n = tpe.typeConstructor.typeSymbol.name
+    !isRefined(tpe) && (n.encodedName.toString != n.decodedName.toString)
+  }
 
   def ctorNames(tpe: Type) =
     tpe.typeConstructor.toString.split('.')
 
   def isAux(tpe: Type) =
     ctorNames(tpe).lastOption.contains("Aux")
-
-  def formatAux(tpe: Type) = {
-    val ctor = formatAuxSimple(tpe)
-    val args = bracket(tpe.typeArgs.map(formatInfix(_, true)))
-    s"$ctor$args"
-  }
 
   def formatRefinement(sym: Symbol) = {
     if (sym.hasRawInfo) {
@@ -63,7 +63,7 @@ trait Formatting
 
   def formatNormalSimple(tpe: Type) =
     tpe match {
-    case a: RefinedType =>
+    case a @ RefinedType(_, _) => true
       val simple = a.parents.map(formatInfix(_, true)).mkString(" with ")
       val refine = a.decls.map(formatRefinement).mkString("; ")
       s"$simple {$refine}"
@@ -78,8 +78,10 @@ trait Formatting
     else formatNormalSimple(tpe)
   }
 
-  def formatTypeApply(simple: String, args: List[String]) =
-    args.mkString(s"$simple[", ",", "]")
+  def formatTypeApply(simple: String, args: List[String]) = {
+    val a = bracket(args)
+    s"$simple$a"
+  }
 
   def formatTuple(args: List[String]) =
     args match {
@@ -99,22 +101,22 @@ trait Formatting
 
   def formatType[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => String): String = {
-    val simple = formatSimpleType(tpe)
-    def formattedArgs = args.map(rec(_)(true))
-    if (simple.startsWith("Function"))
-      wrapParens(formatFunction(formattedArgs), top)
-    else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
-    else args match {
-      case left :: right :: Nil if isSymbolic(tpe) =>
-        val l = rec(left)(false)
-        val r = rec(right)(false)
-        val t = s"$l $simple $r"
-        wrapParens(t, top)
-      case head :: tail =>
-        formatTypeApply(simple, formattedArgs)
-      case _ =>
-        simple
-    }
+      val simple = formatSimpleType(tpe)
+      def formattedArgs = args.map(rec(_)(true))
+      if (simple.startsWith("Function"))
+        wrapParens(formatFunction(formattedArgs), top)
+      else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
+      else args match {
+        case left :: right :: Nil if isSymbolic(tpe) =>
+          val l = rec(left)(false)
+          val r = rec(right)(false)
+          val t = s"$l $simple $r"
+          wrapParens(t, top)
+        case head :: tail =>
+          formatTypeApply(simple, formattedArgs)
+        case _ =>
+          simple
+      }
   }
 
   def formatInfix(tpe: Type, top: Boolean): String = {
