@@ -47,3 +47,30 @@ that also shows all invalid implicits for parameters that have been resolved
 successfully.
 This feature prints a compact list of all involved implicits:
 ![implicits](img/implicits.jpg)
+
+For comparison, this is the regular compiler output for this case:
+```
+[info] unit/src/basic.scala:35: i1 is not a valid implicit value for splain.ImplicitChain.I1 because:
+[info] hasMatchingSymbol reported error: could not find implicit value for parameter impPar7: splain.ImplicitChain.I3
+[info]   implicitly[T1]
+[info]             ^
+[info] unit/src/basic.scala:35: i2b is not a valid implicit value for splain.ImplicitChain.I2 because:
+[info] hasMatchingSymbol reported error: could not find implicit value for parameter impPar8: splain.ImplicitChain.I3
+[info]   implicitly[T1]
+[info]             ^
+[info] unit/src/basic.scala:35: i2a is not a valid implicit value for splain.ImplicitChain.I2 because:
+[info] hasMatchingSymbol reported error: could not find implicit value for parameter impPar8: splain.ImplicitChain.I3
+[info]   implicitly[T1]
+[info]             ^
+[info] unit/src/basic.scala:35: f is not a valid implicit value for splain.ImplicitChain.T2 because:
+[info] hasMatchingSymbol reported error: could not find implicit value for parameter impPar2: splain.ImplicitChain.T3
+[info]   implicitly[T1]
+[info]             ^
+[info] unit/src/basic.scala:35: g is not a valid implicit value for splain.ImplicitChain.T1 because:
+[info] hasMatchingSymbol reported error: could not find implicit value for parameter impPar1: splain.ImplicitChain.T2
+[info]   implicitly[T1]
+[info]             ^
+[error] unit/src/basic.scala:35: could not find implicit value for parameter e: splain.ImplicitChain.T1
+[error]   implicitly[T1]
+
+```
