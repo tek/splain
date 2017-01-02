@@ -1,0 +1,6 @@
+implicit error;
+!I e: (C *** D) >:< C with D {type A = D; type B = C}
+g invalid because
+!I impPar1: D *** ((C >:< C) *** (D => Unit))
+f invalid because
+!I impPar2: (D *** (C *** String)) >:< ((C,D,C) *** D)

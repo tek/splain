@@ -8,7 +8,8 @@ object SplainDeps
 extends Deps
 {
   val splain = ids(
-    d("org.scala-lang" % "scala-compiler" % scalaVersion.value)
+    d("org.scala-lang" % "scala-compiler" % scalaVersion.value),
+    "org.specs2" %% "specs2-core" % "3.8.6" % "test"
   )
 }
 
@@ -25,18 +26,12 @@ extends MultiBuild("splain", deps = SplainDeps)
       name := "splain",
       licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
       bintrayRepository in bintray := "releases",
-      publishMavenStyle := true
+      publishMavenStyle := true,
+      fork := true,
+      javaOptions in Test ++= {
+        val jar = (Keys.`package` in Compile).value.getAbsolutePath
+        val tests = baseDirectory.value / "tests"
+        List(s"-Dsplain.jar=$jar", s"-Dsplain.tests=$tests")
+      }
   )
-
-  lazy val unit = "unit"
-    .settingsV(
-      scalacOptions in Compile ++= {
-        val jar = (Keys.`package` in (splain.!, Compile)).value
-        System.setProperty("sbt.paths.plugin.jar", jar.getAbsolutePath)
-        val addPlugin = "-Xplugin:" + jar.getAbsolutePath
-        val dummy = "-Jdummy=" + jar.lastModified
-        Seq(addPlugin, dummy)
-      },
-      scalacOptions in Compile += "-P:splain:bounds"
-    )
 }

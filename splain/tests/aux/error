@@ -1,0 +1,4 @@
+implicit error;
+!I e: F.Aux[C, D]
+Aux.f invalid because
+!I impPar10: C
