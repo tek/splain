@@ -11,15 +11,35 @@ object Messages
     "typing TypeApply reported errors for the implicit tree: "
 }
 
+trait StringColor
+{
+  def color(s: String, col: String): String
+}
+
+object StringColors
+{
+  implicit val noColor =
+    new StringColor {
+      def color(s: String, col: String) = s
+    }
+
+  implicit val color =
+    new StringColor {
+      import Console.RESET
+
+      def color(s: String, col: String) = col + s + RESET
+    }
+}
+
 object StringColor
 {
-  implicit class StringColorOps(s: String)
+  implicit class StringColorOps(s: String)(implicit sc: StringColor)
   {
     import Console._
-    def red = RED + s + RESET
-    def green = GREEN + s + RESET
-    def yellow = YELLOW + s + RESET
-    def blue = BLUE + s + RESET
+    def red = sc.color(s, RED)
+    def green = sc.color(s, GREEN)
+    def yellow = sc.color(s, YELLOW)
+    def blue = sc.color(s, BLUE)
   }
 }
 import StringColor._
@@ -29,6 +49,11 @@ trait Formatting
   import global._
 
   def featureInfix: Boolean
+  def featureColor: Boolean
+
+  implicit def colors =
+    if(featureColor) StringColors.color
+    else StringColors.noColor
 
   def dealias(tpe: Type) =
     if (isAux(tpe)) tpe
@@ -44,8 +69,10 @@ trait Formatting
     !isRefined(tpe) && (n.encodedName.toString != n.decodedName.toString)
   }
 
-  def ctorNames(tpe: Type) =
-    tpe.typeConstructor.toString.split('.')
+  def ctorNames(tpe: Type): List[String] =
+    scala.util.Try(tpe.typeConstructor.toString)
+      .map(_.split('.').toList)
+      .getOrElse(List(tpe.toString))
 
   def isAux(tpe: Type) =
     ctorNames(tpe).lastOption.contains("Aux")
@@ -389,6 +416,7 @@ extends plugins.Plugin
       def featureFoundReq = boolean(keyFoundReq)
       def featureInfix = boolean(keyInfix)
       def featureBounds = boolean(keyBounds)
+      def featureColor = boolean(keyColor)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
@@ -440,13 +468,15 @@ extends plugins.Plugin
   val keyFoundReq = "foundreq"
   val keyInfix = "infix"
   val keyBounds = "bounds"
+  val keyColor = "color"
 
   val opts: mutable.Map[String, String] = mutable.Map(
     keyAll -> "true",
     keyImplicits -> "true",
     keyFoundReq -> "true",
     keyInfix -> "true",
-    keyBounds -> "false"
+    keyBounds -> "false",
+    keyColor -> "true"
   )
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)

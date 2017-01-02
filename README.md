@@ -20,6 +20,7 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `foundreq`
 * `implicits`
 * `bounds` (default off)
+* `color`
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -48,7 +49,11 @@ successfully.
 This feature prints a compact list of all involved implicits:
 ![implicits](img/implicits.jpg)
 
-For comparison, this is the regular compiler output for this case:
+Here, `!I` stands for *could not find implicit value*, the name of the implicit
+parameter is in yellow, and its type in green.
+
+For comparison, this is the regular compiler output for this case (with
+formatted types):
 ```
 [info] unit/src/basic.scala:35: f is not a valid implicit value for
 splain.ImplicitChain.T2 because:
