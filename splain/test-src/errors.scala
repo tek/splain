@@ -75,5 +75,6 @@ extends SpecBase
   diff with refinement type ${checkError("refinediff")}
   nonconformant bounds ${checkError("bounds")}
   aux type ${checkError("aux")}
+  shapeless Lazy ${checkError("lazy")}
   """
 }

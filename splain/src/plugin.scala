@@ -9,6 +9,8 @@ object Messages
 
   val typingTypeApply =
     "typing TypeApply reported errors for the implicit tree: "
+
+  val lazyderiv = "could not find Lazy implicit"
 }
 
 trait StringColor
@@ -178,24 +180,47 @@ trait Formatting
     List(problem, err.cleanReason)
   }
 
+  def hideImpError(error: ImpError) = {
+    error.candidateName.toString == "mkLazy"
+  }
+
   def formatNestedImplicits(errors: List[ImpError]) = {
-    errors.distinct flatMap formatNestedImplicit
+    errors.distinct filterNot hideImpError flatMap formatNestedImplicit
   }
 
   def formatImplicitParam(sym: Symbol) = sym.name.toString
 
+  def overrideMessage(msg: String): Option[String] = {
+    if (msg.startsWith(Messages.lazyderiv)) None
+    else Some(msg)
+  }
+
+  def effectiveImplicitType(tpe: Type) = {
+    if (tpe.typeSymbol.name.toString == "Lazy")
+      tpe.typeArgs.headOption.getOrElse(tpe)
+    else tpe
+  }
+
   def formatImplicitMessage
   (param: Symbol, showStack: Boolean, errors: List[ImpError]) = {
-    def stack = formatNestedImplicits(errors)
     val tpe = param.tpe
+    val msg = tpe.typeSymbolDirect match {
+      case ImplicitNotFoundMsg(msg) =>
+        overrideMessage(msg.format(TermName(param.name.toString), tpe))
+          .map(a => s" ($a)")
+          .getOrElse("")
+      case _ => ""
+    }
+    val effTpe = effectiveImplicitType(tpe)
+    def stack = formatNestedImplicits(errors)
     val paramName = formatImplicitParam(param)
-    val ptp = formatInfix(tpe, true)
+    val ptp = formatInfix(effTpe, true)
     val nl = if (showStack && errors.nonEmpty) "\n" else ""
     val ex = if(showStack) stack.mkString("\n") else ""
     val pre = if (showStack) "implicit error;\n" else ""
     val bang = "!"
     val i = "I"
-    s"${pre}${bang.red}${i.blue} ${paramName.yellow}: ${ptp.green}$nl$ex"
+    s"${pre}${bang.red}${i.blue} ${paramName.yellow}$msg: ${ptp.green}$nl$ex"
   }
 }
 
@@ -371,11 +396,7 @@ with Formatting
 
   override def NoImplicitFoundError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
-    val msg = param.tpe.typeSymbolDirect match {
-      case ImplicitNotFoundMsg(_) => true
-      case _ => false
-    }
-    if (featureImplicits && !msg) noImplicitError(tree, param)
+    if (featureImplicits) noImplicitError(tree, param)
     else super.NoImplicitFoundError(tree, param)
   }
 }
