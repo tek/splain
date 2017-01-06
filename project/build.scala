@@ -21,7 +21,7 @@ extends MultiBuild("splain", deps = SplainDeps)
     super.defaultBuilder(_)
       .settingsV(
         scalaVersion := "2.12.1",
-        crossScalaVersions ++= List("2.10.6", "2.11.8", "2.12.1")
+        crossScalaVersions ++= List("2.10.6", "2.11.8")
       )
 
   lazy val splain = "splain"
