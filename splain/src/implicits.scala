@@ -59,8 +59,10 @@ with Formatting
 
   def search
   (tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
+    val resultType = Option(tree.tpe).map(_.resultType)
     val repeat =
-      OptionOps.contains(tree.tpe.resultType)(implicitErrors.headOption.map(_.tpe))
+      resultType.exists(OptionOps.contains(_)(
+        implicitErrors.headOption.map(_.tpe)))
     if (!nestedImplicit) implicitErrors = List()
     implicitTypeStack = pt :: implicitTypeStack
     val result =
