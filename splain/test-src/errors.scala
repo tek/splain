@@ -5,7 +5,7 @@ import java.nio.file.{Files, FileSystems}
 import scala.util.{Try, Failure}
 import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.reflect.runtime.universe
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.specs2._
 
@@ -22,7 +22,7 @@ object Helpers
   }
 
   def fileContentList(name: String, fname: String) = {
-    Files.readAllLines(fileContent(name, fname)).toList
+    Files.readAllLines(fileContent(name, fname)).asScala
   }
 
   def types = {

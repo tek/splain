@@ -1,0 +1,158 @@
+package splain
+
+import tools.nsc._
+
+import StringColor._
+
+trait ImplicitChains
+extends typechecker.Implicits
+with typechecker.ContextErrors
+with Formatting
+{ self: Analyzer =>
+  import global._
+
+  def featureImplicits: Boolean
+  def featureBounds: Boolean
+
+  val candidateRegex = """.*\.this\.(.*)""".r
+
+  case class ImpError(tpe: Type, candidate: Any, reason: String, prev: Type)
+  {
+    def candidateName = candidate match {
+      case Select(_, name) => name
+      case Ident(name) => name
+      case a => a
+    }
+
+    lazy val cleanCandidate =
+      candidate.toString match {
+        case candidateRegex(suf) => suf
+        case a => a
+      }
+
+    override def equals(other: Any) = other match {
+      case o @ ImpError(t, _, _, _) =>
+        t == tpe && candidateName == o.candidateName
+      case _ => false
+    }
+
+    override def hashCode = tpe.hashCode
+
+    lazy val cleanReason = {
+      val clean = reason
+        .stripPrefix(Messages.typingTypeApply)
+        .stripPrefix(Messages.hasMatching)
+      if (cleanCandidate == "Lazy.mkLazy" &&
+        clean.startsWith("Unable to derive"))
+          "Unable to derive lazy implicit"
+      else clean
+    }
+  }
+
+  var implicitTypeStack = List[Type]()
+  var implicitErrors = List[ImpError]()
+
+  def nestedImplicit = implicitTypeStack.nonEmpty
+
+  def removeErrorsFor(tpe: Type) =
+    implicitErrors = implicitErrors.dropWhile(_.tpe == tpe)
+
+  def search
+  (tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
+    val repeat =
+      OptionOps.contains(tree.tpe.resultType)(implicitErrors.headOption.map(_.tpe))
+    if (!nestedImplicit) implicitErrors = List()
+    implicitTypeStack = pt :: implicitTypeStack
+    val result =
+      new ImplicitSearchCompat(tree, pt, isView, context, pos).bestImplicit
+    if (result.isSuccess) removeErrorsFor(pt)
+    implicitTypeStack = implicitTypeStack.drop(1)
+    result
+  }
+
+  def inferImplicitImpl(tree: Tree, pt: Type, reportAmbiguous: Boolean,
+    isView: Boolean, context: Context, saveAmbiguousDivergent: Boolean,
+    pos: Position)
+  : SearchResult = {
+    import typechecker.ImplicitsStats._
+    import reflect.internal.util.Statistics
+    val shouldPrint = printTypings && !context.undetparams.isEmpty
+    val rawTypeStart =
+      if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
+    val findMemberStart =
+      if (Statistics.canEnable) Statistics.startCounter(findMemberImpl)
+      else null
+    val subtypeStart =
+      if (Statistics.canEnable) Statistics.startCounter(subtypeImpl) else null
+    val start =
+      if (Statistics.canEnable) Statistics.startTimer(implicitNanos)
+      else null
+    val implicitSearchContext = context.makeImplicit(reportAmbiguous)
+    inferImplicitPre(shouldPrint, tree, pt, isView, context)
+    val result = search(tree, pt, isView, implicitSearchContext, pos)
+    inferImplicitPost(result, saveAmbiguousDivergent, context,
+      implicitSearchContext)
+    if (Statistics.canEnable) Statistics.stopTimer(implicitNanos, start)
+    if (Statistics.canEnable) Statistics.stopCounter(rawTypeImpl, rawTypeStart)
+    if (Statistics.canEnable)
+      Statistics.stopCounter(findMemberImpl, findMemberStart)
+    if (Statistics.canEnable) Statistics.stopCounter(subtypeImpl, subtypeStart)
+    result
+  }
+
+  override def inferImplicit(tree: Tree, pt: Type, r: Boolean, v: Boolean,
+    context: Context, s: Boolean, pos: Position): SearchResult = {
+      if (featureImplicits) inferImplicitImpl(tree, pt, r, v, context, s, pos)
+      else super.inferImplicit(tree, pt, r, v, context, s, pos)
+  }
+
+  abstract class ImplicitSearchImpl(tree: Tree, pt: Type, isView: Boolean,
+    context0: Context, pos0: Position = NoPosition)
+  extends ImplicitSearch(tree, pt, isView, context0, pos0)
+  {
+    override def failure(what: Any, reason: String, pos: Position = this.pos)
+    : SearchResult = {
+      val prev = implicitTypeStack.headOption.getOrElse(typeOf[Unit])
+      implicitErrors = ImpError(pt, what, reason, prev) :: implicitErrors
+      super.failure(what, reason, pos)
+    }
+
+    trait InferencerImpl
+    { self: Inferencer =>
+      import InferErrorGen._
+
+      override def checkBounds(tree: Tree, pre: Type, owner: Symbol,
+        tparams: List[Symbol], targs: List[Type], prefix: String): Boolean = {
+        def issueBoundsError() = {
+          notWithinBounds(tree, prefix, targs, tparams, Nil)
+          false
+        }
+        def issueKindBoundErrors(errs: List[String]) = {
+          KindBoundErrors(tree, prefix, targs, tparams, errs)
+          false
+        }
+        def check() = checkKindBounds(tparams, targs, pre, owner) match {
+          case Nil  =>
+            isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
+          case errs =>
+            (targs contains WildcardType) || issueKindBoundErrors(errs)
+        }
+        targs.exists(_.isErroneous) || tparams.exists(_.isErroneous) || check()
+      }
+
+      def notWithinBounds(tree: Tree, prefix: String, targs: List[Type],
+        tparams: List[Symbol], kindErrors: List[String]) = {
+          val params = bracket(tparams.map(_.defString))
+          val tpes = bracket(targs.map(formatInfix(_, true)))
+          val msg = s"nonconformant bounds;\n${tpes.red}\n${params.green}"
+          ErrorUtils.issueNormalTypeError(tree, msg)
+      }
+    }
+  }
+
+  def noImplicitError(tree: Tree, param: Symbol)
+  (implicit context: Context): Unit = {
+    val err = formatImplicitMessage(param, !nestedImplicit, implicitErrors)
+    ErrorUtils.issueNormalTypeError(tree, err)
+  }
+}
