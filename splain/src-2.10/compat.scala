@@ -157,3 +157,11 @@ extends ImplicitChains
     }
   }
 }
+
+class SplainPlugin(val global: Global)
+extends plugins.Plugin
+{ plugin =>
+  val name = "splain"
+  val description = "better types and implicit errors"
+  val components = Nil
+}
