@@ -4,6 +4,35 @@ import tools.nsc._
 
 import StringColor._
 
+sealed trait Formatted
+
+case class Infix(infix: Formatted, left: Formatted, right: Formatted,
+  top: Boolean)
+extends Formatted
+
+case class Simple(tpe: String)
+extends Formatted
+
+case object UnitForm
+extends Formatted
+
+case class Applied(cons: Formatted, args: List[Formatted])
+extends Formatted
+
+case class TupleForm(elems: List[Formatted])
+extends Formatted
+
+case class FunctionForm(args: List[Formatted], ret: Formatted, top: Boolean)
+extends Formatted
+
+object FunctionForm
+{
+  def fromArgs(args: List[Formatted], top: Boolean) = {
+    val (params, returnt) = args.splitAt(args.length - 1)
+    FunctionForm(params, returnt.headOption.getOrElse(UnitForm), top)
+  }
+}
+
 trait Formatting
 extends Compat
 { self: Analyzer =>
@@ -40,7 +69,7 @@ extends Compat
 
   def formatRefinement(sym: Symbol) = {
     if (sym.hasRawInfo) {
-      val rhs = formatInfix(sym.rawInfo, true)
+      val rhs = showFormatted(formatType(sym.rawInfo, true))
       s"$sym = $rhs"
     }
     else sym.toString
@@ -52,7 +81,8 @@ extends Compat
   def formatNormalSimple(tpe: Type) =
     tpe match {
     case RefinedType(parents, decls) =>
-      val simple = parents.map(formatInfix(_, true)).mkString(" with ")
+      val simple =
+        parents.map(a => showFormatted(formatType(a, true))).mkString(" with ")
       val refine = decls.map(formatRefinement).mkString("; ")
       s"$simple {$refine}"
     case a =>
@@ -84,56 +114,72 @@ extends Compat
     s"${formatTuple(params)} => ${formatTuple(returnt)}"
   }
 
+  def showFormatted(tpe: Formatted): String = tpe match {
+    case Simple(a) => a
+    case Applied(cons, args) =>
+      formatTypeApply(showFormatted(cons), args map showFormatted)
+    case Infix(infix, left, right, top) =>
+      val l = showFormatted(left)
+      val i = showFormatted(infix)
+      val r = showFormatted(right)
+      wrapParens(s"$l $i $r", top)
+    case UnitForm => "Unit"
+    case FunctionForm(args, ret, top) =>
+      val a = formatTuple(args map showFormatted)
+      val r = showFormatted(ret)
+      wrapParens(s"$a => $r", top)
+    case TupleForm(elems) => formatTuple(elems map showFormatted)
+  }
+
   def wrapParens(expr: String, top: Boolean) =
     if (top) expr else s"($expr)"
 
-  def formatType[A](tpe: Type, args: List[A], top: Boolean,
-    rec: A => Boolean => String): String = {
+  def formatInfix[A](tpe: Type, args: List[A], top: Boolean,
+    rec: A => Boolean => Formatted): Formatted = {
       val simple = formatSimpleType(tpe)
       def formattedArgs = args.map(rec(_)(true))
       if (simple.startsWith("Function"))
-        wrapParens(formatFunction(formattedArgs), top)
-      else if (simple.startsWith("Tuple")) formatTuple(formattedArgs)
+        FunctionForm.fromArgs(formattedArgs, top)
+      else if (simple.startsWith("Tuple")) TupleForm(formattedArgs)
       else args match {
         case left :: right :: Nil if isSymbolic(tpe) =>
           val l = rec(left)(false)
           val r = rec(right)(false)
-          val t = s"$l $simple $r"
-          wrapParens(t, top)
+          Infix(Simple(simple), l, r, top)
         case head :: tail =>
-          formatTypeApply(simple, formattedArgs)
+          Applied(Simple(simple), formattedArgs)
         case _ =>
-          simple
+          Simple(simple)
       }
   }
 
-  def formatInfix(tpe: Type, top: Boolean): String = {
+  def formatType(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
-    val rec = (tp: Type) => (t: Boolean) => formatInfix(tp, t)
-    if (featureInfix) formatType(dtpe, dtpe.typeArgs, top, rec)
-    else dtpe.toLongString
+    val rec = (tp: Type) => (t: Boolean) => formatType(tp, t)
+    if (featureInfix) formatInfix(dtpe, dtpe.typeArgs, top, rec)
+    else Simple(dtpe.toLongString)
   }
 
-  def formatDiff(found: Type, req: Type, top: Boolean): String = {
+  def formatDiff(found: Type, req: Type, top: Boolean): Formatted = {
     val (left, right) = dealias(found) -> dealias(req)
     if (left.typeSymbol == right.typeSymbol) {
       val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
       val recT = rec.tupled
       val args = left.typeArgs zip right.typeArgs
-      formatType(left, args, top, recT)
+      formatInfix(left, args, top, recT)
     }
     else {
-      val l = formatInfix(left, true)
-      val r = formatInfix(right, true)
-      s"${l.red}|${r.green}"
+      val l = formatType(left, true)
+      val r = formatType(right, true)
+      Simple(s"${showFormatted(l).red}|${showFormatted(r).green}")
     }
   }
 
   def formatNestedImplicit(err: ImpError): List[String] = {
     val candidate = err.cleanCandidate
-    val tpe = formatInfix(err.tpe, true)
+    val tpe = showFormatted(formatType(err.tpe, true))
     val extraInfo =
-      if (tpe == formatInfix(err.prev, true)) ""
+      if (tpe == showFormatted(formatType(err.prev, true))) ""
       else s" as ${tpe.green}"
     val problem = s"${candidate.red} invalid$extraInfo because"
     List(problem, err.cleanReason)
@@ -174,7 +220,7 @@ extends Compat
     val effTpe = effectiveImplicitType(tpe)
     def stack = formatNestedImplicits(errors)
     val paramName = formatImplicitParam(param)
-    val ptp = formatInfix(effTpe, true)
+    val ptp = showFormatted(formatType(effTpe, true))
     val nl = if (showStack && errors.nonEmpty) "\n" else ""
     val ex = if(showStack) stack.mkString("\n") else ""
     val pre = if (showStack) "implicit error;\n" else ""
@@ -193,12 +239,14 @@ with Formatting
   def featureFoundReq: Boolean
 
   def foundReqMsgShort(found: Type, req: Type): String =
-    formatDiff(found, req, true)
+    showFormatted(formatDiff(found, req, true))
 
+  // FIXME not used, needs feature
   def foundReqMsgNormal(found: Type, req: Type): String = {
-    withDisambiguation(Nil, found, req)(formatDiff(found, req, true)) +
-    explainVariance(found, req) +
-    explainAnyVsAnyRef(found, req)
+    withDisambiguation(Nil, found, req)(
+      showFormatted(formatDiff(found, req, true))) +
+        explainVariance(found, req) +
+        explainAnyVsAnyRef(found, req)
   }
 
   override def foundReqMsg(found: Type, req: Type): String =
