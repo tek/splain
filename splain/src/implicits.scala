@@ -145,8 +145,7 @@ with Formatting
       def notWithinBounds(tree: Tree, prefix: String, targs: List[Type],
         tparams: List[Symbol], kindErrors: List[String]) = {
           val params = bracket(tparams.map(_.defString))
-          val tpes =
-            bracket(targs.map(a => showFormatted(formatType(a, true))))
+          val tpes = bracket(targs map showType)
           val msg = s"nonconformant bounds;\n${tpes.red}\n${params.green}"
           ErrorUtils.issueNormalTypeError(tree, msg)
       }

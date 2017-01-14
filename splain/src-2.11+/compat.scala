@@ -1,7 +1,6 @@
 package splain
 
 import tools.nsc._
-import collection.mutable
 
 object OptionOps
 {
@@ -67,7 +66,7 @@ extends ImplicitChains
 }
 
 class SplainPlugin(val global: Global)
-extends plugins.Plugin
+extends Plugin
 { plugin =>
   val analyzer =
     new { val global = plugin.global } with Analyzer {
@@ -76,6 +75,7 @@ extends plugins.Plugin
       def featureInfix = boolean(keyInfix)
       def featureBounds = boolean(keyBounds)
       def featureColor = boolean(keyColor)
+      def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
@@ -84,14 +84,16 @@ extends plugins.Plugin
 
   val phasesSetMapGetter = classOf[Global]
     .getDeclaredMethod("phasesSet")
+
   val phasesSet = phasesSetMapGetter
     .invoke(global)
     .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
+
   if (phasesSet.exists(_.phaseName == "typer")) {
-  def subcomponentNamed(name: String) =
-    phasesSet
-      .find(_.phaseName == name)
-      .head
+    def subcomponentNamed(name: String) =
+      phasesSet
+        .find(_.phaseName == name)
+        .head
     val oldScs @ List(oldNamer, oldPackageobjects, oldTyper) =
       List(subcomponentNamed("namer"),
         subcomponentNamed("packageobjects"),
@@ -102,45 +104,4 @@ extends plugins.Plugin
     phasesSet --= oldScs
     phasesSet ++= newScs
   }
-
-  override def processOptions(options: List[String], error: String => Unit) = {
-    def invalid(opt: String) = error(s"splain: invalid option `$opt`")
-    def setopt(key: String, value: String) = {
-      if (opts.contains(key)) opts.update(key, value)
-      else invalid(key)
-    }
-    options foreach { opt =>
-      opt.split(":").toList match {
-        case key :: value :: Nil => setopt(key, value)
-        case key :: Nil => setopt(key, "true")
-        case _ => invalid(opt)
-      }
-    }
-  }
-
-  val name = "splain"
-  val description = "better types and implicit errors"
-  val components = Nil
-
-  val keyAll = "all"
-  val keyImplicits = "implicits"
-  val keyFoundReq = "foundreq"
-  val keyInfix = "infix"
-  val keyBounds = "bounds"
-  val keyColor = "color"
-
-  val opts: mutable.Map[String, String] = mutable.Map(
-    keyAll -> "true",
-    keyImplicits -> "true",
-    keyFoundReq -> "true",
-    keyInfix -> "true",
-    keyBounds -> "false",
-    keyColor -> "true"
-  )
-
-  def opt(key: String, default: String) = opts.getOrElse(key, default)
-
-  def enabled = opt("all", "true") == "true"
-
-  def boolean(key: String) = enabled && opt(key, "true") == "true"
 }

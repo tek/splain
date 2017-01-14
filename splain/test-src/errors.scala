@@ -59,7 +59,7 @@ extends Specification
   def compileError(name: String, extra: String) = {
     val tb = toolbox(extra)
     Try(tb.eval(tb.parse(code(name)))) match {
-      case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).map(_.trim)
+      case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2)
       case a => sys.error(s"invalid error: $a")
     }
   }
@@ -79,5 +79,6 @@ extends SpecBase
   nonconformant bounds ${checkError("bounds")}
   aux type ${checkError("aux")}
   shapeless Lazy ${checkError("lazy")}
+  linebreak long infix types ${checkError("break", "-P:splain:breakinfix:20")}
   """
 }

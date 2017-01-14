@@ -1,2 +1,2 @@
 type mismatch;
-C *** D {type X = C}|C *** D {type X = D}
+  C *** D {type X = C}|C *** D {type X = D}

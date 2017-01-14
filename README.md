@@ -6,7 +6,7 @@ additional info for implicit resolution errors.
 
 ```sbt
 resolvers += Resolver.bintrayRepo("tek", "maven")
-addCompilerPlugin("tryp" %% "splain" % "0.1.14")
+addCompilerPlugin("tryp" %% "splain" % "0.1.15")
 ```
 
 # Configuration
@@ -21,6 +21,7 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `implicits`
 * `bounds` (default off)
 * `color`
+* `breakinfix` (default 0)
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -71,4 +72,34 @@ parameter impPar1: D *** ((C >:< C) *** (D => Unit))
 parameter e: (C *** D) >:< C with D {type A = D; type B = C}
 [error]   implicitly[T1]
 
+```
+
+# infix type and type argument line breaking
+If the parameter `breakinfix` is given and greater than 0, types longer than
+that number will be split into multiple lines:
+```
+implicit error;
+!I e: String
+f invalid because
+!I impPar4: List[
+  (
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName
+  )
+  ::::
+  (Short :::: Short) ::::
+  (
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName
+  )
+  ::::
+  VeryLongTypeName ::::
+  VeryLongTypeName ::::
+  VeryLongTypeName ::::
+  VeryLongTypeName
+]
 ```

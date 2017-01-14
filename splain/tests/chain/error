@@ -1,6 +1,16 @@
 implicit error;
 !I e: (C *** D) >:< C with D {type A = D; type B = C}
 g invalid because
-!I impPar1: D *** ((C >:< C) *** (D => Unit))
+!I impPar1: D *** (C >:< C) *** (D => Unit)
 f invalid because
-!I impPar2: (D *** (C *** String)) >:< ((C,D,C) *** D)
+!I impPar2: (D *** C *** String) >:< (C,D,C) *** D
+t3a invalid because
+!I impPar11: (D >:< C) >:< D
+t7 invalid because
+!I impPar14: D >:< C
+t3b invalid because
+!I impPar10: (C *** D) *** C
+t4 invalid because
+!I impPar12: (D *** C) >:< D
+t5 invalid because
+!I impPar13: C >:< D
