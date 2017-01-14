@@ -47,8 +47,8 @@ import types._
 
   val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds"
 
-  val tb =
-    ToolBox(cm).mkToolBox(options = opts)
+  def toolbox(extra: String) =
+    ToolBox(cm).mkToolBox(options = s"$opts $extra")
 }
 
 trait SpecBase
@@ -56,13 +56,16 @@ extends Specification
 {
   import Helpers._
 
-  def compileError(name: String) =
+  def compileError(name: String, extra: String) = {
+    val tb = toolbox(extra)
     Try(tb.eval(tb.parse(code(name)))) match {
       case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).map(_.trim)
       case a => sys.error(s"invalid error: $a")
     }
+  }
 
-  def checkError(name: String) = compileError(name) must_== error(name)
+  def checkError(name: String, extra: String = "") =
+    compileError(name, extra) must_== error(name)
 }
 
 class BasicSpec
