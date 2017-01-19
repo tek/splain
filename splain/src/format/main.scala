@@ -4,32 +4,102 @@ import tools.nsc._
 
 import StringColor._
 
-trait TypeRepr
-{
-  def broken: Boolean
-  def flat: String
-  def lines: List[String]
-  def tokenize = lines mkString " "
-  def joinLines = lines mkString "\n"
-}
+trait Formatters
+{ self: Analyzer =>
+  import global._
 
-case class BrokenType(lines: List[String])
-extends TypeRepr
-{
-  def broken = true
-  def flat = lines mkString " "
-}
+  def formatType(tpe: Type, top: Boolean): Formatted
 
-case class FlatType(flat: String)
-extends TypeRepr
-{
-  def broken = false
-  def length = flat.length
-  def lines = List(flat)
+  trait SpecialFormatter
+  {
+    def apply[A](tpe: Type, simple: String, args: List[A],
+      formattedArgs: List[Formatted], top: Boolean,
+      rec: A => Boolean => Formatted): Option[Formatted]
+  }
+
+  object FunctionFormatter
+  extends SpecialFormatter
+  {
+    def apply[A](tpe: Type, simple: String, args: List[A],
+      formattedArgs: List[Formatted], top: Boolean,
+      rec: A => Boolean => Formatted) = {
+        if (simple.startsWith("Function"))
+          Some(FunctionForm.fromArgs(formattedArgs, top))
+        else None
+    }
+  }
+
+  object TupleFormatter
+  extends SpecialFormatter
+  {
+    def apply[A](tpe: Type, simple: String, args: List[A],
+      formattedArgs: List[Formatted], top: Boolean,
+      rec: A => Boolean => Formatted) = {
+        if (simple.startsWith("Tuple"))
+          Some(TupleForm(formattedArgs))
+        else None
+    }
+  }
+
+  object SLRecordItemFormatter
+  extends SpecialFormatter
+  {
+    def keyTagName = "shapeless.labelled.KeyTag"
+
+    def taggedName = "shapeless.tag.Tagged"
+
+    def isKeyTag(tpe: Type) = tpe.typeSymbol.fullName == keyTagName
+
+    def isTagged(tpe: Type) = tpe.typeSymbol.fullName == taggedName
+
+    object extractStringConstant
+    {
+      def unapply(tpe: Type) = tpe match {
+        case ConstantType(Constant(a: String)) => Some(a)
+        case _ => None
+      }
+    }
+
+    def formatConstant(tag: String): PartialFunction[Type, String] = {
+      case a if a == typeOf[scala.Symbol] =>
+        s"'$tag"
+    }
+
+    def formatKeyArg: PartialFunction[List[Type], Option[Formatted]] = {
+      case RefinedType(parents, _) :: _ :: Nil =>
+        for {
+          main <- parents.headOption
+          tagged <- parents.find(isTagged)
+          headArg <- tagged.typeArgs.headOption
+          tag <- extractStringConstant.unapply(headArg)
+          repr <- formatConstant(tag).lift(main)
+        } yield Simple(repr)
+      case extractStringConstant(tag) :: _ :: Nil =>
+        Some(Simple(s""""$tag""""))
+      case tag :: _ :: Nil =>
+        Some(formatType(tag, true))
+    }
+
+    def formatKey(tpe: Type): Formatted = {
+      formatKeyArg.lift(tpe.typeArgs).flatten getOrElse formatType(tpe, true)
+    }
+
+    def apply[A](tpe: Type, simple: String, args: List[A],
+      formattedArgs: List[Formatted], top: Boolean,
+      rec: A => Boolean => Formatted) = {
+        tpe match {
+          case RefinedType(actual :: key :: Nil, _) if isKeyTag(key) =>
+            Some(SLRecordItem(formatKey(key), formatType(actual, true)))
+          case _ =>
+            None
+        }
+    }
+}
 }
 
 trait Formatting
 extends Compat
+with Formatters
 { self: Analyzer =>
   import global._
 
@@ -86,7 +156,7 @@ extends Compat
       else name
   }
 
-  def formatSimpleType(tpe: Type) = {
+  def formatSimpleType(tpe: Type): String = {
     if (isAux(tpe)) formatAuxSimple(tpe)
     else formatNormalSimple(tpe)
   }
@@ -98,7 +168,7 @@ extends Compat
    * lines for the constructor name and the closing bracket; else return a
    * single line.
    */
-  def formatTypeApply
+  def showTypeApply
   (cons: String, args: List[TypeRepr], break: Boolean)
   : TypeRepr = {
     val flatArgs = bracket(args map (_.flat))
@@ -112,17 +182,22 @@ extends Compat
     if (break) decideBreak(flat, broken) else flat
   }
 
-  def formatTuple(args: List[String]) =
+  def showTuple(args: List[String]) =
     args match {
       case head :: Nil => head
       case _ => args.mkString("(", ",", ")")
     }
 
+  def showSLRecordItem(key: Formatted, value: Formatted) = {
+    FlatType(
+      s"(${showFormattedNoBreak(key)} ->> ${showFormattedNoBreak(value)})")
+  }
+
   def bracket[A](params: List[A]) = params.mkString("[", ", ", "]")
 
   def formatFunction(args: List[String]) = {
     val (params, returnt) = args.splitAt(args.length - 1)
-    s"${formatTuple(params)} => ${formatTuple(returnt)}"
+    s"${showTuple(params)} => ${showTuple(returnt)}"
   }
 
   def decideBreak
@@ -180,7 +255,7 @@ extends Compat
       case Simple(a) => FlatType(a)
       case Applied(cons, args) =>
         val reprs = args map (showFormattedL(_, break))
-        formatTypeApply(showFormattedNoBreak(cons), reprs, break)
+        showTypeApply(showFormattedNoBreak(cons), reprs, break)
       case tpe @ Infix(infix, left, right, top) =>
         val flat = flattenInfix(tpe)
         val broken: TypeRepr =
@@ -189,11 +264,13 @@ extends Compat
         wrapParensRepr(broken, top)
       case UnitForm => FlatType("Unit")
       case FunctionForm(args, ret, top) =>
-        val a = formatTuple(args map showFormattedNoBreak)
+        val a = showTuple(args map showFormattedNoBreak)
         val r = showFormattedNoBreak(ret)
         FlatType(wrapParens(s"$a => $r", top))
       case TupleForm(elems) =>
-        FlatType(formatTuple(elems map showFormattedNoBreak))
+        FlatType(showTuple(elems map showFormattedNoBreak))
+      case SLRecordItem(key, value) =>
+        showSLRecordItem(key, value)
     }
 
   def showFormattedLBreak(tpe: Formatted) = showFormattedL(tpe, true)
@@ -221,23 +298,38 @@ extends Compat
     }
   }
 
+  val specialFormatters: List[SpecialFormatter] =
+    List(
+      FunctionFormatter,
+      TupleFormatter,
+      SLRecordItemFormatter
+    )
+
+  def formatSpecial[A](tpe: Type, simple: String, args: List[A],
+    formattedArgs: List[Formatted], top: Boolean,
+    rec: A => Boolean => Formatted)
+  : Option[Formatted] = {
+    specialFormatters
+      .map(_.apply(tpe, simple, args, formattedArgs, top, rec))
+      .collectFirst { case Some(a) => a }
+      .headOption
+  }
+
   def formatInfix[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => Formatted): Formatted = {
       val simple = formatSimpleType(tpe)
       def formattedArgs = args.map(rec(_)(true))
-      if (simple.startsWith("Function"))
-        FunctionForm.fromArgs(formattedArgs, top)
-      else if (simple.startsWith("Tuple"))
-        TupleForm(formattedArgs)
-      else args match {
-        case left :: right :: Nil if isSymbolic(tpe) =>
-          val l = rec(left)(false)
-          val r = rec(right)(false)
-          Infix(Simple(simple), l, r, top)
-        case head :: tail =>
-          Applied(Simple(simple), formattedArgs)
-        case _ =>
-          Simple(simple)
+      formatSpecial(tpe, simple, args, formattedArgs, top, rec) getOrElse {
+        args match {
+          case left :: right :: Nil if isSymbolic(tpe) =>
+            val l = rec(left)(false)
+            val r = rec(right)(false)
+            Infix(Simple(simple), l, r, top)
+          case head :: tail =>
+            Applied(Simple(simple), formattedArgs)
+          case _ =>
+            Simple(simple)
+        }
       }
   }
 
@@ -250,7 +342,8 @@ extends Compat
 
   def formatDiff(found: Type, req: Type, top: Boolean): Formatted = {
     val (left, right) = dealias(found) -> dealias(req)
-    if (left.typeSymbol == right.typeSymbol) {
+    if (left =:= right) formatType(left, top)
+    else if (left.typeSymbol == right.typeSymbol) {
       val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
       val recT = rec.tupled
       val args = left.typeArgs zip right.typeArgs

@@ -49,3 +49,33 @@ object FunctionForm
     FunctionForm(params, returnt.headOption.getOrElse(UnitForm), top)
   }
 }
+
+case class SLRecordItem(key: Formatted, value: Formatted)
+extends Formatted
+{
+  def length = 0
+}
+
+trait TypeRepr
+{
+  def broken: Boolean
+  def flat: String
+  def lines: List[String]
+  def tokenize = lines mkString " "
+  def joinLines = lines mkString "\n"
+}
+
+case class BrokenType(lines: List[String])
+extends TypeRepr
+{
+  def broken = true
+  def flat = lines mkString " "
+}
+
+case class FlatType(flat: String)
+extends TypeRepr
+{
+  def broken = false
+  def length = flat.length
+  def lines = List(flat)
+}

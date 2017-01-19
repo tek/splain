@@ -39,7 +39,7 @@ import types._
 
   def code(name: String) = types + fileContentString(name, "code.scala")
 
-  def error(name: String) = fileContentList(name, "error")
+  def error(name: String) = fileContentString(name, "error").stripLineEnd
 
   val cm = universe.runtimeMirror(getClass.getClassLoader)
 
@@ -59,7 +59,7 @@ extends Specification
   def compileError(name: String, extra: String) = {
     val tb = toolbox(extra)
     Try(tb.eval(tb.parse(code(name)))) match {
-      case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2)
+      case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).mkString("\n")
       case a => sys.error(s"invalid error: $a")
     }
   }
@@ -80,5 +80,6 @@ extends SpecBase
   aux type ${checkError("aux")}
   shapeless Lazy ${checkError("lazy")}
   linebreak long infix types ${checkError("break", "-P:splain:breakinfix:20")}
+  shapeless Record ${checkError("record")}
   """
 }

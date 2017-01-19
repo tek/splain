@@ -1,0 +1,2 @@
+type mismatch;
+  ('sym ->> String) :: ("str" ->> Value.type) :: (Key.type ->> Long)|(Key.type ->> Int) :: HNil
