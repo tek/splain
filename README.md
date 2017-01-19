@@ -42,6 +42,9 @@ Rather than printing up to four types, only the dealiased types are shown as a
 colored diff:
 ![foundreq](img/foundreq.jpg)
 
+special consideration for `shapeless.Record`:
+![foundreq_record](img/foundreq_record.jpg)
+
 # implicit resolution chains
 When an implicit is not found, only the outermost error at the invocation point
 is printed. This can be expanded with the compiler flag `-Xlog-implicits`, but
