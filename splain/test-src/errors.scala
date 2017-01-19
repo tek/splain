@@ -66,6 +66,9 @@ extends Specification
 
   def checkError(name: String, extra: String = "") =
     compileError(name, extra) must_== error(name)
+
+  def checkErrorWithBreak(name: String) =
+    checkError(name, "-P:splain:breakinfix:20")
 }
 
 class BasicSpec
@@ -79,7 +82,7 @@ extends SpecBase
   nonconformant bounds ${checkError("bounds")}
   aux type ${checkError("aux")}
   shapeless Lazy ${checkError("lazy")}
-  linebreak long infix types ${checkError("break", "-P:splain:breakinfix:20")}
-  shapeless Record ${checkError("record")}
+  linebreak long infix types ${checkErrorWithBreak("break")}
+  shapeless Record ${checkErrorWithBreak("record")}
   """
 }

@@ -13,7 +13,7 @@ with Formatting
   def featureFoundReq: Boolean
 
   def foundReqMsgShort(found: Type, req: Type): String =
-    showFormattedNoBreak(formatDiff(found, req, true))
+    showFormatted(formatDiff(found, req, true), true)
 
   // FIXME not used, needs feature
   def foundReqMsgNormal(found: Type, req: Type): String = {
