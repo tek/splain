@@ -63,6 +63,10 @@ extends ImplicitChains
     if (featureImplicits) noImplicitError(tree, param)
     else super.NoImplicitFoundError(tree, param)
   }
+
+  def nativeNoImplicitFoundError(tree: Tree, param: Symbol)
+  (implicit context: Context) =
+    super.NoImplicitFoundError(tree, param)
 }
 
 class SplainPlugin(val global: Global)

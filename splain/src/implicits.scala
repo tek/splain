@@ -169,7 +169,10 @@ with Formatting
         .headOption
         .map(ImpError(_, tree, param))
         .foreach(err => implicitErrors = err :: implicitErrors)
-      super.NoImplicitFoundError(tree, param)
+      nativeNoImplicitFoundError(tree, param)
     }
   }
+
+  def nativeNoImplicitFoundError(tree: Tree, param: Symbol)
+  (implicit context: Context): Unit
 }
