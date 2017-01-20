@@ -16,41 +16,47 @@ with Formatting
 
   val candidateRegex = """.*\.this\.(.*)""".r
 
-  case class ImpError(tpe: Type, candidate: Any, reason: String, prev: Type)
+  trait ImpFailReason
   {
-    def candidateName = candidate match {
-      case Select(_, name) => name
-      case Ident(name) => name
+    def tpe: Type
+    def candidate: Tree
+
+    lazy val unapplyCandidate = candidate match {
+      case TypeApply(name, _) => name
       case a => a
     }
 
-    lazy val cleanCandidate =
-      candidate.toString match {
+    def candidateName = unapplyCandidate match {
+      case Select(_, name) => name.toString
+      case Ident(name) => name.toString
+      case a => a.toString
+    }
+
+    lazy val cleanCandidate = {
+      unapplyCandidate.toString match {
         case candidateRegex(suf) => suf
         case a => a
       }
+    }
 
     override def equals(other: Any) = other match {
-      case o @ ImpError(t, _, _, _) =>
-        t == tpe && candidateName == o.candidateName
+      case o: ImpFailReason =>
+        o.tpe == tpe && candidateName == o.candidateName
       case _ => false
     }
 
     override def hashCode = tpe.hashCode
-
-    lazy val cleanReason = {
-      val clean = reason
-        .stripPrefix(Messages.typingTypeApply)
-        .stripPrefix(Messages.hasMatching)
-      if (cleanCandidate == "Lazy.mkLazy" &&
-        clean.startsWith("Unable to derive"))
-          "Unable to derive lazy implicit"
-      else clean
-    }
   }
 
+  case class ImpError(tpe: Type, candidate: Tree, param: Symbol)
+  extends ImpFailReason
+
+  case class NonConfBounds
+  (tpe: Type, candidate: Tree, targs: List[Type], tparams: List[Symbol])
+  extends ImpFailReason
+
   var implicitTypeStack = List[Type]()
-  var implicitErrors = List[ImpError]()
+  var implicitErrors = List[ImpFailReason]()
 
   def nestedImplicit = implicitTypeStack.nonEmpty
 
@@ -66,7 +72,8 @@ with Formatting
     if (!nestedImplicit) implicitErrors = List()
     implicitTypeStack = pt :: implicitTypeStack
     val result =
-      new ImplicitSearchCompat(tree, pt, isView, context, pos).bestImplicit
+      new ImplicitSearchCompat(tree, pt, isView, context, pos)
+        .bestImplicit
     if (result.isSuccess) removeErrorsFor(pt)
     implicitTypeStack = implicitTypeStack.drop(1)
     result
@@ -112,17 +119,14 @@ with Formatting
     context0: Context, pos0: Position = NoPosition)
   extends ImplicitSearch(tree, pt, isView, context0, pos0)
   {
-    override def failure(what: Any, reason: String, pos: Position = this.pos)
-    : SearchResult = {
-      val prev = implicitTypeStack.headOption.getOrElse(typeOf[Unit])
-      implicitErrors = ImpError(pt, what, reason, prev) :: implicitErrors
-      super.failure(what, reason, pos)
-    }
-
     trait InferencerImpl
     { self: Inferencer =>
       import InferErrorGen._
 
+      /**
+       * Duplication of the original method, because the error is created
+       * within.
+       */
       override def checkBounds(tree: Tree, pre: Type, owner: Symbol,
         tparams: List[Symbol], targs: List[Type], prefix: String): Boolean = {
         def issueBoundsError() = {
@@ -147,6 +151,8 @@ with Formatting
           val params = bracket(tparams.map(_.defString))
           val tpes = bracket(targs map showType)
           val msg = s"nonconformant bounds;\n${tpes.red}\n${params.green}"
+          val err = NonConfBounds(pt, tree, targs, tparams)
+          implicitErrors = err :: implicitErrors
           ErrorUtils.issueNormalTypeError(tree, msg)
       }
     }
@@ -154,7 +160,16 @@ with Formatting
 
   def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
-    val err = formatImplicitMessage(param, !nestedImplicit, implicitErrors)
-    ErrorUtils.issueNormalTypeError(tree, err)
+    if (!nestedImplicit) {
+      val err = formatImplicitError(param, implicitErrors)
+      ErrorUtils.issueNormalTypeError(tree, err)
+    }
+    else {
+      implicitTypeStack
+        .headOption
+        .map(ImpError(_, tree, param))
+        .foreach(err => implicitErrors = err :: implicitErrors)
+      super.NoImplicitFoundError(tree, param)
+    }
   }
 }

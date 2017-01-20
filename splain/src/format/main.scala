@@ -356,23 +356,34 @@ with Formatters
     }
   }
 
-  def formatNestedImplicit(err: ImpError): List[String] = {
+  def formatNonConfBounds(err: NonConfBounds) = {
+    val params = bracket(err.tparams.map(_.defString))
+    val tpes = bracket(err.targs map showType)
+    s"nonconformant bounds;\n${tpes.red}\n${params.green}"
+  }
+
+  def formatNestedImplicit(err: ImpFailReason): List[String] = {
     val candidate = err.cleanCandidate
-    val tpe = showType(err.tpe)
-    val extraInfo =
-      if (tpe == showType(err.prev)) ""
-      else s" as ${tpe.green}"
-    val problem = s"${candidate.red} invalid$extraInfo because"
-    List(problem, err.cleanReason)
+    val problem = s"${candidate.red} invalid because"
+    val reason = err match {
+      case e: ImpError => implicitMessage(e.param)
+      case e: NonConfBounds => formatNonConfBounds(e)
+    }
+    List(problem, reason)
   }
 
-  def hideImpError(error: ImpError) = {
+  def hideImpError(error: ImpFailReason) =
     error.candidateName.toString == "mkLazy"
-  }
 
-  def formatNestedImplicits(errors: List[ImpError]) = {
+  /**
+   * Remove duplicates and special cases that should not be shown.
+   * In some cases, candidates are reported twice, once as `Foo.f` and once as
+   * `f`. [[ImpFailReason.equals]] checks the simple names for identity, which
+   * is suboptimal, but works for 99% of cases.
+   * Special cases are handled in [[hideImpError]]
+   */
+  def formatNestedImplicits(errors: List[ImpFailReason]) =
     errors.distinct filterNot hideImpError flatMap formatNestedImplicit
-  }
 
   def formatImplicitParam(sym: Symbol) = sym.name.toString
 
@@ -387,8 +398,7 @@ with Formatters
     else tpe
   }
 
-  def formatImplicitMessage
-  (param: Symbol, showStack: Boolean, errors: List[ImpError]) = {
+  def implicitMessage(param: Symbol) = {
     val tpe = param.tpe
     val msg = tpe.typeSymbolDirect match {
       case ImplicitNotFoundMsg(msg) =>
@@ -398,14 +408,19 @@ with Formatters
       case _ => ""
     }
     val effTpe = effectiveImplicitType(tpe)
-    def stack = formatNestedImplicits(errors)
     val paramName = formatImplicitParam(param)
     val ptp = showTypeBreak(effTpe)
-    val nl = if (showStack && errors.nonEmpty) "\n" else ""
-    val ex = if(showStack) stack.mkString("\n") else ""
-    val pre = if (showStack) "implicit error;\n" else ""
     val bang = "!"
     val i = "I"
-    s"${pre}${bang.red}${i.blue} ${paramName.yellow}$msg: ${ptp.green}$nl$ex"
+    s"${bang.red}${i.blue} ${paramName.yellow}$msg: ${ptp.green}"
+  }
+
+  def formatImplicitError(param: Symbol, errors: List[ImpFailReason]) = {
+    val stack = formatNestedImplicits(errors)
+    val nl = if (errors.nonEmpty) "\n" else ""
+    val ex = stack.mkString("\n")
+    val pre = "implicit error;\n"
+    val msg = implicitMessage(param)
+    s"$pre$msg$nl$ex"
   }
 }
