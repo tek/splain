@@ -53,7 +53,13 @@ object FunctionForm
 case class SLRecordItem(key: Formatted, value: Formatted)
 extends Formatted
 {
-  def length = 0
+  def length = key.length + value.length + 5
+}
+
+case class Diff(left: Formatted, right: Formatted)
+extends Formatted
+{
+  def length = left.length + right.length + 1
 }
 
 trait TypeRepr

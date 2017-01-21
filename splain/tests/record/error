@@ -1,5 +1,5 @@
 type mismatch;
-  ('sym ->> String) ::
+('sym ->> String) ::
 ("str" ->> Value.type) ::
-(Key.type ->> Long)|(Key.type ->> Int) ::
+(Key.type ->> Long|Int) ::
 HNil

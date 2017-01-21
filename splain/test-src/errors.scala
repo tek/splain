@@ -71,8 +71,8 @@ extends Specification
   def checkError(name: String, extra: String = "") =
     compileError(name, extra) must_== error(name)
 
-  def checkErrorWithBreak(name: String) =
-    checkError(name, "-P:splain:breakinfix:20")
+  def checkErrorWithBreak(name: String, length: Int = 20) =
+    checkError(name, s"-P:splain:breakinfix:$length")
 }
 
 class BasicSpec
@@ -87,6 +87,6 @@ extends SpecBase
   aux type ${checkError("aux")}
   shapeless Lazy ${checkError("lazy")}
   linebreak long infix types ${checkErrorWithBreak("break")}
-  shapeless Record ${checkErrorWithBreak("record")}
+  shapeless Record ${checkErrorWithBreak("record", 30)}
   """
 }

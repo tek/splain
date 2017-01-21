@@ -29,32 +29,38 @@ trait Formatters
   trait SpecialFormatter
   {
     def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: List[Formatted], top: Boolean,
+      formattedArgs: => List[Formatted], top: Boolean,
       rec: A => Boolean => Formatted): Option[Formatted]
+
+    def diff(left: Type, right: Type, top: Boolean): Option[Formatted]
   }
 
   object FunctionFormatter
   extends SpecialFormatter
   {
     def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: List[Formatted], top: Boolean,
+      formattedArgs: => List[Formatted], top: Boolean,
       rec: A => Boolean => Formatted) = {
         if (simple.startsWith("Function"))
           Some(FunctionForm.fromArgs(formattedArgs, top))
         else None
     }
+
+    def diff(left: Type, right: Type, top: Boolean) = None
   }
 
   object TupleFormatter
   extends SpecialFormatter
   {
     def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: List[Formatted], top: Boolean,
+      formattedArgs: => List[Formatted], top: Boolean,
       rec: A => Boolean => Formatted) = {
         if (simple.startsWith("Tuple"))
           Some(TupleForm(formattedArgs))
         else None
     }
+
+    def diff(left: Type, right: Type, top: Boolean) = None
   }
 
   object SLRecordItemFormatter
@@ -67,6 +73,15 @@ trait Formatters
     def isKeyTag(tpe: Type) = tpe.typeSymbol.fullName == keyTagName
 
     def isTagged(tpe: Type) = tpe.typeSymbol.fullName == taggedName
+
+    object extractRecord
+    {
+      def unapply(tpe: Type) = tpe match {
+        case RefinedType(actual :: key :: Nil, _) if isKeyTag(key) =>
+          Some((actual, key))
+        case _ => None
+      }
+    }
 
     object extractStringConstant
     {
@@ -100,15 +115,31 @@ trait Formatters
       formatKeyArg.lift(tpe.typeArgs).flatten getOrElse formatType(tpe, true)
     }
 
+    def recordItem(actual: Type, key: Type) =
+      SLRecordItem(formatKey(key), formatType(actual, true))
+
     def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: List[Formatted], top: Boolean,
+      formattedArgs: => List[Formatted], top: Boolean,
       rec: A => Boolean => Formatted) = {
         tpe match {
-          case RefinedType(actual :: key :: Nil, _) if isKeyTag(key) =>
-            Some(SLRecordItem(formatKey(key), formatType(actual, true)))
+          case extractRecord(actual, key) =>
+            Some(recordItem(actual, key))
           case _ =>
             None
         }
+    }
+
+    def diff(left: Type, right: Type, top: Boolean) = {
+      (left -> right) match {
+        case (extractRecord(a1, k1), extractRecord(a2, k2)) =>
+          val  rec = (l: Formatted, r: Formatted) => (t: Boolean) =>
+            if (l == r) l else Diff(l, r)
+          val recT = rec.tupled
+          val left = formatKey(k1) -> formatKey(k2)
+          val right = formatType(a1, true) -> formatType(a2, true)
+          Some(formatInfix("->>", left, right, top, recT))
+        case _ => None
+      }
     }
   }
 }
@@ -289,6 +320,10 @@ with Formatters
         FlatType(showTuple(elems map showFormattedNoBreak))
       case SLRecordItem(key, value) =>
         showSLRecordItem(key, value)
+      case Diff(left, right) =>
+        val l = showFormattedNoBreak(left)
+        val r = showFormattedNoBreak(right)
+        FlatType(s"${l.red}|${r.green}")
     }
 
   def showFormattedL(tpe: Formatted, break: Boolean): TypeRepr = {
@@ -300,12 +335,8 @@ with Formatters
 
   def showFormattedLNoBreak(tpe: Formatted) = showFormattedL(tpe, false)
 
-  val showFormattedCache = FormatCache[(Formatted, Boolean), String]
-
-  def showFormatted(tpe: Formatted, break: Boolean): String = {
-    val key = (tpe, break)
-    showFormattedCache(key, showFormattedL(tpe, break).joinLines)
-  }
+  def showFormatted(tpe: Formatted, break: Boolean): String =
+    showFormattedL(tpe, break).joinLines
 
   def showFormattedNoBreak(tpe: Formatted) =
     showFormattedLNoBreak(tpe).tokenize
@@ -333,7 +364,7 @@ with Formatters
     )
 
   def formatSpecial[A](tpe: Type, simple: String, args: List[A],
-    formattedArgs: List[Formatted], top: Boolean,
+    formattedArgs: => List[Formatted], top: Boolean,
     rec: A => Boolean => Formatted)
   : Option[Formatted] = {
     specialFormatters
@@ -342,16 +373,21 @@ with Formatters
       .headOption
   }
 
-  def formatInfix[A](tpe: Type, args: List[A], top: Boolean,
+  def formatInfix[A](simple: String, left: A, right: A, top: Boolean,
+    rec: A => Boolean => Formatted) = {
+      val l = rec(left)(false)
+      val r = rec(right)(false)
+      Infix(Simple(simple), l, r, top)
+  }
+
+  def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => Formatted): Formatted = {
       val simple = formatSimpleType(tpe)
-      val formattedArgs = args.map(rec(_)(true))
+      lazy val formattedArgs = args.map(rec(_)(true))
       formatSpecial(tpe, simple, args, formattedArgs, top, rec) getOrElse {
         args match {
           case left :: right :: Nil if isSymbolic(tpe) =>
-            val l = rec(left)(false)
-            val r = rec(right)(false)
-            Infix(Simple(simple), l, r, top)
+            formatInfix(simple, left, right, top, rec)
           case head :: tail =>
             Applied(Simple(simple), formattedArgs)
           case _ =>
@@ -363,7 +399,7 @@ with Formatters
   def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
     val rec = (tp: Type) => (t: Boolean) => formatType(tp, t)
-    if (featureInfix) formatInfix(dtpe, dtpe.typeArgs, top, rec)
+    if (featureInfix) formatWithInfix(dtpe, dtpe.typeArgs, top, rec)
     else Simple(dtpe.toLongString)
   }
 
@@ -378,19 +414,30 @@ with Formatters
     val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
     val recT = rec.tupled
     val args = left.typeArgs zip right.typeArgs
-    formatInfix(left, args, top, recT)
+    formatWithInfix(left, args, top, recT)
+  }
+
+  def formatDiffSpecial(left: Type, right: Type, top: Boolean) = {
+    specialFormatters.map(_.diff(left, right, top))
+      .collectFirst { case Some(a) => a }
+      .headOption
+  }
+
+  def formatDiffSimple(left: Type, right: Type) = {
+    val l = formatType(left, true)
+    val r = formatType(right, true)
+    Diff(l, r)
   }
 
   def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
     val (left, right) = dealias(found) -> dealias(req)
-    if (left =:= right) formatType(left, top)
+    if (left =:= right)
+      formatType(left, top)
     else if (left.typeSymbol == right.typeSymbol)
       formatDiffInfix(left, right, top)
-    else {
-      val l = showType(left)
-      val r = showType(right)
-      Simple(s"${l.red}|${r.green}")
-    }
+    else
+      formatDiffSpecial(left, right, top) getOrElse
+        formatDiffSimple(left, right)
   }
 
   val formatDiffCache = FormatCache[(Type, Type, Boolean), Formatted]
@@ -469,9 +516,9 @@ with Formatters
   }
 
   def cacheStats = {
-    val sf = showFormattedCache.stats
+    val sfl = showFormattedLCache.stats
     val ft = formatTypeCache.stats
     val df = formatDiffCache.stats
-    s"showFormatted -> $sf, formatType -> $ft, formatDiff -> $df"
+    s"showFormatted -> $sfl, formatType -> $ft, formatDiff -> $df"
   }
 }

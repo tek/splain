@@ -31,7 +31,7 @@ with Formatting
   }
 
   override def foundReqMsg(found: Type, req: Type): String =
-    if (featureFoundReq) ";\n  " + foundReqMsgShort(found, req)
+    if (featureFoundReq) ";\n" + foundReqMsgShort(found, req)
     else super.foundReqMsg(found, req)
 }
 
