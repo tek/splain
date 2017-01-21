@@ -15,12 +15,13 @@ with Formatting
   def showStats[A](desc: String, run: => A): A = {
     val ret = run
     if (sys.env.contains("SPLAIN_CACHE_STATS"))
+      // FIXME reporter
       println(s"$desc entries/hits: $cacheStats")
     ret
   }
 
-  def foundReqMsgShort(found: Type, req: Type): String =
-    showStats("foundreq", showFormatted(formatDiff(found, req, true), true))
+  def foundReqMsgShort(found: Type, req: Type): TypeRepr =
+    showStats("foundreq", showFormattedL(formatDiff(found, req, true), true))
 
   // FIXME not used, needs feature
   def foundReqMsgNormal(found: Type, req: Type): String = {
@@ -31,7 +32,7 @@ with Formatting
   }
 
   override def foundReqMsg(found: Type, req: Type): String =
-    if (featureFoundReq) ";\n" + foundReqMsgShort(found, req)
+    if (featureFoundReq) ";\n" + foundReqMsgShort(found, req).indent.joinLines
     else super.foundReqMsg(found, req)
 }
 

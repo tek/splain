@@ -69,6 +69,7 @@ trait TypeRepr
   def lines: List[String]
   def tokenize = lines mkString " "
   def joinLines = lines mkString "\n"
+  def indent: TypeRepr
 }
 
 case class BrokenType(lines: List[String])
@@ -76,6 +77,7 @@ extends TypeRepr
 {
   def broken = true
   def flat = lines mkString " "
+  def indent = BrokenType(lines map ("  " + _))
 }
 
 case class FlatType(flat: String)
@@ -84,4 +86,5 @@ extends TypeRepr
   def broken = false
   def length = flat.length
   def lines = List(flat)
+  def indent = FlatType("  " + flat)
 }
