@@ -148,12 +148,9 @@ with Formatting
 
       def notWithinBounds(tree: Tree, prefix: String, targs: List[Type],
         tparams: List[Symbol], kindErrors: List[String]) = {
-          val params = bracket(tparams.map(_.defString))
-          val tpes = bracket(targs map showType)
-          val msg = s"nonconformant bounds;\n${tpes.red}\n${params.green}"
           val err = NonConfBounds(pt, tree, targs, tparams)
           implicitErrors = err :: implicitErrors
-          ErrorUtils.issueNormalTypeError(tree, msg)
+          NotWithinBounds(tree, prefix, targs, tparams, Nil)
       }
     }
   }
@@ -161,7 +158,8 @@ with Formatting
   def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
     if (!nestedImplicit) {
-      val err = formatImplicitError(param, implicitErrors)
+      val err =
+        showStats("implicits", formatImplicitError(param, implicitErrors))
       ErrorUtils.issueNormalTypeError(tree, err)
     }
     else {

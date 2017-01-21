@@ -12,8 +12,15 @@ with Formatting
 
   def featureFoundReq: Boolean
 
+  def showStats[A](desc: String, run: => A): A = {
+    val ret = run
+    if (sys.env.contains("SPLAIN_CACHE_STATS"))
+      println(s"$desc entries/hits: $cacheStats")
+    ret
+  }
+
   def foundReqMsgShort(found: Type, req: Type): String =
-    showFormatted(formatDiff(found, req, true), true)
+    showStats("foundreq", showFormatted(formatDiff(found, req, true), true))
 
   // FIXME not used, needs feature
   def foundReqMsgNormal(found: Type, req: Type): String = {

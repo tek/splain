@@ -1,8 +1,24 @@
 package splain
 
+import collection.mutable
 import tools.nsc._
 
 import StringColor._
+
+class FormatCache[K, V](cache: mutable.Map[K, V], var hits: Long)
+{
+  def apply(k: K, orElse: => V) = {
+    if (cache.contains(k)) hits += 1
+    cache.getOrElseUpdate(k, orElse)
+  }
+
+  def stats = s"${cache.size}/$hits"
+}
+
+object FormatCache
+{
+  def apply[K, V] = new FormatCache[K, V](mutable.Map(), 0)
+}
 
 trait Formatters
 { self: Analyzer =>
@@ -94,7 +110,7 @@ trait Formatters
             None
         }
     }
-}
+  }
 }
 
 trait Formatting
@@ -250,7 +266,9 @@ with Formatters
     decideBreak(flat, BrokenType(broken))
   }
 
-  def showFormattedL(tpe: Formatted, break: Boolean): TypeRepr =
+  val showFormattedLCache = FormatCache[(Formatted, Boolean), TypeRepr]
+
+  def showFormattedLImpl(tpe: Formatted, break: Boolean): TypeRepr =
     tpe match {
       case Simple(a) => FlatType(a)
       case Applied(cons, args) =>
@@ -273,12 +291,21 @@ with Formatters
         showSLRecordItem(key, value)
     }
 
+  def showFormattedL(tpe: Formatted, break: Boolean): TypeRepr = {
+    val key = (tpe, break)
+    showFormattedLCache(key, showFormattedLImpl(tpe, break))
+  }
+
   def showFormattedLBreak(tpe: Formatted) = showFormattedL(tpe, true)
 
   def showFormattedLNoBreak(tpe: Formatted) = showFormattedL(tpe, false)
 
-  def showFormatted(tpe: Formatted, break: Boolean): String =
-    showFormattedL(tpe, break).joinLines
+  val showFormattedCache = FormatCache[(Formatted, Boolean), String]
+
+  def showFormatted(tpe: Formatted, break: Boolean): String = {
+    val key = (tpe, break)
+    showFormattedCache(key, showFormattedL(tpe, break).joinLines)
+  }
 
   def showFormattedNoBreak(tpe: Formatted) =
     showFormattedLNoBreak(tpe).tokenize
@@ -318,7 +345,7 @@ with Formatters
   def formatInfix[A](tpe: Type, args: List[A], top: Boolean,
     rec: A => Boolean => Formatted): Formatted = {
       val simple = formatSimpleType(tpe)
-      def formattedArgs = args.map(rec(_)(true))
+      val formattedArgs = args.map(rec(_)(true))
       formatSpecial(tpe, simple, args, formattedArgs, top, rec) getOrElse {
         args match {
           case left :: right :: Nil if isSymbolic(tpe) =>
@@ -333,27 +360,44 @@ with Formatters
       }
   }
 
-  def formatType(tpe: Type, top: Boolean): Formatted = {
+  def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
     val rec = (tp: Type) => (t: Boolean) => formatType(tp, t)
     if (featureInfix) formatInfix(dtpe, dtpe.typeArgs, top, rec)
     else Simple(dtpe.toLongString)
   }
 
-  def formatDiff(found: Type, req: Type, top: Boolean): Formatted = {
+  val formatTypeCache = FormatCache[(Type, Boolean), Formatted]
+
+  def formatType(tpe: Type, top: Boolean): Formatted = {
+    val key = (tpe, top)
+    formatTypeCache(key, formatTypeImpl(tpe, top))
+  }
+
+  def formatDiffInfix(left: Type, right: Type, top: Boolean) = {
+    val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
+    val recT = rec.tupled
+    val args = left.typeArgs zip right.typeArgs
+    formatInfix(left, args, top, recT)
+  }
+
+  def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
     val (left, right) = dealias(found) -> dealias(req)
     if (left =:= right) formatType(left, top)
-    else if (left.typeSymbol == right.typeSymbol) {
-      val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
-      val recT = rec.tupled
-      val args = left.typeArgs zip right.typeArgs
-      formatInfix(left, args, top, recT)
-    }
+    else if (left.typeSymbol == right.typeSymbol)
+      formatDiffInfix(left, right, top)
     else {
       val l = showType(left)
       val r = showType(right)
       Simple(s"${l.red}|${r.green}")
     }
+  }
+
+  val formatDiffCache = FormatCache[(Type, Type, Boolean), Formatted]
+
+  def formatDiff(left: Type, right: Type, top: Boolean) = {
+    val key = (left, right, top)
+    formatDiffCache(key, formatDiffImpl(left, right, top))
   }
 
   def formatNonConfBounds(err: NonConfBounds) = {
@@ -422,5 +466,12 @@ with Formatters
     val pre = "implicit error;\n"
     val msg = implicitMessage(param)
     s"$pre$msg$nl$ex"
+  }
+
+  def cacheStats = {
+    val sf = showFormattedCache.stats
+    val ft = formatTypeCache.stats
+    val df = formatDiffCache.stats
+    s"showFormatted -> $sf, formatType -> $ft, formatDiff -> $df"
   }
 }

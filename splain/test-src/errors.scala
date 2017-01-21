@@ -56,9 +56,13 @@ extends Specification
 {
   import Helpers._
 
-  def compileError(name: String, extra: String) = {
+  def compile(name: String, extra: String) = {
     val tb = toolbox(extra)
-    Try(tb.eval(tb.parse(code(name)))) match {
+    tb.eval(tb.parse(code(name)))
+  }
+
+  def compileError(name: String, extra: String) = {
+    Try(compile(name, extra)) match {
       case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).mkString("\n")
       case a => sys.error(s"invalid error: $a")
     }
