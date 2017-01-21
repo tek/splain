@@ -40,9 +40,11 @@ Instead of `shapeless.::[A, HNil]`, prints `A :: HNil`.
 # found/required types
 Rather than printing up to four types, only the dealiased types are shown as a
 colored diff:
+
 ![foundreq](img/foundreq.jpg)
 
 special consideration for `shapeless.Record`:
+
 ![foundreq_record](img/foundreq_record.jpg)
 
 # implicit resolution chains
