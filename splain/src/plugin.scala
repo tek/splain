@@ -12,10 +12,12 @@ with Formatting
 
   def featureFoundReq: Boolean
 
+  def echo(msg: String): Unit
+
   def showStats[A](desc: String, run: => A): A = {
     val ret = run
     if (sys.env.contains("SPLAIN_CACHE_STATS"))
-      typer.context.reporter.echo(s"$desc entries/hits: $cacheStats")
+      echo(s"$desc entries/hits: $cacheStats")
     ret
   }
 

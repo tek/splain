@@ -159,9 +159,7 @@ extends ImplicitChains
 }
 
 class SplainPlugin(val global: Global)
-extends plugins.Plugin
+extends Plugin
 { plugin =>
-  val name = "splain"
-  val description = "better types and implicit errors"
-  val components = Nil
+  def echo(msg: String) = ()
 }

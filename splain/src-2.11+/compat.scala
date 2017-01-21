@@ -11,6 +11,8 @@ trait Compat
 { self: Analyzer =>
   import global._
 
+  def echo(msg: String) = typer.context.reporter.echo(msg)
+
   object TermNameCompat
   {
     def apply(n: String) = TermName(n)
@@ -71,9 +73,11 @@ extends ImplicitChains
 
 class SplainPlugin(val global: Global)
 extends Plugin
-{ plugin =>
+{
+  import global._
+
   val analyzer =
-    new { val global = plugin.global } with Analyzer {
+    new { val global = SplainPlugin.this.global } with Analyzer {
       def featureImplicits = boolean(keyImplicits)
       def featureFoundReq = boolean(keyFoundReq)
       def featureInfix = boolean(keyInfix)
