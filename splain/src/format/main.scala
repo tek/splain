@@ -162,6 +162,17 @@ with Formatters
     if (isAux(tpe)) tpe
     else tpe.dealias
 
+  def extractArgs(tpe: Type) = {
+    tpe match {
+      case PolyType(params, result) =>
+        result.typeArgs.map {
+          case t if params.contains(t.typeSymbol) => WildcardType
+          case a => a
+        }
+      case _ => tpe.typeArgs
+    }
+  }
+
   def isRefined(tpe: Type) = tpe.dealias match {
     case RefinedType(_, _) => true
     case _ => false
@@ -177,8 +188,7 @@ with Formatters
       .map(_.split('.').toList)
       .getOrElse(List(tpe.toString))
 
-  def isAux(tpe: Type) =
-    OptionOps.contains("Aux")(ctorNames(tpe).lastOption)
+  def isAux(tpe: Type) = OptionOps.contains("Aux")(ctorNames(tpe).lastOption)
 
   def formatRefinement(sym: Symbol) = {
     if (sym.hasRawInfo) {
@@ -197,6 +207,7 @@ with Formatters
       val simple = parents map showType mkString " with "
       val refine = decls map formatRefinement mkString "; "
       s"$simple {$refine}"
+    case a @ WildcardType => a.toString
     case a =>
       val name = a.typeSymbol.name.decodedName.toString
       if (a.typeSymbol.isModuleClass) s"$name.type"
@@ -363,8 +374,7 @@ with Formatters
       SLRecordItemFormatter
     )
 
-  def formatSpecial[A](tpe: Type, simple: String, args: List[A],
-    formattedArgs: => List[Formatted], top: Boolean,
+  def formatSpecial[A](tpe: Type, simple: String, args: List[A], formattedArgs: => List[Formatted], top: Boolean,
     rec: A => Boolean => Formatted)
   : Option[Formatted] = {
     specialFormatters
@@ -373,22 +383,20 @@ with Formatters
       .headOption
   }
 
-  def formatInfix[A](simple: String, left: A, right: A, top: Boolean,
-    rec: A => Boolean => Formatted) = {
+  def formatInfix[A](simple: String, left: A, right: A, top: Boolean, rec: A => Boolean => Formatted) = {
       val l = rec(left)(false)
       val r = rec(right)(false)
       Infix(Simple(simple), l, r, top)
   }
 
-  def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean,
-    rec: A => Boolean => Formatted): Formatted = {
+  def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean, rec: A => Boolean => Formatted): Formatted = {
       val simple = formatSimpleType(tpe)
       lazy val formattedArgs = args.map(rec(_)(true))
       formatSpecial(tpe, simple, args, formattedArgs, top, rec) getOrElse {
         args match {
           case left :: right :: Nil if isSymbolic(tpe) =>
             formatInfix(simple, left, right, top, rec)
-          case head :: tail =>
+          case _ :: _ =>
             Applied(Simple(simple), formattedArgs)
           case _ =>
             Simple(simple)
@@ -399,7 +407,7 @@ with Formatters
   def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
     val rec = (tp: Type) => (t: Boolean) => formatType(tp, t)
-    if (featureInfix) formatWithInfix(dtpe, dtpe.typeArgs, top, rec)
+    if (featureInfix) formatWithInfix(dtpe, extractArgs(dtpe), top, rec)
     else Simple(dtpe.toLongString)
   }
 
@@ -413,7 +421,7 @@ with Formatters
   def formatDiffInfix(left: Type, right: Type, top: Boolean) = {
     val rec = (l: Type, r: Type) => (t: Boolean) => formatDiff(l, r, t)
     val recT = rec.tupled
-    val args = left.typeArgs zip right.typeArgs
+    val args = extractArgs(left) zip extractArgs(right)
     formatWithInfix(left, args, top, recT)
   }
 
