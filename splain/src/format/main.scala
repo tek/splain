@@ -160,7 +160,13 @@ with Formatters
 
   def dealias(tpe: Type) =
     if (isAux(tpe)) tpe
-    else tpe.dealias
+    else {
+      val actual = tpe match {
+        case ExistentialType(_, t) => t
+        case _ => tpe
+      }
+      actual.dealias
+    }
 
   def extractArgs(tpe: Type) = {
     tpe match {
@@ -169,6 +175,8 @@ with Formatters
           case t if params.contains(t.typeSymbol) => WildcardType
           case a => a
         }
+      case t: AliasTypeRef if !isAux(tpe) =>
+        t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isParameter) WildcardType else a)
       case _ => tpe.typeArgs
     }
   }
@@ -198,8 +206,7 @@ with Formatters
     else sym.toString
   }
 
-  def formatAuxSimple(tpe: Type) =
-    ctorNames(tpe).takeRight(2).mkString(".")
+  def formatAuxSimple(tpe: Type) = ctorNames(tpe) takeRight 2 mkString "."
 
   def formatNormalSimple(tpe: Type) =
     tpe match {
@@ -209,8 +216,9 @@ with Formatters
       s"$simple {$refine}"
     case a @ WildcardType => a.toString
     case a =>
-      val name = a.typeSymbol.name.decodedName.toString
-      if (a.typeSymbol.isModuleClass) s"$name.type"
+      val sym = if (a.takesTypeArgs) a.typeSymbolDirect else a.typeSymbol
+      val name = sym.name.decodedName.toString
+      if (sym.isModuleClass) s"$name.type"
       else name
   }
 
