@@ -88,5 +88,6 @@ extends SpecBase
   shapeless Lazy ${checkError("lazy")}
   linebreak long infix types ${checkErrorWithBreak("break")}
   shapeless Record ${checkErrorWithBreak("record", 30)}
+  deep hole ${checkError("deephole")}
   """
 }
