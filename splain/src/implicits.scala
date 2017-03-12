@@ -60,15 +60,12 @@ with Formatting
 
   def nestedImplicit = implicitTypeStack.nonEmpty
 
-  def removeErrorsFor(tpe: Type) =
+  def removeErrorsFor(tpe: Type): Unit =
     implicitErrors = implicitErrors.dropWhile(_.tpe == tpe)
 
-  def search
-  (tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
+  def search(tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
     val resultType = Option(tree.tpe).map(_.resultType)
-    val repeat =
-      resultType.exists(OptionOps.contains(_)(
-        implicitErrors.headOption.map(_.tpe)))
+    val repeat = resultType.exists(OptionOps.contains(_)(implicitErrors.headOption.map(_.tpe)))
     if (!nestedImplicit) implicitErrors = List()
     implicitTypeStack = pt :: implicitTypeStack
     val result =
@@ -79,28 +76,20 @@ with Formatting
     result
   }
 
-  def inferImplicitImpl(tree: Tree, pt: Type, reportAmbiguous: Boolean,
-    isView: Boolean, context: Context, saveAmbiguousDivergent: Boolean,
-    pos: Position)
+  def inferImplicitImpl(tree: Tree, pt: Type, reportAmbiguous: Boolean, isView: Boolean, context: Context,
+    saveAmbiguousDivergent: Boolean, pos: Position)
   : SearchResult = {
     import typechecker.ImplicitsStats._
     import reflect.internal.util.Statistics
     val shouldPrint = printTypings && !context.undetparams.isEmpty
-    val rawTypeStart =
-      if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
-    val findMemberStart =
-      if (Statistics.canEnable) Statistics.startCounter(findMemberImpl)
-      else null
-    val subtypeStart =
-      if (Statistics.canEnable) Statistics.startCounter(subtypeImpl) else null
-    val start =
-      if (Statistics.canEnable) Statistics.startTimer(implicitNanos)
-      else null
+    val rawTypeStart = if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
+    val findMemberStart = if (Statistics.canEnable) Statistics.startCounter(findMemberImpl) else null
+    val subtypeStart = if (Statistics.canEnable) Statistics.startCounter(subtypeImpl) else null
+    val start = if (Statistics.canEnable) Statistics.startTimer(implicitNanos) else null
     val implicitSearchContext = context.makeImplicit(reportAmbiguous)
     inferImplicitPre(shouldPrint, tree, pt, isView, context)
     val result = search(tree, pt, isView, implicitSearchContext, pos)
-    inferImplicitPost(result, saveAmbiguousDivergent, context,
-      implicitSearchContext)
+    inferImplicitPost(result, saveAmbiguousDivergent, context, implicitSearchContext)
     if (Statistics.canEnable) Statistics.stopTimer(implicitNanos, start)
     if (Statistics.canEnable) Statistics.stopCounter(rawTypeImpl, rawTypeStart)
     if (Statistics.canEnable)
