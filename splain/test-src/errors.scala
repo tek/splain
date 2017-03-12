@@ -2,7 +2,7 @@ package splain
 
 import java.nio.file.{Files, FileSystems}
 
-import scala.util.{Try, Failure}
+import scala.util.{Try, Failure, Success}
 import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.reflect.runtime.universe
 import scala.collection.JavaConverters._
@@ -64,7 +64,8 @@ extends Specification
   def compileError(name: String, extra: String) = {
     Try(compile(name, extra)) match {
       case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).mkString("\n")
-      case a => sys.error(s"invalid error: $a")
+      case Failure(t) => throw t
+      case Success(_) => sys.error("compiling succeeded")
     }
   }
 
