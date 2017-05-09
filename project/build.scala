@@ -8,7 +8,7 @@ object SplainDeps
 extends Deps
 {
   val splain = ids(
-    d("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"),
+    d(scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided"),
     "org.specs2" %% "specs2-core" % "3.8.6" % "test",
     "com.chuusai" %% "shapeless" % "2.3.2" % "test"
   )
@@ -20,8 +20,8 @@ extends MultiBuild("splain", deps = SplainDeps)
   override def defaultBuilder =
     super.defaultBuilder(_)
       .settingsV(
-        scalaVersion := "2.11.8",
-        crossScalaVersions ++= List("2.10.6", "2.12.1")
+        scalaVersion := "2.12.2",
+        crossScalaVersions ++= List("2.10.6", "2.11.11")
       )
 
   lazy val splain = "splain"
