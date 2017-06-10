@@ -2,17 +2,17 @@ implicit error;
 !I e: I1
 i1a invalid because
 !I p: I2
-  i8 invalid because
+――i8 invalid because
   !I p: I9
-  i6b invalid because
+――i6b invalid because
   !I p: I8
-    i8 invalid because
+――――i8 invalid because
     !I p: I9
-  i3b invalid because
+――i3b invalid because
   !I p: I4
-    i8 invalid because
+――――i8 invalid because
     !I p: I9
 i1b invalid because
 !I p: I6
-  i8 invalid because
+――i8 invalid because
   !I p: I9

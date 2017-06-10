@@ -230,7 +230,9 @@ with Formatters
     else formatNormalSimple(tpe)
   }
 
-  def indent(lines: List[String], n: Int = 1) = lines map (("  " * n) + _)
+  def indentLine(line: String, n: Int = 1, prefix: String = "  ") = (prefix * n) + line
+
+  def indent(lines: List[String], n: Int = 1, prefix: String = "  ") = lines map (indentLine(_, n, prefix))
 
   /**
    * If the args of an applied type constructor are multiline, create separate
@@ -474,26 +476,29 @@ with Formatters
     List("nonconformant bounds;", tpes.red, params.green)
   }
 
-  def formatNestedImplicit(err: ImpFailReason): List[String] = {
+  def formatNestedImplicit(err: ImpFailReason): (String, List[String]) = {
     val candidate = err.cleanCandidate
     val problem = s"${candidate.red} invalid because"
     val reason = err match {
       case e: ImpError => implicitMessage(e.param)
       case e: NonConfBounds => formatNonConfBounds(e)
     }
-    problem :: reason
+    problem -> reason
   }
 
   def hideImpError(error: ImpFailReason) =
-    (error.candidateName.toString == "mkLazy") || (featureBoundsImplicits && (
+    (error.candidateName.toString == "mkLazy") || (!featureBoundsImplicits && (
       error match {
         case NonConfBounds(_, _, _, _, _) => true
         case _ => false
       }
       ))
 
-  def indentTree(tree: List[List[String]], baseIndent: Int): List[String] = {
-    tree.zipWithIndex.flatMap { case (a, i) => indent(a, baseIndent + i) }
+  def indentTree(tree: List[(String, List[String])], baseIndent: Int): List[String] = {
+    tree.zipWithIndex.flatMap {
+      case ((head, a), i) =>
+        indentLine(head, baseIndent + i, "――") :: indent(a, baseIndent + i)
+    }
   }
 
   def formatIndentTree(chain: List[ImpFailReason], baseIndent: Int) = {
@@ -518,7 +523,7 @@ with Formatters
   }
 
   def formatImplicitChainFlat(chain: List[ImpFailReason]): List[String] = {
-    chain flatMap formatNestedImplicit
+    chain map formatNestedImplicit flatMap { case (h, t) => h :: t }
   }
 
   def formatImplicitChainTree(chain: List[ImpFailReason]): List[String] = {
