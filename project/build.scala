@@ -2,7 +2,8 @@ package tryp
 
 import sbt._, Keys._
 
-import bintray.BintrayKeys._
+import sbtrelease.ReleasePlugin.autoImport.{ReleaseTransformations, releaseProcess, ReleaseStep}
+import ReleaseTransformations._
 
 object SplainDeps
 extends Deps
@@ -26,11 +27,11 @@ extends MultiBuild("splain", deps = SplainDeps)
 
   lazy val splain = "splain"
     .bintray
+    .settings(publishSettings)
+    .settings(releaseSettings)
     .settingsV(
+      organization := "io.tryp",
       name := "splain",
-      licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-      bintrayRepository in bintray := "releases",
-      publishMavenStyle := true,
       fork := true,
       javaOptions in Test ++= {
         val jar = (Keys.`package` in Compile).value.getAbsolutePath
@@ -44,5 +45,36 @@ extends MultiBuild("splain", deps = SplainDeps)
           case _ => List()
         }
       }
+  )
+
+  val github = "https://github.com/tek"
+  val repo = s"$github/splain"
+
+  def publishSettings = List(
+    publishMavenStyle := true,
+    publishTo := Some(
+      if (isSnapshot.value) Opts.resolver.sonatypeSnapshots
+      else Resolver.url("sonatype staging", url("https://oss.sonatype.org/service/local/staging/deploy/maven2"))
+    ),
+    licenses := List("MIT" -> url("http://opensource.org/licenses/MIT")),
+    homepage := Some(url(repo)),
+    scmInfo := Some(ScmInfo(url(repo), "scm:git@github.com:tek/splain")),
+    developers := List(Developer(id="tryp", name="Torsten Schmits", email="torstenschmits@gmail.com", url=url(github)))
+  )
+
+  def releaseSettings = List(
+    releaseProcess := Seq[ReleaseStep](
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      setReleaseVersion,
+      ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
+      commitReleaseVersion,
+      tagRelease,
+      setNextVersion,
+      commitNextVersion,
+      ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true),
+      pushChanges
+    )
   )
 }

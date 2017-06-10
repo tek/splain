@@ -5,8 +5,7 @@ additional info for implicit resolution errors.
 # Usage
 
 ```sbt
-resolvers += Resolver.bintrayRepo("tek", "maven")
-addCompilerPlugin("tryp" %% "splain" % "0.1.22")
+addCompilerPlugin("io.tryp" %% "splain" % "0.1.22")
 ```
 
 # Configuration
