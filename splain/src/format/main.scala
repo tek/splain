@@ -155,6 +155,7 @@ with Formatters
   def featureColor: Boolean
   def featureCompact: Boolean
   def featureTree: Boolean
+  def featureBoundsImplicits: Boolean
 
   implicit def colors =
     if(featureColor) StringColors.color
@@ -484,7 +485,12 @@ with Formatters
   }
 
   def hideImpError(error: ImpFailReason) =
-    error.candidateName.toString == "mkLazy"
+    (error.candidateName.toString == "mkLazy") || (featureBoundsImplicits && (
+      error match {
+        case NonConfBounds(_, _, _, _, _) => true
+        case _ => false
+      }
+      ))
 
   def indentTree(tree: List[List[String]], baseIndent: Int): List[String] = {
     tree.zipWithIndex.flatMap { case (a, i) => indent(a, baseIndent + i) }
@@ -534,7 +540,7 @@ with Formatters
    */
   def formatNestedImplicits(errors: List[ImpFailReason]) = {
     val visible = errors filterNot hideImpError
-    val chains = splitChains(errors).distinct.map(_.distinct)
+    val chains = splitChains(visible).map(_.distinct).distinct
     chains flatMap formatImplicitChain
   }
 

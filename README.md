@@ -23,6 +23,7 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `breakinfix` (default 0)
 * `tree`
 * `compact` (default off)
+* `boundsimplicits`
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -62,6 +63,8 @@ parameter is in yellow, and its type in green.
 If the parameter `tree` is set, the candidates will be indented according to their nesting level.
 
 If the parameter `compact` is set, only the first and last implicit in a chain will be printed.
+
+If the parameter `boundsimplicits` is set to false, any **nonconformant bounds** errors will be suppressed.
 
 For comparison, this is the regular compiler output for this case (with
 formatted types):

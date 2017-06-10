@@ -86,6 +86,7 @@ extends Plugin
       def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
       def featureCompact = boolean(keyCompact)
       def featureTree = boolean(keyTree)
+      def featureBoundsImplicits = boolean(keyBoundsImplicits)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
