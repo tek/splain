@@ -209,7 +209,11 @@ with Formatters
     else sym.toString
   }
 
-  def formatAuxSimple(tpe: Type) = ctorNames(tpe) takeRight 2 mkString "."
+  def formatAuxSimple(tpe: Type) = {
+    val names = ctorNames(tpe)
+    val num = if (OptionOps.contains("Case")(names.lift(names.length - 2))) 3 else 2
+    ctorNames(tpe) takeRight num mkString "."
+  }
 
   def formatNormalSimple(tpe: Type) =
     tpe match {

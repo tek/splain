@@ -1,3 +1,8 @@
+import shapeless.Poly1
+
+object pol
+extends Poly1
+
 trait Low
 {
   trait I1
@@ -17,14 +22,14 @@ extends Low
   type T3 = (D *** (C *** String)) >:< ((C, D, C) *** D)
   type T4 = C *** D *** C
   type T5 = D *** C >:< D
-  type T6 = C >:< D
+  type T6 = pol.Case.Aux[Int, String]
   type T7 = D >:< C >:< D
   implicit def i1(implicit impPar7: I3): I1 = ???
   implicit def i2a(implicit impPar8: I3): I2 = ???
   implicit def i2b(implicit impPar8: I3): I2 = ???
   implicit def i4(implicit impPar9: I2): I4 = ???
   implicit def t7(implicit impPar14: F[({type λ[X] = Either[Int, X]})#λ]): T7 = ???
-  implicit def t5(implicit impPar13: T6): T5 = ???
+  implicit def t5(implicit impPar13: pol.Case.Aux[Int, String]): T5 = ???
   implicit def t4(implicit impPar12: T5): T4 = ???
   implicit def t3a(implicit impPar11: T7): T3 = ???
   implicit def t3b(implicit impPar10: T4): T3 = ???

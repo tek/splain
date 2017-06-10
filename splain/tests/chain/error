@@ -13,4 +13,4 @@ t3b invalid because
 t4 invalid because
 !I impPar12: (D *** C) >:< D
 t5 invalid because
-!I impPar13: C >:< D
+!I impPar13: pol.Case.Aux[Int, String]
