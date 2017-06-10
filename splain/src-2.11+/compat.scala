@@ -84,6 +84,8 @@ extends Plugin
       def featureBounds = boolean(keyBounds)
       def featureColor = boolean(keyColor)
       def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
+      def featureCompact = boolean(keyCompact)
+      def featureTree = boolean(keyTree)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")

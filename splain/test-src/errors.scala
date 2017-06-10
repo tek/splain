@@ -39,13 +39,13 @@ import types._
 
   def code(name: String) = types + fileContentString(name, "code.scala")
 
-  def error(name: String) = fileContentString(name, "error").stripLineEnd
+  def error(name: String, fname: Option[String]) = fileContentString(name, fname getOrElse "error").stripLineEnd
 
   val cm = universe.runtimeMirror(getClass.getClassLoader)
 
   val plugin = System.getProperty("splain.jar")
 
-  val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds"
+  val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
 
   def toolbox(extra: String) =
     ToolBox(cm).mkToolBox(options = s"$opts $extra")
@@ -69,8 +69,8 @@ extends Specification
     }
   }
 
-  def checkError(name: String, extra: String = "") =
-    compileError(name, extra) must_== error(name)
+  def checkError(name: String, extra: String = "", errorFile: Option[String] = None) =
+    compileError(name, extra) must_== error(name, errorFile)
 
   def checkErrorWithBreak(name: String, length: Int = 20) =
     checkError(name, s"-P:splain:breakinfix:$length")
@@ -90,5 +90,7 @@ extends SpecBase
   linebreak long infix types ${checkErrorWithBreak("break")}
   shapeless Record ${checkErrorWithBreak("record", 30)}
   deep hole ${checkError("deephole")}
+  tree printing ${checkError("tree", "-P:splain:tree")}
+  compact tree printing ${checkError("tree", "-P:splain:tree -P:splain:compact", Some("errorCompact"))}
   """
 }

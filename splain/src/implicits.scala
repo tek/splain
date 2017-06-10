@@ -16,10 +16,13 @@ with Formatting
 
   val candidateRegex = """.*\.this\.(.*)""".r
 
+  def shortName(ident: String) = ident.split('.').toList.lastOption.getOrElse(ident)
+
   trait ImpFailReason
   {
     def tpe: Type
     def candidate: Tree
+    def nesting: Int
 
     lazy val unapplyCandidate = candidate match {
       case TypeApply(name, _) => name
@@ -45,18 +48,26 @@ with Formatting
       case _ => false
     }
 
-    override def hashCode = tpe.hashCode
+    override def hashCode = (tpe.hashCode, candidateName.hashCode).hashCode
   }
 
-  case class ImpError(tpe: Type, candidate: Tree, param: Symbol)
+  case class ImpError(tpe: Type, candidate: Tree, nesting: Int, param: Symbol)
   extends ImpFailReason
+  {
+    override def toString =
+      s"ImpError(${shortName(tpe.toString)}, ${shortName(candidate.toString)}), $nesting, $param"
+  }
 
-  case class NonConfBounds
-  (tpe: Type, candidate: Tree, targs: List[Type], tparams: List[Symbol])
+  case class NonConfBounds(tpe: Type, candidate: Tree, nesting: Int, targs: List[Type], tparams: List[Symbol])
   extends ImpFailReason
+  {
+    override def toString =
+      s"NonConfBounds(${shortName(tpe.toString)}, ${shortName(candidate.toString)}), $nesting, $targs, $tparams"
+  }
 
   var implicitTypeStack = List[Type]()
   var implicitErrors = List[ImpFailReason]()
+  def implicitNesting = implicitTypeStack.length - 1
 
   def nestedImplicit = implicitTypeStack.nonEmpty
 
@@ -65,7 +76,6 @@ with Formatting
 
   def search(tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
     val resultType = Option(tree.tpe).map(_.resultType)
-    val repeat = resultType.exists(OptionOps.contains(_)(implicitErrors.headOption.map(_.tpe)))
     if (!nestedImplicit) implicitErrors = List()
     implicitTypeStack = pt :: implicitTypeStack
     val result =
@@ -98,14 +108,14 @@ with Formatting
     result
   }
 
-  override def inferImplicit(tree: Tree, pt: Type, r: Boolean, v: Boolean,
-    context: Context, s: Boolean, pos: Position): SearchResult = {
+  override def inferImplicit(tree: Tree, pt: Type, r: Boolean, v: Boolean, context: Context, s: Boolean, pos: Position)
+  : SearchResult = {
       if (featureImplicits) inferImplicitImpl(tree, pt, r, v, context, s, pos)
       else super.inferImplicit(tree, pt, r, v, context, s, pos)
   }
 
-  abstract class ImplicitSearchImpl(tree: Tree, pt: Type, isView: Boolean,
-    context0: Context, pos0: Position = NoPosition)
+  abstract class ImplicitSearchImpl(tree: Tree, pt: Type, isView: Boolean, context0: Context,
+    pos0: Position = NoPosition)
   extends ImplicitSearch(tree, pt, isView, context0, pos0)
   {
     trait InferencerImpl
@@ -127,7 +137,7 @@ with Formatting
           false
         }
         def check() = checkKindBounds(tparams, targs, pre, owner) match {
-          case Nil  =>
+          case Nil =>
             isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
           case errs =>
             (targs contains WildcardType) || issueKindBoundErrors(errs)
@@ -135,9 +145,9 @@ with Formatting
         targs.exists(_.isErroneous) || tparams.exists(_.isErroneous) || check()
       }
 
-      def notWithinBounds(tree: Tree, prefix: String, targs: List[Type],
-        tparams: List[Symbol], kindErrors: List[String]) = {
-          val err = NonConfBounds(pt, tree, targs, tparams)
+      def notWithinBounds(tree: Tree, prefix: String, targs: List[Type], tparams: List[Symbol],
+        kindErrors: List[String]) = {
+          val err = NonConfBounds(pt, tree, implicitNesting, targs, tparams)
           implicitErrors = err :: implicitErrors
           NotWithinBounds(tree, prefix, targs, tparams, Nil)
       }
@@ -154,7 +164,7 @@ with Formatting
     else {
       implicitTypeStack
         .headOption
-        .map(ImpError(_, tree, param))
+        .map(ImpError(_, tree, implicitNesting, param))
         .foreach(err => implicitErrors = err :: implicitErrors)
       nativeNoImplicitFoundError(tree, param)
     }

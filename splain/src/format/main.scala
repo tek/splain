@@ -153,6 +153,8 @@ with Formatters
   def featureInfix: Boolean
   def featureBreakInfix: Option[Int]
   def featureColor: Boolean
+  def featureCompact: Boolean
+  def featureTree: Boolean
 
   implicit def colors =
     if(featureColor) StringColors.color
@@ -227,7 +229,7 @@ with Formatters
     else formatNormalSimple(tpe)
   }
 
-  def indent(lines: List[String]) = lines map ("  " + _)
+  def indent(lines: List[String], n: Int = 1) = lines map (("  " * n) + _)
 
   /**
    * If the args of an applied type constructor are multiline, create separate
@@ -482,6 +484,45 @@ with Formatters
   def hideImpError(error: ImpFailReason) =
     error.candidateName.toString == "mkLazy"
 
+  def indentTree(tree: List[List[String]], baseIndent: Int): List[String] = {
+    tree.zipWithIndex.flatMap { case (a, i) => indent(a, baseIndent + i) }
+  }
+
+  def formatIndentTree(chain: List[ImpFailReason], baseIndent: Int) = {
+    val formatted = chain map formatNestedImplicit
+    indentTree(formatted, baseIndent)
+  }
+
+  def formatImplicitChainTreeCompact(chain: List[ImpFailReason]): Option[List[String]] = {
+    chain
+      .headOption
+      .flatMap { head =>
+        chain.lastOption.map { last =>
+        val base = if (head.nesting == 0) 0 else 1
+          formatIndentTree(List(head, last), base)
+        }
+      }
+  }
+
+  def formatImplicitChainTreeFull(chain: List[ImpFailReason]): List[String] = {
+    val baseIndent = chain.headOption.map(_.nesting).getOrElse(0)
+    formatIndentTree(chain, baseIndent)
+  }
+
+  def formatImplicitChainFlat(chain: List[ImpFailReason]): List[String] = {
+    chain flatMap formatNestedImplicit
+  }
+
+  def formatImplicitChainTree(chain: List[ImpFailReason]): List[String] = {
+    val compact = if (featureCompact) formatImplicitChainTreeCompact(chain) else None
+    compact getOrElse formatImplicitChainTreeFull(chain)
+  }
+
+  def formatImplicitChain(chain: List[ImpFailReason]): List[String] = {
+    if (featureTree) formatImplicitChainTree(chain)
+    else formatImplicitChainFlat(chain)
+  }
+
   /**
    * Remove duplicates and special cases that should not be shown.
    * In some cases, candidates are reported twice, once as `Foo.f` and once as
@@ -489,8 +530,11 @@ with Formatters
    * is suboptimal, but works for 99% of cases.
    * Special cases are handled in [[hideImpError]]
    */
-  def formatNestedImplicits(errors: List[ImpFailReason]) =
-    errors.distinct filterNot hideImpError flatMap formatNestedImplicit
+  def formatNestedImplicits(errors: List[ImpFailReason]) = {
+    val visible = errors filterNot hideImpError
+    val chains = splitChains(errors).distinct.map(_.distinct)
+    chains flatMap formatImplicitChain
+  }
 
   def formatImplicitParam(sym: Symbol) = sym.name.toString
 
@@ -520,6 +564,16 @@ with Formatters
     val bang = "!"
     val i = "I"
     s"${bang.red}${i.blue} ${paramName.yellow}$msg: ${ptp.green}"
+  }
+
+  def splitChains(errors: List[ImpFailReason]): List[List[ImpFailReason]] = {
+    errors.foldRight(Nil: List[List[ImpFailReason]]) {
+      case (a, chains @ ((chain @ (prev :: _)) :: tail)) =>
+        if (a.nesting > prev.nesting) List(a) :: chains
+        else (a :: chain) :: tail
+      case (a, _) =>
+        List(List(a))
+    }
   }
 
   def formatImplicitError(param: Symbol, errors: List[ImpFailReason]) = {
