@@ -5,7 +5,7 @@ additional info for implicit resolution errors.
 # Usage
 
 ```sbt
-addCompilerPlugin("io.tryp" %% "splain" % "0.1.22")
+addCompilerPlugin("io.tryp" %% "splain" % "0.2.0")
 ```
 
 # Configuration
@@ -21,6 +21,8 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `bounds` (default off)
 * `color`
 * `breakinfix` (default 0)
+* `tree`
+* `compact` (default off)
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -56,6 +58,10 @@ This feature prints a compact list of all involved implicits:
 
 Here, `!I` stands for *could not find implicit value*, the name of the implicit
 parameter is in yellow, and its type in green.
+
+If the parameter `tree` is set, the candidates will be indented according to their nesting level.
+
+If the parameter `compact` is set, only the first and last implicit in a chain will be printed.
 
 For comparison, this is the regular compiler output for this case (with
 formatted types):
