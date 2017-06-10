@@ -268,8 +268,7 @@ with Formatters
     s"${showTuple(params)} => ${showTuple(returnt)}"
   }
 
-  def decideBreak
-  (flat: FlatType, broken: => BrokenType)
+  def decideBreak(flat: FlatType, broken: => BrokenType)
   : TypeRepr = {
     featureBreakInfix
       .flatMap { maxlen =>
@@ -362,9 +361,11 @@ with Formatters
   def showFormattedNoBreak(tpe: Formatted) =
     showFormattedLNoBreak(tpe).tokenize
 
-  def showType(tpe: Type) = showFormatted(formatType(tpe, true), false)
+  def showType(tpe: Type): String = showFormatted(formatType(tpe, true), false)
 
-  def showTypeBreak(tpe: Type) = showFormatted(formatType(tpe, true), true)
+  def showTypeBreak(tpe: Type): String = showFormatted(formatType(tpe, true), true)
+
+  def showTypeBreakL(tpe: Type): List[String] = showFormattedL(formatType(tpe, true), true).lines
 
   def wrapParens(expr: String, top: Boolean) =
     if (top) expr else s"($expr)"
@@ -465,10 +466,11 @@ with Formatters
     formatDiffCache(key, formatDiffImpl(left, right, top))
   }
 
-  def formatNonConfBounds(err: NonConfBounds) = {
+  // TODO split non conf bounds
+  def formatNonConfBounds(err: NonConfBounds): List[String] = {
     val params = bracket(err.tparams.map(_.defString))
     val tpes = bracket(err.targs map showType)
-    s"nonconformant bounds;\n${tpes.red}\n${params.green}"
+    List("nonconformant bounds;", tpes.red, params.green)
   }
 
   def formatNestedImplicit(err: ImpFailReason): List[String] = {
@@ -478,7 +480,7 @@ with Formatters
       case e: ImpError => implicitMessage(e.param)
       case e: NonConfBounds => formatNonConfBounds(e)
     }
-    List(problem, reason)
+    problem :: reason
   }
 
   def hideImpError(error: ImpFailReason) =
@@ -549,7 +551,7 @@ with Formatters
     else tpe
   }
 
-  def implicitMessage(param: Symbol) = {
+  def implicitMessage(param: Symbol): List[String] = {
     val tpe = param.tpe
     val msg = tpe.typeSymbolDirect match {
       case ImplicitNotFoundMsg(msg) =>
@@ -560,10 +562,13 @@ with Formatters
     }
     val effTpe = effectiveImplicitType(tpe)
     val paramName = formatImplicitParam(param)
-    val ptp = showTypeBreak(effTpe)
     val bang = "!"
     val i = "I"
-    s"${bang.red}${i.blue} ${paramName.yellow}$msg: ${ptp.green}"
+    val head = s"${bang.red}${i.blue} ${paramName.yellow}$msg:"
+    showTypeBreakL(effTpe) match {
+      case single :: Nil => List(s"$head ${single.green}")
+      case l => head :: indent(l).map(_.green)
+    }
   }
 
   def splitChains(errors: List[ImpFailReason]): List[List[ImpFailReason]] = {
@@ -581,7 +586,7 @@ with Formatters
     val nl = if (errors.nonEmpty) "\n" else ""
     val ex = stack.mkString("\n")
     val pre = "implicit error;\n"
-    val msg = implicitMessage(param)
+    val msg = implicitMessage(param).mkString("\n")
     s"$pre$msg$nl$ex"
   }
 
