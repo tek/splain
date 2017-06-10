@@ -5,7 +5,7 @@ additional info for implicit resolution errors.
 # Usage
 
 ```sbt
-addCompilerPlugin("io.tryp" %% "splain" % "0.2.1")
+addCompilerPlugin("io.tryp" %% "splain" % "0.2.3")
 ```
 
 # Configuration
@@ -60,7 +60,9 @@ This feature prints a compact list of all involved implicits:
 Here, `!I` stands for *could not find implicit value*, the name of the implicit
 parameter is in yellow, and its type in green.
 
-If the parameter `tree` is set, the candidates will be indented according to their nesting level.
+If the parameter `tree` is set, the candidates will be indented according to their nesting level:
+
+![tree](img/tree.jpg)
 
 If the parameter `compact` is set, only the first and last implicit in a chain will be printed.
 
