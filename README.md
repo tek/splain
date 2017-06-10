@@ -5,7 +5,7 @@ additional info for implicit resolution errors.
 # Usage
 
 ```sbt
-addCompilerPlugin("io.tryp" %% "splain" % "0.2.0")
+addCompilerPlugin("io.tryp" %% "splain" % "0.2.1")
 ```
 
 # Configuration
