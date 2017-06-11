@@ -180,7 +180,7 @@ with Formatters
           case a => a
         }
       case t: AliasTypeRef if !isAux(tpe) =>
-        t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isParameter) WildcardType else a)
+        t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isTypeParameter) WildcardType else a)
       case _ => tpe.typeArgs
     }
   }
@@ -482,14 +482,14 @@ with Formatters
     List("nonconformant bounds;", tpes.red, params.green)
   }
 
-  def formatNestedImplicit(err: ImpFailReason): (String, List[String]) = {
+  def formatNestedImplicit(err: ImpFailReason): (String, List[String], Int) = {
     val candidate = err.cleanCandidate
     val problem = s"${candidate.red} invalid because"
     val reason = err match {
       case e: ImpError => implicitMessage(e.param)
       case e: NonConfBounds => formatNonConfBounds(e)
     }
-    problem -> reason
+    (problem, reason, err.nesting)
   }
 
   def hideImpError(error: ImpFailReason) =
@@ -500,11 +500,14 @@ with Formatters
       }
       ))
 
-  def indentTree(tree: List[(String, List[String])], baseIndent: Int): List[String] = {
-    tree.zipWithIndex.flatMap {
-      case ((head, a), i) =>
-        indentLine(head, baseIndent + i, "――") :: indent(a, baseIndent + i)
-    }
+  def indentTree(tree: List[(String, List[String], Int)], baseIndent: Int): List[String] = {
+    val nestings = tree.map(_._3).distinct.sorted
+    tree
+      .flatMap {
+        case (head, tail, nesting) =>
+          val ind = baseIndent + nestings.indexOf(nesting).abs
+          indentLine(head, ind, "――") :: indent(tail, ind)
+      }
   }
 
   def formatIndentTree(chain: List[ImpFailReason], baseIndent: Int) = {
@@ -512,14 +515,22 @@ with Formatters
     indentTree(formatted, baseIndent)
   }
 
+  def deepestLevel(chain: List[ImpFailReason]) = {
+    chain.foldLeft(0)((z, a) => if (a.nesting > z) a.nesting else z)
+  }
+
   def formatImplicitChainTreeCompact(chain: List[ImpFailReason]): Option[List[String]] = {
     chain
       .headOption
-      .flatMap { head =>
-        chain.lastOption.map { last =>
+      .map { head =>
+        val max = deepestLevel(chain)
+        val leaves = chain.drop(1).dropWhile(_.nesting < max)
         val base = if (head.nesting == 0) 0 else 1
-          formatIndentTree(List(head, last), base)
-        }
+        val (fhh, fht, fhn) = formatNestedImplicit(head)
+        val spacer = if (leaves.nonEmpty && leaves.length < chain.length) List("⋮".blue) else Nil
+        val fh = (fhh, fht ++ spacer, fhn)
+        val ft = leaves map formatNestedImplicit
+        indentTree(fh :: ft, base)
       }
   }
 
@@ -529,7 +540,7 @@ with Formatters
   }
 
   def formatImplicitChainFlat(chain: List[ImpFailReason]): List[String] = {
-    chain map formatNestedImplicit flatMap { case (h, t) => h :: t }
+    chain map formatNestedImplicit flatMap { case (h, t, _) => h :: t }
   }
 
   def formatImplicitChainTree(chain: List[ImpFailReason]): List[String] = {
@@ -552,7 +563,7 @@ with Formatters
   def formatNestedImplicits(errors: List[ImpFailReason]) = {
     val visible = errors filterNot hideImpError
     val chains = splitChains(visible).map(_.distinct).distinct
-    chains flatMap formatImplicitChain
+    chains map formatImplicitChain flatMap ("" :: _) drop 1
   }
 
   def formatImplicitParam(sym: Symbol) = sym.name.toString
