@@ -44,11 +44,11 @@ with Formatting
 
     override def equals(other: Any) = other match {
       case o: ImpFailReason =>
-        o.tpe == tpe && candidateName == o.candidateName
+        o.tpe.toString == tpe.toString && candidateName == o.candidateName
       case _ => false
     }
 
-    override def hashCode = (tpe.hashCode, candidateName.hashCode).hashCode
+    override def hashCode = (tpe.toString.hashCode, candidateName.hashCode).hashCode
   }
 
   case class ImpError(tpe: Type, candidate: Tree, nesting: Int, param: Symbol)
