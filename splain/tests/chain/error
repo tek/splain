@@ -8,6 +8,7 @@ t3a invalid because
 !I impPar11: (D >:< C) >:< D
 t7 invalid because
 !I impPar14: F[Either[Int, ?]]
+
 t3b invalid because
 !I impPar10: (C *** D) *** C
 t4 invalid because
