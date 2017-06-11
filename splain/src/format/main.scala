@@ -156,6 +156,7 @@ with Formatters
   def featureCompact: Boolean
   def featureTree: Boolean
   def featureBoundsImplicits: Boolean
+  def featureTruncRefined: Option[Int]
 
   implicit def colors =
     if(featureColor) StringColors.color
@@ -220,7 +221,8 @@ with Formatters
     case RefinedType(parents, decls) =>
       val simple = parents map showType mkString " with "
       val refine = decls map formatRefinement mkString "; "
-      s"$simple {$refine}"
+      val refine1 = featureTruncRefined.collect { case len if (refine.length > len) => "..." }.getOrElse(refine)
+      s"$simple {$refine1}"
     case a @ WildcardType => a.toString
     case a =>
       val sym = if (a.takesTypeArgs) a.typeSymbolDirect else a.typeSymbol

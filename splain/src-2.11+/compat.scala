@@ -87,6 +87,7 @@ extends Plugin
       def featureCompact = boolean(keyCompact)
       def featureTree = boolean(keyTree)
       def featureBoundsImplicits = boolean(keyBoundsImplicits)
+      def featureTruncRefined = int(keyTruncRefined).filterNot(_ == 0)
     }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")

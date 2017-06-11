@@ -24,6 +24,7 @@ The plugin can be configured via compiler plugin parameters with the format:
 * `tree`
 * `compact` (default off)
 * `boundsimplicits`
+* `truncrefined` (default 0)
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -118,3 +119,7 @@ f invalid because
   VeryLongTypeName
 ]
 ```
+
+# truncating refined types
+A type of the shape `T { type A = X; type B = Y }` will be displayed as `T {...}` if the parameter `truncrefined` is set
+to a value `/= 0` and the refinement's length is greater than the value.
