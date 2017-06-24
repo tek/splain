@@ -8,42 +8,50 @@ import ReleaseTransformations._
 object SplainDeps
 extends Deps
 {
-  val splain = ids(
-    d(scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided"),
+  val core = ids(
+    d(scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided")
+  )
+
+  val test = ids(
     "org.specs2" %% "specs2-core" % "3.8.6" % "test",
     "com.chuusai" %% "shapeless" % "2.3.2" % "test"
   )
+
+  val splain = test ++ core
+
+  val analyzer = test ++ core
 }
 
 object Build
 extends MultiBuild("splain", deps = SplainDeps)
 {
   override def defaultBuilder =
-    super.defaultBuilder(_)
+    pb(_)
+      .antSrc
       .settingsV(
-        scalaVersion := "2.12.2",
-        crossScalaVersions ++= List("2.10.6", "2.11.11")
+        scalaOrganization := "org.scala-lang",
+        organization := "io.tryp",
+        scalaVersion := "2.11.12-bin-SNAPSHOT",
+        // crossScalaVersions ++= List("2.10.6", "2.12.2"),
+        (unmanagedSourceDirectories in Compile) ++= {
+          CrossVersion.partialVersion(scalaVersion.value) match {
+            case Some((2, y)) if y >= 11 =>
+              List(baseDirectory.value / "src-2.11+")
+            case _ => List()
+          }
+        }
       )
 
   lazy val splain = "splain"
-    .bintray
     .settings(publishSettings)
     .settings(releaseSettings)
     .settingsV(
-      organization := "io.tryp",
       name := "splain",
       fork := true,
       javaOptions in Test ++= {
         val jar = (Keys.`package` in Compile).value.getAbsolutePath
-        val tests = baseDirectory.value / "tests"
+        val tests = (baseDirectory in ThisBuild).value / "tests"
         List(s"-Dsplain.jar=$jar", s"-Dsplain.tests=$tests")
-      },
-      (unmanagedSourceDirectories in Compile) ++= {
-        CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, y)) if y >= 11 =>
-            List(baseDirectory.value / "src-2.11+")
-          case _ => List()
-        }
       }
   )
 

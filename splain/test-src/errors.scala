@@ -45,7 +45,9 @@ import types._
 
   val plugin = System.getProperty("splain.jar")
 
-  val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
+  val core = System.getProperty("core.jar")
+
+  val opts = s"-Xplugin:$plugin -Xplugin:$core -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
 
   def toolbox(extra: String) =
     ToolBox(cm).mkToolBox(options = s"$opts $extra")
