@@ -21,10 +21,15 @@ object FormatCache
 }
 
 trait Formatters
-{ self: Analyzer =>
+{
+  val analyzer: typechecker.Analyzer
+
+  import analyzer._
   import global._
 
   def formatType(tpe: Type, top: Boolean): Formatted
+
+  def formatInfix[A](simple: String, left: A, right: A, top: Boolean, rec: A => Boolean => Formatted): Formatted
 
   trait SpecialFormatter
   {
@@ -145,10 +150,11 @@ trait Formatters
 }
 
 trait Formatting
-extends Compat
-with Formatters
+// extends Compat
+extends Formatters
 with ImplicitMsgCompat
-{ self: Analyzer =>
+{
+  import analyzer._
   import global._
 
   def featureInfix: Boolean
@@ -477,26 +483,26 @@ with ImplicitMsgCompat
   }
 
   // TODO split non conf bounds
-  def formatNonConfBounds(err: NonConfBounds): List[String] = {
+  def formatNonConfBounds(err: ImplicitError.NonconformantBounds): List[String] = {
     val params = bracket(err.tparams.map(_.defString))
     val tpes = bracket(err.targs map showType)
     List("nonconformant bounds;", tpes.red, params.green)
   }
 
-  def formatNestedImplicit(err: ImpFailReason): (String, List[String], Int) = {
+  def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
     val candidate = err.cleanCandidate
     val problem = s"${candidate.red} invalid because"
     val reason = err match {
-      case e: ImpError => implicitMessage(e.param)
-      case e: NonConfBounds => formatNonConfBounds(e)
+      case e: ImplicitError.NotFound => implicitMessage(e.param)
+      case e: ImplicitError.NonconformantBounds => formatNonConfBounds(e)
     }
     (problem, reason, err.nesting)
   }
 
-  def hideImpError(error: ImpFailReason) =
+  def hideImpError(error: ImplicitError) =
     (error.candidateName.toString == "mkLazy") || (!featureBoundsImplicits && (
       error match {
-        case NonConfBounds(_, _, _, _, _) => true
+        case ImplicitError.NonconformantBounds(_, _, _, _, _, _) => true
         case _ => false
       }
       ))
@@ -511,16 +517,16 @@ with ImplicitMsgCompat
       }
   }
 
-  def formatIndentTree(chain: List[ImpFailReason], baseIndent: Int) = {
+  def formatIndentTree(chain: List[ImplicitError], baseIndent: Int) = {
     val formatted = chain map formatNestedImplicit
     indentTree(formatted, baseIndent)
   }
 
-  def deepestLevel(chain: List[ImpFailReason]) = {
+  def deepestLevel(chain: List[ImplicitError]) = {
     chain.foldLeft(0)((z, a) => if (a.nesting > z) a.nesting else z)
   }
 
-  def formatImplicitChainTreeCompact(chain: List[ImpFailReason]): Option[List[String]] = {
+  def formatImplicitChainTreeCompact(chain: List[ImplicitError]): Option[List[String]] = {
     chain
       .headOption
       .map { head =>
@@ -535,21 +541,21 @@ with ImplicitMsgCompat
       }
   }
 
-  def formatImplicitChainTreeFull(chain: List[ImpFailReason]): List[String] = {
+  def formatImplicitChainTreeFull(chain: List[ImplicitError]): List[String] = {
     val baseIndent = chain.headOption.map(_.nesting).getOrElse(0)
     formatIndentTree(chain, baseIndent)
   }
 
-  def formatImplicitChainFlat(chain: List[ImpFailReason]): List[String] = {
+  def formatImplicitChainFlat(chain: List[ImplicitError]): List[String] = {
     chain map formatNestedImplicit flatMap { case (h, t, _) => h :: t }
   }
 
-  def formatImplicitChainTree(chain: List[ImpFailReason]): List[String] = {
+  def formatImplicitChainTree(chain: List[ImplicitError]): List[String] = {
     val compact = if (featureCompact) formatImplicitChainTreeCompact(chain) else None
     compact getOrElse formatImplicitChainTreeFull(chain)
   }
 
-  def formatImplicitChain(chain: List[ImpFailReason]): List[String] = {
+  def formatImplicitChain(chain: List[ImplicitError]): List[String] = {
     if (featureTree) formatImplicitChainTree(chain)
     else formatImplicitChainFlat(chain)
   }
@@ -557,11 +563,11 @@ with ImplicitMsgCompat
   /**
    * Remove duplicates and special cases that should not be shown.
    * In some cases, candidates are reported twice, once as `Foo.f` and once as
-   * `f`. `ImpFailReason.equals` checks the simple names for identity, which
+   * `f`. `ImplicitError.equals` checks the simple names for identity, which
    * is suboptimal, but works for 99% of cases.
    * Special cases are handled in [[hideImpError]]
    */
-  def formatNestedImplicits(errors: List[ImpFailReason]) = {
+  def formatNestedImplicits(errors: List[ImplicitError]) = {
     val visible = errors filterNot hideImpError
     val chains = splitChains(visible).map(_.distinct).distinct
     chains map formatImplicitChain flatMap ("" :: _) drop 1
@@ -600,8 +606,8 @@ with ImplicitMsgCompat
     }
   }
 
-  def splitChains(errors: List[ImpFailReason]): List[List[ImpFailReason]] = {
-    errors.foldRight(Nil: List[List[ImpFailReason]]) {
+  def splitChains(errors: List[ImplicitError]): List[List[ImplicitError]] = {
+    errors.foldRight(Nil: List[List[ImplicitError]]) {
       case (a, chains @ ((chain @ (prev :: _)) :: tail)) =>
         if (a.nesting > prev.nesting) List(a) :: chains
         else (a :: chain) :: tail
@@ -610,7 +616,7 @@ with ImplicitMsgCompat
     }
   }
 
-  def formatImplicitError(param: Symbol, errors: List[ImpFailReason]) = {
+  def formatImplicitError(param: Symbol, errors: List[ImplicitError]) = {
     val stack = formatNestedImplicits(errors)
     val nl = if (errors.nonEmpty) "\n" else ""
     val ex = stack.mkString("\n")

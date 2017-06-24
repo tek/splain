@@ -1,4 +1,5 @@
-scalaVersion := "2.13.0-M5"
+// scalaVersion := "2.13.0-M5"
+scalaVersion := "2.12.9-bin-SNAPSHOT"
 crossScalaVersions ++= List(
   "2.10.7",
   "2.11.12",

@@ -45,6 +45,8 @@ import types._
 
   val plugin = System.getProperty("splain.jar")
 
+  val core = System.getProperty("core.jar")
+
   val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
 
   def toolbox(extra: String) =
@@ -81,16 +83,16 @@ extends SpecBase
 {
   def is = s2"""
   implicit resolution chains ${checkError("chain")}
-  ambiguous implicits ${checkError("ambiguous")}
-  found/required type diff ${checkError("foundreq")}
-  diff with refinement type ${checkError("refinediff")}
-  nonconformant bounds ${checkError("bounds")}
-  aux type ${checkError("aux")}
-  shapeless Lazy ${checkError("lazy")}
-  linebreak long infix types ${checkErrorWithBreak("break")}
-  shapeless Record ${checkErrorWithBreak("record", 30)}
-  deep hole ${checkError("deephole")}
-  tree printing ${checkError("tree", "-P:splain:tree")}
-  compact tree printing ${checkError("tree", "-P:splain:tree -P:splain:compact", Some("errorCompact"))}
   """
+  // ambiguous implicits ${checkError("ambiguous")}
+  // found/required type diff ${checkError("foundreq")}
+  // diff with refinement type ${checkError("refinediff")}
+  // nonconformant bounds ${checkError("bounds")}
+  // aux type ${checkError("aux")}
+  // shapeless Lazy ${checkError("lazy")}
+  // linebreak long infix types ${checkErrorWithBreak("break")}
+  // shapeless Record ${checkErrorWithBreak("record", 30)}
+  // deep hole ${checkError("deephole")}
+  // tree printing ${checkError("tree", "-P:splain:tree")}
+  // compact tree printing ${checkError("tree", "-P:splain:tree -P:splain:compact", Some("errorCompact"))}
 }

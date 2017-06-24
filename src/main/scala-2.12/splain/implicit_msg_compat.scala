@@ -4,7 +4,8 @@ import tools.nsc._
 
 trait ImplicitMsgCompat
 extends Formatters
-{ self: Analyzer =>
+{
+  import analyzer._
   import global._
 
   def formatMsg(msg: Message, param: Symbol, tpe: Type): String =
