@@ -123,11 +123,16 @@ with Formatting
       import InferErrorGen._
 
       /**
-       * Duplication of the original method, because the error is created
-       * within.
+       * Duplication of the original method, because the error is created within.
        */
-      override def checkBounds(tree: Tree, pre: Type, owner: Symbol,
-        tparams: List[Symbol], targs: List[Type], prefix: String): Boolean = {
+      override def checkBounds(
+        tree: Tree,
+        pre: Type,
+        owner: Symbol,
+        tparams: List[Symbol],
+        targs: List[Type],
+        prefix: String
+      ): Boolean = {
         def issueBoundsError() = {
           notWithinBounds(tree, prefix, targs, tparams, Nil)
           false
@@ -147,8 +152,10 @@ with Formatting
 
       def notWithinBounds(tree: Tree, prefix: String, targs: List[Type], tparams: List[Symbol],
         kindErrors: List[String]) = {
-          val err = NonConfBounds(pt, tree, implicitNesting, targs, tparams)
-          implicitErrors = err :: implicitErrors
+          if (tree.tpe =:= pt) {
+            val err = NonConfBounds(pt, tree, implicitNesting, targs, tparams)
+            implicitErrors = err :: implicitErrors
+          }
           NotWithinBounds(tree, prefix, targs, tparams, Nil)
       }
     }
