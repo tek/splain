@@ -8,18 +8,11 @@ import ReleaseTransformations._
 object SplainDeps
 extends Deps
 {
-  val core = ids(
-    d(scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided")
-  )
-
-  val test = ids(
+  val splain = ids(
+    d(scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided"),
     "org.specs2" %% "specs2-core" % "3.8.6" % "test",
     "com.chuusai" %% "shapeless" % "2.3.2" % "test"
   )
-
-  val splain = test ++ core
-
-  val analyzer = test ++ core
 }
 
 object Build
