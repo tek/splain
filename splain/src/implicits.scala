@@ -8,6 +8,7 @@ trait ImplicitChains
 extends typechecker.Implicits
 with typechecker.ContextErrors
 with Formatting
+with ImplicitStatsCompat
 { self: Analyzer =>
   import global._
 
@@ -89,23 +90,14 @@ with Formatting
   def inferImplicitImpl(tree: Tree, pt: Type, reportAmbiguous: Boolean, isView: Boolean, context: Context,
     saveAmbiguousDivergent: Boolean, pos: Position)
   : SearchResult = {
-    import typechecker.ImplicitsStats._
-    import reflect.internal.util.Statistics
     val shouldPrint = printTypings && !context.undetparams.isEmpty
-    val rawTypeStart = if (Statistics.canEnable) Statistics.startCounter(rawTypeImpl) else null
-    val findMemberStart = if (Statistics.canEnable) Statistics.startCounter(findMemberImpl) else null
-    val subtypeStart = if (Statistics.canEnable) Statistics.startCounter(subtypeImpl) else null
-    val start = if (Statistics.canEnable) Statistics.startTimer(implicitNanos) else null
-    val implicitSearchContext = context.makeImplicit(reportAmbiguous)
-    inferImplicitPre(shouldPrint, tree, pt, isView, context)
-    val result = search(tree, pt, isView, implicitSearchContext, pos)
-    inferImplicitPost(result, saveAmbiguousDivergent, context, implicitSearchContext)
-    if (Statistics.canEnable) Statistics.stopTimer(implicitNanos, start)
-    if (Statistics.canEnable) Statistics.stopCounter(rawTypeImpl, rawTypeStart)
-    if (Statistics.canEnable)
-      Statistics.stopCounter(findMemberImpl, findMemberStart)
-    if (Statistics.canEnable) Statistics.stopCounter(subtypeImpl, subtypeStart)
-    result
+    withImplicitStats { () =>
+      val implicitSearchContext = context.makeImplicit(reportAmbiguous)
+      inferImplicitPre(shouldPrint, tree, pt, isView, context)
+      val result = search(tree, pt, isView, implicitSearchContext, pos)
+      inferImplicitPost(result, saveAmbiguousDivergent, context, implicitSearchContext)
+      result
+    }
   }
 
   override def inferImplicit(tree: Tree, pt: Type, r: Boolean, v: Boolean, context: Context, s: Boolean, pos: Position)
