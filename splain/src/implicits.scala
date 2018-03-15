@@ -156,9 +156,12 @@ with ImplicitStatsCompat
   def noImplicitError(tree: Tree, param: Symbol)
   (implicit context: Context): Unit = {
     if (!nestedImplicit) {
-      val err =
-        showStats("implicits", formatImplicitError(param, implicitErrors))
-      ErrorUtils.issueNormalTypeError(tree, err)
+      scala.util.Try(showStats("implicits", formatImplicitError(param, implicitErrors))) match {
+        case scala.util.Success(err) => ErrorUtils.issueNormalTypeError(tree, err)
+        case scala.util.Failure(exc) =>
+          ErrorUtils.issueNormalTypeError(tree, s"fatal error in splain: $exc")
+          nativeNoImplicitFoundError(tree, param)
+      }
     }
     else {
       implicitTypeStack
