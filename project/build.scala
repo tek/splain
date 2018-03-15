@@ -22,7 +22,7 @@ extends MultiBuild("splain")
     super.defaultBuilder(_)
       .settingsV(
         scalaVersion := "2.12.4",
-        crossScalaVersions ++= List("2.10.6", "2.11.11", "2.12.1", "2.12.2", "2.12.3"),
+        crossScalaVersions ++= List("2.10.6", "2.11.11", "2.11.12", "2.12.1", "2.12.2", "2.12.3"),
         crossVersion := CrossVersion.full,
         TrypBuildKeys.libs := SplainLibs
       )
