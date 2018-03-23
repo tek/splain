@@ -21,8 +21,8 @@ extends MultiBuild("splain")
   override def defaultBuilder =
     super.defaultBuilder(_)
       .settingsV(
-        scalaVersion := "2.12.4",
-        crossScalaVersions ++= List("2.10.6", "2.11.11", "2.11.12", "2.12.1", "2.12.2", "2.12.3"),
+        scalaVersion := "2.12.5",
+        crossScalaVersions ++= List("2.10.6", "2.11.11", "2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4"),
         crossVersion := CrossVersion.full,
         TrypBuildKeys.libs := SplainLibs
       )
