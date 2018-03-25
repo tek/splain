@@ -1,0 +1,4 @@
+jdk:
+  - oraclejdk8
+language: scala
+script: 'sbt splain/test'
