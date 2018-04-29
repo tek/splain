@@ -1,13 +1,13 @@
-scalaVersion := "2.12.5"
-crossScalaVersions ++= List("2.10.6", "2.11.11", "2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4")
+scalaVersion := "2.12.6"
+crossScalaVersions ++= List("2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4", "2.12.5")
 crossVersion := CrossVersion.full
 organization := "io.tryp"
 name := "splain"
 fork := true
 libraryDependencies ++= List(
   scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided",
-  "org.specs2" %% "specs2-core" % "3.8.6" % "test",
-  "com.chuusai" %% "shapeless" % "2.3.2" % "test",
+  "org.specs2" %% "specs2-core" % "4.1.0" % "test",
+  "com.chuusai" %% "shapeless" % "2.3.3" % "test",
 )
 
 addSourceDir { case (2, minor, _) if minor >= 11 => "2.11+" }
