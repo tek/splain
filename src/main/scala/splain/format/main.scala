@@ -556,7 +556,7 @@ with Formatters
   /**
    * Remove duplicates and special cases that should not be shown.
    * In some cases, candidates are reported twice, once as `Foo.f` and once as
-   * `f`. [[ImpFailReason.equals]] checks the simple names for identity, which
+   * `f`. `ImpFailReason.equals` checks the simple names for identity, which
    * is suboptimal, but works for 99% of cases.
    * Special cases are handled in [[hideImpError]]
    */
