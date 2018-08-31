@@ -144,7 +144,7 @@ with ImplicitStatsCompat
 
       def notWithinBounds(tree: Tree, prefix: String, targs: List[Type], tparams: List[Symbol],
         kindErrors: List[String]) = {
-          if (tree.tpe =:= pt) {
+          if (tree.tpe != null && tree.tpe =:= pt) {
             val err = NonConfBounds(pt, tree, implicitNesting, targs, tparams)
             implicitErrors = err :: implicitErrors
           }
