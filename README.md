@@ -5,7 +5,7 @@ additional info for implicit resolution errors.
 # Usage
 
 ```sbt
-addCompilerPlugin("io.tryp" % "splain" % "0.3.2" cross CrossVersion.patch)
+addCompilerPlugin("io.tryp" % "splain" % "0.3.3" cross CrossVersion.patch)
 ```
 
 # Configuration
