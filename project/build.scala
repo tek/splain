@@ -1,5 +1,7 @@
 package tryp
 
+import java.io.File
+
 import sbt._, Keys._
 
 object P
@@ -9,18 +11,17 @@ extends AutoPlugin
   {
     val versionRex = raw"(\d+)\.(\d+).(\d+).*".r
 
-    def addSourceDir(f: PartialFunction[(Int, Int, Int), String]) =
-      (unmanagedSourceDirectories in Compile) ++= {
-        val add = for {
-          a <- scalaVersion.value match {
-            case versionRex(ma, mi, pa) => Some(ma.toInt, mi.toInt, pa.toInt)
-            case _ => None
-          }
-          (ma, mi, pa) = a
-          b <- f.lift(ma, mi, pa)
-        } yield List(sourceDirectory.value / "main" / s"scala-$b")
-        add.getOrElse(Nil)
+    def matchScala[A](f: PartialFunction[(Int, Int, Int), A]): Def.Initialize[Option[A]] =
+      Def.settingDyn {
+        scalaVersion.value match {
+          case versionRex(ma, mi, pa) => Def.setting(f.lift(ma.toInt, mi.toInt, pa.toInt))
+          case _ => Def.setting(None)
+        }
       }
+
+    def addSourceDir(f: PartialFunction[(Int, Int, Int), String]): Def.Setting[Seq[File]] =
+      (unmanagedSourceDirectories in Compile) +=
+        matchScala(f).value.map(b => sourceDirectory.value / "main" / s"scala-$b")
 
     val github = "https://github.com/tek"
     val repo = s"$github/splain"
