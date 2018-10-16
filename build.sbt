@@ -1,12 +1,12 @@
 scalaVersion := "2.12.7"
-crossScalaVersions ++= List("2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4", "2.12.5", "2.12.6")
+crossScalaVersions ++= List("2.10.7","2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4", "2.12.5", "2.12.6")
 crossVersion := CrossVersion.full
 organization := "io.tryp"
 name := "splain"
 fork := true
 libraryDependencies ++= List(
   scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided",
-  "org.specs2" %% "specs2-core" % "4.1.0" % "test",
+  "org.specs2" %% "specs2-core" % "3.9.5" % "test",
   "com.chuusai" %% "shapeless" % "2.3.3" % "test",
 )
 
