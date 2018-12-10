@@ -1,5 +1,5 @@
-scalaVersion := "2.12.7"
-crossScalaVersions ++= List("2.10.7", "2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4", "2.12.5", "2.12.6")
+scalaVersion := "2.12.8"
+crossScalaVersions ++= List("2.10.7", "2.11.12", "2.12.1", "2.12.2", "2.12.3", "2.12.4", "2.12.5", "2.12.6", "2.12.7")
 crossVersion := CrossVersion.full
 organization := "io.tryp"
 name := "splain"
