@@ -1,6 +1,2 @@
 implicit error;
 !I e: F[D *** C]
-NonconformantBounds.f invalid because
-nonconformant bounds;
-[D *** C, Nothing]
-[A <: types.C, B]
