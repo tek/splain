@@ -147,6 +147,7 @@ trait Formatters
 trait Formatting
 extends Compat
 with Formatters
+with ImplicitMsgCompat
 { self: Analyzer =>
   import global._
 
@@ -583,7 +584,7 @@ with Formatters
     val tpe = param.tpe
     val msg = tpe.typeSymbolDirect match {
       case ImplicitNotFoundMsg(msg) =>
-        overrideMessage(msg.format(TermName(param.name.toString), tpe))
+        overrideMessage(formatMsg(msg, param, tpe))
           .map(a => s" ($a)")
           .getOrElse("")
       case _ => ""
