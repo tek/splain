@@ -24,7 +24,7 @@ libraryDependencies += {
   val specsV =
     matchScala { case (ma, mi, _) if ma == 2 && mi == 10 => "3.9.5" }
       .value
-      .getOrElse("4.4.1")
+      .getOrElse("4.5.1")
   "org.specs2" %% "specs2-core" % specsV % "test"
 }
 
