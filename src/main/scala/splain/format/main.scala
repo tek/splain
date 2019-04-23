@@ -1,5 +1,6 @@
 package splain
 
+import util.matching.Regex
 import collection.mutable
 import tools.nsc._
 
@@ -158,6 +159,8 @@ with ImplicitMsgCompat
   def featureTree: Boolean
   def featureBoundsImplicits: Boolean
   def featureTruncRefined: Option[Int]
+  def featureRewrite: String
+  def featureKeepModules: Int
 
   implicit def colors =
     if(featureColor) StringColors.color
@@ -217,6 +220,63 @@ with ImplicitMsgCompat
     ctorNames(tpe) takeRight num mkString "."
   }
 
+  def rewriteRegexes: List[(Regex, String)] =
+    featureRewrite
+      .split(";")
+      .toList
+      .map(_.split("/").toList)
+      .map {
+        case re :: repl :: _ =>
+          (re.r, repl)
+        case re :: Nil =>
+          (re.r, "")
+        case Nil =>
+          ("".r, "")
+      }
+
+  case class MatchRewrite(target: String)
+  {
+    def unapply(candidate: (Regex, String)): Option[String] = {
+      val (regex, replacement) = candidate
+      val transformed = regex.replaceAllIn(target, replacement)
+      if (transformed == target || transformed.isEmpty) None
+      else Some(transformed)
+    }
+  }
+
+  def modulePath: Type => List[String] = {
+    case tr: TypeRef if !tr.pre.toString.isEmpty =>
+      tr.pre.toString.split("\\.").toList.takeWhile(_ != "type")
+    case _ =>
+      Nil
+  }
+
+  def pathPrefix: List[String] => String = {
+    case Nil =>
+      ""
+    case a =>
+      a.mkString("", ".", ".")
+  }
+
+  def stripModules(path: List[String], name: String)(keep: Int): String =
+    s"${pathPrefix(path.takeRight(keep))}$name"
+
+  def stripType(tpe: Type): String = {
+    val sym = if (tpe.takesTypeArgs) tpe.typeSymbolDirect else tpe.typeSymbol
+    val symName = sym.name.decodedName.toString
+    val path = modulePath(tpe)
+    val fullType = s"${pathPrefix(path)}$symName"
+    val matchRewrite = MatchRewrite(fullType)
+    val regexRewritten =
+      rewriteRegexes
+        .foldLeft(fullType) { case (current, (regex, replacement)) => regex.replaceAllIn(current, replacement) }
+    val stripped =
+      if (fullType == regexRewritten || regexRewritten.isEmpty) stripModules(path, symName)(featureKeepModules)
+      else regexRewritten
+    if (sym.isModuleClass) s"$stripped.type"
+    else stripped
+  }
+
   def formatNormalSimple(tpe: Type) =
     tpe match {
     case RefinedType(parents, decls) =>
@@ -226,16 +286,12 @@ with ImplicitMsgCompat
       s"$simple {$refine1}"
     case a @ WildcardType => a.toString
     case a =>
-      val sym = if (a.takesTypeArgs) a.typeSymbolDirect else a.typeSymbol
-      val name = sym.name.decodedName.toString
-      if (sym.isModuleClass) s"$name.type"
-      else name
+      stripType(a)
   }
 
-  def formatSimpleType(tpe: Type): String = {
+  def formatSimpleType(tpe: Type): String =
     if (isAux(tpe)) formatAuxSimple(tpe)
     else formatNormalSimple(tpe)
-  }
 
   def indentLine(line: String, n: Int = 1, prefix: String = "  ") = (prefix * n) + line
 

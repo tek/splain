@@ -1,0 +1,2 @@
+implicit error;
+!I e: Level1.Level2.Type[Level1.Level2.Par]

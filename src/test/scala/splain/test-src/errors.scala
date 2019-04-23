@@ -92,5 +92,14 @@ extends SpecBase
   deep hole ${checkError("deephole")}
   tree printing ${checkError("tree", "-P:splain:tree")}
   compact tree printing ${checkError("tree", "-P:splain:tree -P:splain:compact", Some("errorCompact"))}
+  type prefix stripping ${checkError("prefix", "-P:splain:keepmodules:2")}
+  regex type rewriting ${checkError("regex-rewrite", "-P:splain:rewrite:\\.Level;0/5")}
+  """
+}
+
+class DevSpec
+extends SpecBase
+{
+  def is = s2"""
   """
 }

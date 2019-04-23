@@ -52,6 +52,8 @@ extends plugins.Plugin
   val keyTree = "tree"
   val keyBoundsImplicits = "boundsimplicits"
   val keyTruncRefined = "truncrefined"
+  val keyRewrite = "rewrite"
+  val keyKeepModules = "keepmodules"
 
   override def processOptions(options: List[String], error: String => Unit) = {
     def invalid(opt: String) = error(s"splain: invalid option `$opt`")
@@ -79,7 +81,9 @@ extends plugins.Plugin
     keyCompact -> "false",
     keyTree -> "true",
     keyBoundsImplicits -> "true",
-    keyTruncRefined -> "0"
+    keyTruncRefined -> "0",
+    keyRewrite -> "",
+    keyKeepModules -> "0"
   )
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)
