@@ -1,9 +1,8 @@
 package splain
 
-import scala.reflect.internal.util.{Statistics, StatisticsStatics}
-import tools.nsc._
+import scala.reflect.internal.util.StatisticsStatics
 
-trait ImplicitStatsCompat
+trait ImplicitStats
 { self: Analyzer =>
   import global._
   import statistics._
@@ -21,13 +20,4 @@ trait ImplicitStatsCompat
     if (StatisticsStatics.areSomeColdStatsEnabled) statistics.stopCounter(subtypeImpl, subtypeStart)
     result
   }
-}
-
-trait ImplicitMsgCompat
-extends Formatters
-{ self: Analyzer =>
-  import global._
-
-  def formatMsg(msg: Message, param: Symbol, tpe: Type): String =
-    msg.formatDefSiteMessage(tpe)
 }

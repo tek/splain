@@ -2,7 +2,9 @@ package tryp
 
 import java.io.File
 
-import sbt._, Keys._
+import sbt._
+
+import Keys._
 
 object P
 extends AutoPlugin

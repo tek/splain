@@ -1,11 +1,10 @@
 package splain
 
-import java.nio.file.{Files, FileSystems}
+import java.nio.file.{FileSystems, Files, Path}
 
-import scala.util.{Try, Failure, Success}
-import scala.tools.reflect.{ToolBox, ToolBoxError}
 import scala.reflect.runtime.universe
-import scala.collection.JavaConverters._
+import scala.tools.reflect.{ToolBox, ToolBoxError}
+import scala.util.{Failure, Success, Try}
 
 import org.specs2._
 
@@ -13,16 +12,12 @@ object Helpers
 {
   def base = System.getProperty("splain.tests")
 
-  def fileContent(name: String, fname: String) = {
+  def fileContent(name: String, fname: String): Path = {
     FileSystems.getDefault.getPath(base, name, fname)
   }
 
-  def fileContentString(name: String, fname: String) = {
+  def fileContentString(name: String, fname: String): String = {
     new String(Files.readAllBytes(fileContent(name, fname)))
-  }
-
-  def fileContentList(name: String, fname: String) = {
-    Files.readAllLines(fileContent(name, fname)).asScala
   }
 
   def types = {
@@ -61,9 +56,9 @@ extends Specification
     tb.eval(tb.parse(code(name)))
   }
 
-  def compileError(name: String, extra: String) = {
+  def compileError(name: String, extra: String): String = {
     Try(compile(name, extra)) match {
-      case Failure(ToolBoxError(e, _)) => e.lines.toList.drop(2).mkString("\n")
+      case Failure(ToolBoxError(e, _)) => e.linesIterator.toList.drop(2).mkString("\n")
       case Failure(t) => throw t
       case Success(_) => sys.error("compiling succeeded")
     }
@@ -74,9 +69,19 @@ extends Specification
 
   def checkErrorWithBreak(name: String, length: Int = 20) =
     checkError(name, s"-P:splain:breakinfix:$length")
+
+  def compileSuccess(name: String, extra: String): Option[String] = {
+    Try(compile(name, extra)) match {
+      case Success(_) => None
+      case Failure(t) => Some(t.getMessage)
+    }
+  }
+
+  def checkSuccess(name: String, extra: String = "") =
+    compileSuccess(name, extra) must beNone
 }
 
-class BasicSpec
+class ErrorsSpec
 extends SpecBase
 {
   def is = s2"""

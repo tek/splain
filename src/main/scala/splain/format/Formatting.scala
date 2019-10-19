@@ -1,8 +1,7 @@
 package splain
 
-import util.matching.Regex
-import collection.mutable
-import tools.nsc._
+import scala.collection.mutable
+import scala.util.matching.Regex
 
 import StringColor._
 
@@ -21,133 +20,8 @@ object FormatCache
   def apply[K, V] = new FormatCache[K, V](mutable.Map(), 0)
 }
 
-trait Formatters
-{ self: Analyzer =>
-  import global._
-
-  def formatType(tpe: Type, top: Boolean): Formatted
-
-  trait SpecialFormatter
-  {
-    def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: => List[Formatted], top: Boolean,
-      rec: A => Boolean => Formatted): Option[Formatted]
-
-    def diff(left: Type, right: Type, top: Boolean): Option[Formatted]
-  }
-
-  object FunctionFormatter
-  extends SpecialFormatter
-  {
-    def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: => List[Formatted], top: Boolean,
-      rec: A => Boolean => Formatted) = {
-        if (simple.startsWith("Function"))
-          Some(FunctionForm.fromArgs(formattedArgs, top))
-        else None
-    }
-
-    def diff(left: Type, right: Type, top: Boolean) = None
-  }
-
-  object TupleFormatter
-  extends SpecialFormatter
-  {
-    def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: => List[Formatted], top: Boolean,
-      rec: A => Boolean => Formatted) = {
-        if (simple.startsWith("Tuple"))
-          Some(TupleForm(formattedArgs))
-        else None
-    }
-
-    def diff(left: Type, right: Type, top: Boolean) = None
-  }
-
-  object SLRecordItemFormatter
-  extends SpecialFormatter
-  {
-    def keyTagName = "shapeless.labelled.KeyTag"
-
-    def taggedName = "shapeless.tag.Tagged"
-
-    def isKeyTag(tpe: Type) = tpe.typeSymbol.fullName == keyTagName
-
-    def isTagged(tpe: Type) = tpe.typeSymbol.fullName == taggedName
-
-    object extractRecord
-    {
-      def unapply(tpe: Type) = tpe match {
-        case RefinedType(actual :: key :: Nil, _) if isKeyTag(key) =>
-          Some((actual, key))
-        case _ => None
-      }
-    }
-
-    object extractStringConstant
-    {
-      def unapply(tpe: Type) = tpe match {
-        case ConstantType(Constant(a: String)) => Some(a)
-        case _ => None
-      }
-    }
-
-    def formatConstant(tag: String): PartialFunction[Type, String] = {
-      case a if a == typeOf[scala.Symbol] =>
-        s"'$tag"
-    }
-
-    def formatKeyArg: PartialFunction[List[Type], Option[Formatted]] = {
-      case RefinedType(parents, _) :: _ :: Nil =>
-        for {
-          main <- parents.headOption
-          tagged <- parents.find(isTagged)
-          headArg <- tagged.typeArgs.headOption
-          tag <- extractStringConstant.unapply(headArg)
-          repr <- formatConstant(tag).lift(main)
-        } yield Simple(repr)
-      case extractStringConstant(tag) :: _ :: Nil =>
-        Some(Simple(s""""$tag""""))
-      case tag :: _ :: Nil =>
-        Some(formatType(tag, true))
-    }
-
-    def formatKey(tpe: Type): Formatted = {
-      formatKeyArg.lift(tpe.typeArgs).flatten getOrElse formatType(tpe, true)
-    }
-
-    def recordItem(actual: Type, key: Type) =
-      SLRecordItem(formatKey(key), formatType(actual, true))
-
-    def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: => List[Formatted], top: Boolean,
-      rec: A => Boolean => Formatted) = {
-        tpe match {
-          case extractRecord(actual, key) =>
-            Some(recordItem(actual, key))
-          case _ =>
-            None
-        }
-    }
-
-    def diff(left: Type, right: Type, top: Boolean) = {
-      (left -> right) match {
-        case (extractRecord(a1, k1), extractRecord(a2, k2)) =>
-          val  rec = (l: Formatted, r: Formatted) => (t: Boolean) =>
-            if (l == r) l else Diff(l, r)
-          val recT = rec.tupled
-          val left = formatKey(k1) -> formatKey(k2)
-          val right = formatType(a1, true) -> formatType(a2, true)
-          Some(formatInfix("->>", left, right, top, recT))
-        case _ => None
-      }
-    }
-  }
-}
-
 trait Formatting
-extends Compat
-with Formatters
+extends Formatters
 with ImplicitMsgCompat
 { self: Analyzer =>
   import global._
@@ -204,7 +78,7 @@ with ImplicitMsgCompat
       .map(_.split('.').toList)
       .getOrElse(List(tpe.toString))
 
-  def isAux(tpe: Type) = OptionOps.contains("Aux")(ctorNames(tpe).lastOption)
+  def isAux(tpe: Type) = ctorNames(tpe).lastOption.contains("Aux")
 
   def formatRefinement(sym: Symbol) = {
     if (sym.hasRawInfo) {
@@ -216,7 +90,7 @@ with ImplicitMsgCompat
 
   def formatAuxSimple(tpe: Type) = {
     val names = ctorNames(tpe)
-    val num = if (OptionOps.contains("Case")(names.lift(names.length - 2))) 3 else 2
+    val num = if (names.lift(names.length - 2).contains("Case")) 3 else 2
     ctorNames(tpe) takeRight num mkString "."
   }
 
@@ -350,7 +224,7 @@ with ImplicitMsgCompat
    */
   def flattenInfix(tpe: Infix): List[Formatted] = {
     def step(tpe: Formatted): List[Formatted] = tpe match {
-      case Infix(infix, left, right, top) =>
+      case Infix(infix, left, right, _) =>
         left :: infix :: step(right)
       case a => List(a)
     }
@@ -391,7 +265,7 @@ with ImplicitMsgCompat
       case Applied(cons, args) =>
         val reprs = args map (showFormattedL(_, break))
         showTypeApply(showFormattedNoBreak(cons), reprs, break)
-      case tpe @ Infix(infix, left, right, top) =>
+      case tpe @ Infix(_, _, _, top) =>
         val flat = flattenInfix(tpe)
         val broken: TypeRepr =
           if (break) breakInfix(flat)

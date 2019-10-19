@@ -1,9 +1,6 @@
 scalaVersion := "2.13.1"
 crossScalaVersions ++= List(
-  "2.10.7",
-  "2.11.12",
-  "2.12.9",
-  "2.13.0",
+  "2.12.10",
 )
 crossVersion := CrossVersion.full
 organization := "io.tryp"
@@ -14,24 +11,28 @@ libraryDependencies ++= List(
   "com.chuusai" %% "shapeless" % "2.3.3" % "test",
 )
 
-libraryDependencies += {
-  val specsV =
-    matchScala { case (ma, mi, _) if ma == 2 && mi == 10 => "3.9.5" }
-      .value
-      .getOrElse("4.5.1")
-  "org.specs2" %% "specs2-core" % specsV % "test"
-}
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
 
-addSourceDir { case (2, minor, _) if minor >= 11 => "2.11+" }
-addSourceDir { case (2, minor, _) if minor <= 11 => "2.11-" }
-addSourceDir { case (2, minor, _) if minor == 12 => "2.1-" }
-addSourceDir { case (2, 12, patch) if patch >= 4 => "2.12.4+" case (2, minor, _) if minor <= 12 => "2.12.3-" }
-addSourceDir { case (2, minor, _) if minor >= 13 => "2.13+" }
+addSourceDir { case (2, minor, _) if minor == 12 => "2.12" }
+addSourceDir { case (2, minor, _) if minor == 13 => "2.13" }
 javaOptions in Test ++= {
   val jar = (Keys.`package` in Compile).value.getAbsolutePath
     val tests = baseDirectory.value / "tests"
     List(s"-Dsplain.jar=$jar", s"-Dsplain.tests=$tests")
 }
+
+scalacOptions ++= List(
+  "-deprecation",
+  "-unchecked",
+  "-feature",
+  "-language:higherKinds",
+  "-language:existentials",
+  "-Ywarn-value-discard",
+  "-Ywarn-unused:imports",
+  "-Ywarn-unused:implicits",
+  "-Ywarn-unused:params",
+  "-Ywarn-unused:patvars",
+)
 
 publishMavenStyle := true
 publishTo := Some(

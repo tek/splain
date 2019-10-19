@@ -1,7 +1,5 @@
 package splain
 
-import tools.nsc._
-
 trait ImplicitMsgCompat
 extends Formatters
 { self: Analyzer =>

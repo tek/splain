@@ -1,14 +1,13 @@
 package splain
 
-import tools.nsc._
-
-import StringColor._
+import scala.tools.nsc._
 
 trait ImplicitChains
 extends typechecker.Implicits
 with typechecker.ContextErrors
 with Formatting
-with ImplicitStatsCompat
+with ImplicitStats
+with ImplicitsCompat
 { self: Analyzer =>
   import global._
 
@@ -75,16 +74,28 @@ with ImplicitStatsCompat
   def removeErrorsFor(tpe: Type): Unit =
     implicitErrors = implicitErrors.dropWhile(_.tpe == tpe)
 
-  def search(tree: Tree, pt: Type, isView: Boolean, context: Context, pos: Position) = {
-    val resultType = Option(tree.tpe).map(_.resultType)
-    if (!nestedImplicit) implicitErrors = List()
-    implicitTypeStack = pt :: implicitTypeStack
-    val result =
-      new ImplicitSearchCompat(tree, pt, isView, context, pos)
-        .bestImplicit
-    if (result.isSuccess) removeErrorsFor(pt)
-    implicitTypeStack = implicitTypeStack.drop(1)
-    result
+  def inferImplicitPre(shouldPrint: Boolean, tree: Tree, context: Context) =
+    if (shouldPrint)
+      typingStack.printTyping(tree, "typing implicit: %s %s".format(tree, context.undetparamsString))
+
+  def inferImplicitPost(result: SearchResult, saveAmbiguousDivergent: Boolean,
+    context: Context, implicitSearchContext: Context) = {
+    if (result.isFailure && saveAmbiguousDivergent && implicitSearchContext.reporter.hasErrors)
+      implicitSearchContext.reporter
+        .propagateImplicitTypeErrorsTo(context.reporter)
+    context.undetparams =
+      (context.undetparams ++ result.undetparams)
+        .filterNot(result.subst.from.contains)
+        .distinct
+    if (result.isSuccess && settings.warnSelfImplicit && result.tree.symbol != null) {
+      val s =
+        if (result.tree.symbol.isAccessor) result.tree.symbol.accessed
+        else if (result.tree.symbol.isModule) result.tree.symbol.moduleClass
+        else result.tree.symbol
+      if (context.owner.hasTransOwner(s))
+        context.warning(result.tree.pos, s"Implicit resolves to enclosing ${result.tree.symbol}")
+    }
+    emitResult(implicitSearchContext)(result)
   }
 
   def inferImplicitImpl(tree: Tree, pt: Type, reportAmbiguous: Boolean, isView: Boolean, context: Context,
@@ -93,7 +104,7 @@ with ImplicitStatsCompat
     val shouldPrint = printTypings && !context.undetparams.isEmpty
     withImplicitStats { () =>
       val implicitSearchContext = context.makeImplicit(reportAmbiguous)
-      inferImplicitPre(shouldPrint, tree, pt, isView, context)
+      inferImplicitPre(shouldPrint, tree, context)
       val result = search(tree, pt, isView, implicitSearchContext, pos)
       inferImplicitPost(result, saveAmbiguousDivergent, context, implicitSearchContext)
       result
@@ -104,53 +115,6 @@ with ImplicitStatsCompat
   : SearchResult = {
       if (featureImplicits) inferImplicitImpl(tree, pt, r, v, context, s, pos)
       else super.inferImplicit(tree, pt, r, v, context, s, pos)
-  }
-
-  abstract class ImplicitSearchImpl(tree: Tree, pt: Type, isView: Boolean, context0: Context,
-    pos0: Position = NoPosition)
-  extends ImplicitSearch(tree, pt, isView, context0, pos0)
-  {
-    trait InferencerImpl
-    { self: Inferencer =>
-      import InferErrorGen._
-
-      /**
-       * Duplication of the original method, because the error is created within.
-       */
-      override def checkBounds(
-        tree: Tree,
-        pre: Type,
-        owner: Symbol,
-        tparams: List[Symbol],
-        targs: List[Type],
-        prefix: String
-      ): Boolean = {
-        def issueBoundsError() = {
-          notWithinBounds(tree, prefix, targs, tparams, Nil)
-          false
-        }
-        def issueKindBoundErrors(errs: List[String]) = {
-          KindBoundErrors(tree, prefix, targs, tparams, errs)
-          false
-        }
-        def check() = checkKindBounds(tparams, targs, pre, owner) match {
-          case Nil =>
-            isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
-          case errs =>
-            (targs contains WildcardType) || issueKindBoundErrors(errs)
-        }
-        targs.exists(_.isErroneous) || tparams.exists(_.isErroneous) || check()
-      }
-
-      def notWithinBounds(tree: Tree, prefix: String, targs: List[Type], tparams: List[Symbol],
-        kindErrors: List[String]) = {
-          if (tree.tpe != null && tree.tpe =:= pt) {
-            val err = NonConfBounds(pt, tree, implicitNesting, targs, tparams)
-            implicitErrors = err :: implicitErrors
-          }
-          NotWithinBounds(tree, prefix, targs, tparams, Nil)
-      }
-    }
   }
 
   def noImplicitError(tree: Tree, param: Symbol)
@@ -172,6 +136,13 @@ with ImplicitStatsCompat
     }
   }
 
+  override def NoImplicitFoundError(tree: Tree, param: Symbol)
+  (implicit context: Context): Unit = {
+    if (featureImplicits) noImplicitError(tree, param)
+    else super.NoImplicitFoundError(tree, param)
+  }
+
   def nativeNoImplicitFoundError(tree: Tree, param: Symbol)
-  (implicit context: Context): Unit
+  (implicit context: Context): Unit =
+    super.NoImplicitFoundError(tree, param)
 }
