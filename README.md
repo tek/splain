@@ -8,6 +8,15 @@ additional info for implicit resolution errors.
 addCompilerPlugin("io.tryp" % "splain" % "0.5.0" cross CrossVersion.patch)
 ```
 
+If you want to use support scala versions both newer and older than `2.12.4`, use:
+
+```sbt
+libraryDependencies += {
+  val v = if (scalaVersion.value <= "2.12.4") "0.4.1" else "0.5.0"
+  ("io.tryp" %% "splain" % v cross CrossVersion.patch).withConfigurations(Some("plugin->default(compile)"))
+}
+```
+
 # Configuration
 The plugin can be configured via compiler plugin parameters with the format:
 ```
