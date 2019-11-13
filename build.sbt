@@ -1,5 +1,10 @@
 scalaVersion := "2.13.1"
 crossScalaVersions ++= List(
+  "2.12.5",
+  "2.12.6",
+  "2.12.7",
+  "2.12.8",
+  "2.12.9",
   "2.12.10",
 )
 crossVersion := CrossVersion.full
