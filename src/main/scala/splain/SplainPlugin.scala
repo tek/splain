@@ -6,21 +6,27 @@ import scala.tools.nsc._
 class SplainPlugin(val global: Global)
 extends plugins.Plugin
 {
-  val analyzer =
-    new { val global = SplainPlugin.this.global } with Analyzer {
-      def featureImplicits = boolean(keyImplicits)
-      def featureFoundReq = boolean(keyFoundReq)
-      def featureInfix = boolean(keyInfix)
-      def featureBounds = boolean(keyBounds)
-      def featureColor = boolean(keyColor)
-      def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
-      def featureCompact = boolean(keyCompact)
-      def featureTree = boolean(keyTree)
-      def featureBoundsImplicits = boolean(keyBoundsImplicits)
-      def featureTruncRefined = int(keyTruncRefined).filterNot(_ == 0)
-      def featureRewrite = opt(keyRewrite, "")
-      def featureKeepModules = int(keyKeepModules).getOrElse(0)
-    }
+
+  trait Features {
+    def featureImplicits = boolean(keyImplicits)
+    def featureFoundReq = boolean(keyFoundReq)
+    def featureInfix = boolean(keyInfix)
+    def featureBounds = boolean(keyBounds)
+    def featureColor = boolean(keyColor)
+    def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
+    def featureCompact = boolean(keyCompact)
+    def featureTree = boolean(keyTree)
+    def featureBoundsImplicits = boolean(keyBoundsImplicits)
+    def featureTruncRefined = int(keyTruncRefined).filterNot(_ == 0)
+    def featureRewrite = opt(keyRewrite, "")
+    def featureKeepModules = int(keyKeepModules).getOrElse(0)
+  }
+
+  val analyzer = if (global.settings.YmacroAnnotations) {
+    new { val global = SplainPlugin.this.global } with Analyzer with typechecker.MacroAnnotationNamers with Features
+  } else {
+    new { val global = SplainPlugin.this.global } with Analyzer with Features
+  }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
