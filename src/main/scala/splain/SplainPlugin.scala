@@ -3,30 +3,8 @@ package splain
 import scala.collection.mutable
 import scala.tools.nsc._
 
-class SplainPlugin(val global: Global)
-extends plugins.Plugin
+class SplainPlugin(val global: Global) extends SplainPluginCompat
 {
-
-  trait Features {
-    def featureImplicits = boolean(keyImplicits)
-    def featureFoundReq = boolean(keyFoundReq)
-    def featureInfix = boolean(keyInfix)
-    def featureBounds = boolean(keyBounds)
-    def featureColor = boolean(keyColor)
-    def featureBreakInfix = int(keyBreakInfix).filterNot(_ == 0)
-    def featureCompact = boolean(keyCompact)
-    def featureTree = boolean(keyTree)
-    def featureBoundsImplicits = boolean(keyBoundsImplicits)
-    def featureTruncRefined = int(keyTruncRefined).filterNot(_ == 0)
-    def featureRewrite = opt(keyRewrite, "")
-    def featureKeepModules = int(keyKeepModules).getOrElse(0)
-  }
-
-  val analyzer = if (global.settings.YmacroAnnotations) {
-    new { val global = SplainPlugin.this.global } with Analyzer with typechecker.MacroAnnotationNamers with Features
-  } else {
-    new { val global = SplainPlugin.this.global } with Analyzer with Features
-  }
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
@@ -55,6 +33,25 @@ extends plugins.Plugin
     phasesSet ++= newScs
   }
 
+  override def init(options: List[String], error: String => Unit): Boolean = {
+    def invalid(opt: String) = error(s"splain: invalid option `$opt`")
+    def setopt(key: String, value: String) = {
+      if (opts.contains(key)) opts.update(key, value)
+      else invalid(key)
+    }
+    options.foreach { opt =>
+      opt.split(":").toList match {
+        case key :: value :: Nil => setopt(key, value)
+        case key :: Nil => setopt(key, "true")
+        case _ => invalid(opt)
+      }
+    }
+    enabled
+  }
+}
+
+abstract class SplainPluginLike extends plugins.Plugin {
+
   val name = "splain"
   val description = "better types and implicit errors"
   val components = Nil
@@ -72,22 +69,6 @@ extends plugins.Plugin
   val keyTruncRefined = "truncrefined"
   val keyRewrite = "rewrite"
   val keyKeepModules = "keepmodules"
-
-  override def init(options: List[String], error: String => Unit): Boolean = {
-    def invalid(opt: String) = error(s"splain: invalid option `$opt`")
-    def setopt(key: String, value: String) = {
-      if (opts.contains(key)) opts.update(key, value)
-      else invalid(key)
-    }
-    options.foreach { opt =>
-      opt.split(":").toList match {
-        case key :: value :: Nil => setopt(key, value)
-        case key :: Nil => setopt(key, "true")
-        case _ => invalid(opt)
-      }
-    }
-    enabled
-  }
 
   val opts: mutable.Map[String, String] = mutable.Map(
     keyAll -> "true",
