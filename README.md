@@ -4,6 +4,8 @@ additional info for implicit resolution errors.
 
 # Usage
 
+Include this line in your `build.sbt` (_not_ `project/plugins.sbt`!!):
+
 ```sbt
 addCompilerPlugin("io.tryp" % "splain" % "0.5.1" cross CrossVersion.patch)
 ```
