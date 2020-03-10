@@ -18,8 +18,14 @@ libraryDependencies ++= List(
 
 libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
 
-addSourceDir { case (2, minor, _) if minor == 12 => "2.12" }
-addSourceDir { case (2, minor, _) if minor == 13 => "2.13" }
+addSourceDir {
+  case (2, 12, _) => "2.12"
+  case (2, 13, _) => "2.13"
+}
+addSourceDir {
+  case (2, 13, patch) if patch >= 2 => "2.13.2+"
+  case _ => "2.13.1-"
+}
 javaOptions in Test ++= {
   val jar = (Keys.`package` in Compile).value.getAbsolutePath
     val tests = baseDirectory.value / "tests"

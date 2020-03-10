@@ -8,6 +8,7 @@ with typechecker.ContextErrors
 with Formatting
 with ImplicitStats
 with ImplicitsCompat
+with WarningCompat
 { self: Analyzer =>
   import global._
 
@@ -93,7 +94,7 @@ with ImplicitsCompat
         else if (result.tree.symbol.isModule) result.tree.symbol.moduleClass
         else result.tree.symbol
       if (context.owner.hasTransOwner(s))
-        context.warning(result.tree.pos, s"Implicit resolves to enclosing ${result.tree.symbol}")
+        contextWarning(context, result.tree.pos, s"Implicit resolves to enclosing ${result.tree.symbol}")
     }
     emitResult(implicitSearchContext)(result)
   }
