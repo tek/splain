@@ -1,5 +1,7 @@
 package splain
 
+import scala.tools.nsc.Reporting
+
 trait WarningCompat
 { self: Analyzer =>
   import global._
