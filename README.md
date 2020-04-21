@@ -146,7 +146,7 @@ The option `rewrite` takes a string that is parsed as a `;`-delimited list of re
 For example:
 
 ```
--Psplain:rewrite:cats\\.data/cd;.Type
+-P:splain:rewrite:cats\\.data/cd;.Type
 ```
 
 This parses as two rewrite items:
@@ -161,5 +161,5 @@ If it is absent, the empty string is substituted.
 The option `keepmodules` determines how many segments of the module path before the type name will be displayed, but
 only if the `rewrite` mechanism hasn't changed anything.
 
-So with `-Psplain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` will be displayed as `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
+So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` will be displayed as `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
