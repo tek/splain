@@ -1,4 +1,5 @@
 # A scala compiler plugin for more concise errors
+
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
 
@@ -7,7 +8,7 @@ additional info for implicit resolution errors.
 Include this line in your `build.sbt` (_not_ `project/plugins.sbt`!!):
 
 ```sbt
-addCompilerPlugin("io.tryp" % "splain" % "0.5.1" cross CrossVersion.patch)
+addCompilerPlugin("io.tryp" % "splain" % "0.5.2" cross CrossVersion.patch)
 ```
 
 If you want to support scala versions both newer and older than `2.12.4`, use:
@@ -83,6 +84,7 @@ If the parameter `boundsimplicits` is set to false, any **nonconformant bounds**
 
 For comparison, this is the regular compiler output for this case (with
 formatted types):
+
 ```
 [info] unit/src/basic.scala:35: f is not a valid implicit value for
 splain.ImplicitChain.T2 because:
@@ -103,8 +105,10 @@ parameter e: (C *** D) >:< C with D {type A = D; type B = C}
 ```
 
 # infix type and type argument line breaking
+
 If the parameter `breakinfix` is given and greater than 0, types longer than
 that number will be split into multiple lines:
+
 ```
 implicit error;
 !I e: String
@@ -133,14 +137,17 @@ f invalid because
 ```
 
 # truncating refined types
+
 A type of the shape `T { type A = X; type B = Y }` will be displayed as `T {...}` if the parameter `truncrefined` is set
 to a value `/= 0` and the refinement's length is greater than the value.
 
 # truncating module paths
+
 Default behaviour when printing type names is to omit the whole module path and only print the last segment.
 Two options modify this behaviour:
 
 ## regex rewrite
+
 The option `rewrite` takes a string that is parsed as a `;`-delimited list of regexes and optional replacements.
 
 For example:
@@ -158,6 +165,7 @@ If a slash is present, the string following it will be used as a replacement for
 If it is absent, the empty string is substituted.
 
 ## dropping module segments by count
+
 The option `keepmodules` determines how many segments of the module path before the type name will be displayed, but
 only if the `rewrite` mechanism hasn't changed anything.
 

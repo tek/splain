@@ -1,0 +1,2 @@
+type mismatch;
+  A with B with E|C with F|<none> {type X = Int|String; type Y = String; type Z = <none>|String}

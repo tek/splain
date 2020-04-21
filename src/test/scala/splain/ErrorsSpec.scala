@@ -88,7 +88,6 @@ extends SpecBase
   implicit resolution chains ${checkError("chain")}
   ambiguous implicits ${checkError("ambiguous")}
   found/required type diff ${checkError("foundreq")}
-  diff with refinement type ${checkError("refinediff")}
   nonconformant bounds ${checkError("bounds")}
   aux type ${checkError("aux")}
   shapeless Lazy ${checkError("lazy")}
@@ -99,6 +98,7 @@ extends SpecBase
   compact tree printing ${checkError("tree", "-P:splain:tree -P:splain:compact", Some("errorCompact"))}
   type prefix stripping ${checkError("prefix", "-P:splain:keepmodules:2")}
   regex type rewriting ${checkError("regex-rewrite", "-P:splain:rewrite:\\.Level;0/5")}
+  refined type diff ${checkError("refined")}
   """
 }
 
@@ -106,5 +106,6 @@ class DevSpec
 extends SpecBase
 {
   def is = s2"""
+  truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   """
 }

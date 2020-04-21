@@ -6,11 +6,29 @@ trait Formatters
 
   def formatType(tpe: Type, top: Boolean): Formatted
 
+  object Refined
+  {
+    def unapply(tpe: Type): Option[(List[Type], Scope)] =
+      tpe match {
+        case RefinedType(parents, decls) =>
+          Some((parents, decls))
+        case t @ SingleType(_, _) =>
+          unapply(t.underlying)
+        case _ =>
+          None
+      }
+  }
+
   trait SpecialFormatter
   {
-    def apply[A](tpe: Type, simple: String, args: List[A],
-      formattedArgs: => List[Formatted], top: Boolean,
-      rec: A => Boolean => Formatted): Option[Formatted]
+    def apply[A](
+      tpe: Type,
+      simple: String,
+      args: List[A],
+      formattedArgs: => List[Formatted],
+      top: Boolean,
+      rec: A => Boolean => Formatted,
+    ): Option[Formatted]
 
     def diff(left: Type, right: Type, top: Boolean): Option[Formatted]
   }
@@ -119,6 +137,96 @@ trait Formatters
           val right = formatType(a1, true) -> formatType(a2, true)
           Some(formatInfix("->>", left, right, top, recT))
         case _ => None
+      }
+    }
+  }
+
+  object RefinedFormatter
+  extends SpecialFormatter
+  {
+    object DeclSymbol
+    {
+      def unapply(sym: Symbol): Option[(Formatted, Formatted)] =
+        if (sym.hasRawInfo) Some((Simple(sym.simpleName.toString), formatType(sym.rawInfo, true)))
+        else None
+    }
+
+    val ignoredTypes: List[Type] =
+      List(typeOf[Object], typeOf[Any], typeOf[AnyRef])
+
+    def sanitizeParents: List[Type] => List[Type] = {
+      case List(tpe) =>
+        List(tpe)
+      case tpes =>
+        tpes.filterNot(t => ignoredTypes.exists(_ =:= t))
+    }
+
+    def formatDecl: Symbol => Formatted = {
+      case DeclSymbol(n, t) => Decl(n, t)
+      case sym => Simple(sym.toString)
+    }
+
+    def apply[A](
+      tpe: Type,
+      simple: String,
+      args: List[A],
+      formattedArgs: => List[Formatted],
+      top: Boolean,
+      rec: A => Boolean => Formatted
+    ): Option[Formatted] =
+      tpe match {
+        case Refined(parents, decls) =>
+          Some(RefinedForm(sanitizeParents(parents).map(formatType(_, top)), decls.toList.map(formatDecl)))
+        case _ =>
+          None
+      }
+
+    val none: Formatted =
+      Simple("<none>")
+
+    def separate[A](left: List[A], right: List[A])
+    : (List[A], List[A], List[A]) = {
+      val common = Set.from(left).intersect(Set.from(right))
+      val uniqueLeft = Set.from(left) -- common
+      val uniqueRight = Set.from(right) -- common
+      (common.toList, uniqueLeft.toList, uniqueRight.toList)
+    }
+
+    def matchTypes(left: List[Type], right: List[Type]): List[Formatted] = {
+      val (common, uniqueLeft, uniqueRight) =
+        separate(left.map(formatType(_, true)), right.map(formatType(_, true)))
+      val diffs =
+        uniqueLeft.toList
+          .zipAll(uniqueRight.toList, none, none)
+          .map { case (l, r) => Diff(l, r) }
+      common.toList ++ diffs
+    }
+
+    def filterDecls(syms: List[Symbol]): List[(Formatted, Formatted)] =
+      syms.collect { case DeclSymbol(sym, rhs) => (sym, rhs) }
+
+    def matchDecls(left: List[Symbol], right: List[Symbol]): List[Formatted] = {
+      val (common, uniqueLeft, uniqueRight) =
+        separate(filterDecls(left), filterDecls(right))
+      val diffs =
+        uniqueLeft.toList.map(Some(_))
+          .zipAll(uniqueRight.toList.map(Some(_)), None, None)
+          .collect {
+            case (Some((sym, l)), Some((_, r))) => DeclDiff(sym, l, r)
+            case (None, Some((sym, r))) => DeclDiff(sym, none, r)
+            case (Some((sym, l)), None) => DeclDiff(sym, l, none)
+          }
+      common.toList.map { case (sym, rhs) => Decl(sym, rhs) } ++ diffs
+    }
+
+    def diff(left: Type, right: Type, top: Boolean): Option[Formatted] = {
+      (left, right) match {
+        case (Refined(leftParents, leftDecls), Refined(rightParents, rightDecls)) =>
+          val parents = matchTypes(sanitizeParents(leftParents), sanitizeParents(rightParents)).sorted
+          val decls = matchDecls(leftDecls.toList, rightDecls.toList).sorted
+          Some(RefinedForm(parents, decls))
+        case _ =>
+          None
       }
     }
   }

@@ -1,2 +1,2 @@
 type mismatch;
-  Int *** (List[C|String] *** C {type A = C}|C {type A = F.type}) >:< D
+  Int *** (List[C|String] *** C {type A = C|F.type}) >:< D

@@ -80,14 +80,6 @@ with ImplicitMsgCompat
 
   def isAux(tpe: Type) = ctorNames(tpe).lastOption.contains("Aux")
 
-  def formatRefinement(sym: Symbol) = {
-    if (sym.hasRawInfo) {
-      val rhs = showType(sym.rawInfo)
-      s"$sym = $rhs"
-    }
-    else sym.toString
-  }
-
   def formatAuxSimple(tpe: Type) = {
     val names = ctorNames(tpe)
     val num = if (names.lift(names.length - 2).contains("Case")) 3 else 2
@@ -151,17 +143,12 @@ with ImplicitMsgCompat
     else stripped
   }
 
-  def formatNormalSimple(tpe: Type) =
+  def formatNormalSimple(tpe: Type): String =
     tpe match {
-    case RefinedType(parents, decls) =>
-      val simple = parents map showType mkString " with "
-      val refine = decls map formatRefinement mkString "; "
-      val refine1 = featureTruncRefined.collect { case len if (refine.length > len) => "..." }.getOrElse(refine)
-      s"$simple {$refine1}"
-    case a @ WildcardType => a.toString
-    case a =>
-      stripType(a)
-  }
+      case a @ WildcardType => a.toString
+      case a =>
+        stripType(a)
+    }
 
   def formatSimpleType(tpe: Type): String =
     if (isAux(tpe)) formatAuxSimple(tpe)
@@ -195,6 +182,12 @@ with ImplicitMsgCompat
       case head :: Nil => head
       case _ => args.mkString("(", ",", ")")
     }
+
+  def showRefined(parents: List[String], decls: List[String]) = {
+    val p = parents.mkString(" with ")
+    val d = if (decls.isEmpty) "" else decls.mkString(" {", "; ", "}")
+    s"$p$d"
+  }
 
   def showSLRecordItem(key: Formatted, value: Formatted) = {
     FlatType(
@@ -259,6 +252,9 @@ with ImplicitMsgCompat
 
   val showFormattedLCache = FormatCache[(Formatted, Boolean), TypeRepr]
 
+  def truncateDecls(decls: List[Formatted]): Boolean =
+    featureTruncRefined.exists(_ < decls.map(_.length).sum)
+
   def showFormattedLImpl(tpe: Formatted, break: Boolean): TypeRepr =
     tpe match {
       case Simple(a) => FlatType(a)
@@ -280,10 +276,23 @@ with ImplicitMsgCompat
         FlatType(showTuple(elems map showFormattedNoBreak))
       case SLRecordItem(key, value) =>
         showSLRecordItem(key, value)
+      case RefinedForm(elems, decls) if truncateDecls(decls) =>
+        FlatType(showRefined(elems.map(showFormattedNoBreak), List("...")))
+      case RefinedForm(elems, decls) =>
+        FlatType(showRefined(elems.map(showFormattedNoBreak), decls.map(showFormattedNoBreak)))
       case Diff(left, right) =>
         val l = showFormattedNoBreak(left)
         val r = showFormattedNoBreak(right)
         FlatType(s"${l.red}|${r.green}")
+      case Decl(sym, rhs) =>
+        val s = showFormattedNoBreak(sym)
+        val r = showFormattedNoBreak(rhs)
+        FlatType(s"type $s = $r")
+      case DeclDiff(sym, left, right) =>
+        val s = showFormattedNoBreak(sym)
+        val l = showFormattedNoBreak(left)
+        val r = showFormattedNoBreak(right)
+        FlatType(s"type $s = ${l.red}|${r.green}")
     }
 
   def showFormattedL(tpe: Formatted, break: Boolean): TypeRepr = {
@@ -322,7 +331,8 @@ with ImplicitMsgCompat
     List(
       FunctionFormatter,
       TupleFormatter,
-      SLRecordItemFormatter
+      SLRecordItemFormatter,
+      RefinedFormatter
     )
 
   def formatSpecial[A](tpe: Type, simple: String, args: List[A], formattedArgs: => List[Formatted], top: Boolean,
@@ -395,8 +405,8 @@ with ImplicitMsgCompat
     else if (left.typeSymbol == right.typeSymbol)
       formatDiffInfix(left, right, top)
     else
-      formatDiffSpecial(left, right, top) getOrElse
-        formatDiffSimple(left, right)
+      formatDiffSpecial(left, right, top)
+        .getOrElse(formatDiffSimple(left, right))
   }
 
   val formatDiffCache = FormatCache[(Type, Type, Boolean), Formatted]

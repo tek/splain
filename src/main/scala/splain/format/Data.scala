@@ -5,6 +5,46 @@ sealed trait Formatted
   def length: Int
 }
 
+object Formatted
+{
+  def comparator: Formatted => String = {
+    case Infix(left, _, _, _) =>
+      comparator(left)
+    case Simple(tpe) =>
+      tpe
+    case UnitForm =>
+      "()"
+    case Applied(cons, _) =>
+      comparator(cons)
+    case TupleForm(Nil) =>
+      "()"
+    case TupleForm(h :: _) =>
+      comparator(h)
+    case FunctionForm(Nil, ret, _) =>
+      comparator(ret)
+    case FunctionForm(h :: _, _, _) =>
+      comparator(h)
+    case SLRecordItem(key, _) =>
+      comparator(key)
+    case RefinedForm(Nil, _) =>
+      "()"
+    case RefinedForm(h :: _, _) =>
+      comparator(h)
+    case Diff(l, _) =>
+      comparator(l)
+    case Decl(sym, _) =>
+      comparator(sym)
+    case DeclDiff(sym, _, _) =>
+      comparator(sym)
+  }
+
+  implicit def Ordering_Formatted: Ordering[Formatted] =
+    new Ordering[Formatted] {
+      def compare(x: Formatted, y: Formatted): Int =
+        Ordering[String].compare(comparator(x), comparator(y))
+    }
+}
+
 case class Infix(infix: Formatted, left: Formatted, right: Formatted,
   top: Boolean)
 extends Formatted
@@ -56,10 +96,28 @@ extends Formatted
   def length = key.length + value.length + 5
 }
 
+case class RefinedForm(elems: List[Formatted], decls: List[Formatted])
+extends Formatted
+{
+  def length = elems.map(_.length).sum + (elems.length - 1) * 6
+}
+
 case class Diff(left: Formatted, right: Formatted)
 extends Formatted
 {
   def length = left.length + right.length + 1
+}
+
+case class Decl(sym: Formatted, rhs: Formatted)
+extends Formatted
+{
+  def length = sym.length + rhs.length + 8
+}
+
+case class DeclDiff(sym: Formatted, left: Formatted, right: Formatted)
+extends Formatted
+{
+  def length = sym.length + left.length + right.length + 9
 }
 
 trait TypeRepr
