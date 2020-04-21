@@ -186,9 +186,11 @@ trait Formatters
 
     def separate[A](left: List[A], right: List[A])
     : (List[A], List[A], List[A]) = {
-      val common = Set.from(left).intersect(Set.from(right))
-      val uniqueLeft = Set.from(left) -- common
-      val uniqueRight = Set.from(right) -- common
+      val leftS = Set(left: _*)
+      val rightS = Set(right: _*)
+      val common = leftS.intersect(rightS)
+      val uniqueLeft = leftS -- common
+      val uniqueRight = rightS -- common
       (common.toList, uniqueLeft.toList, uniqueRight.toList)
     }
 
