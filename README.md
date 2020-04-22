@@ -63,6 +63,10 @@ special consideration for `shapeless.Record`:
 
 ![foundreq_record](img/foundreq_record.jpg)
 
+In the case of refined types in the form of `Client with Database with
+Publisher`, the types will be matched with each other and a missing or surplus
+type will be indicated by a `<none>` label.
+
 # implicit resolution chains
 When an implicit is not found, only the outermost error at the invocation point
 is printed. This can be expanded with the compiler flag `-Xlog-implicits`, but
