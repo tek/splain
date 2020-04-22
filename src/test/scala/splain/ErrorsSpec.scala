@@ -34,7 +34,7 @@ import types._
 
   def code(name: String) = types + fileContentString(name, "code.scala")
 
-  def error(name: String, fname: Option[String]) = fileContentString(name, fname getOrElse "error").stripLineEnd
+  def error(name: String, fname: Option[String]) = fileContentString(name, fname.getOrElse("error")).stripLineEnd
 
   val cm = universe.runtimeMirror(getClass.getClassLoader)
 
@@ -99,6 +99,7 @@ extends SpecBase
   type prefix stripping ${checkError("prefix", "-P:splain:keepmodules:2")}
   regex type rewriting ${checkError("regex-rewrite", "-P:splain:rewrite:\\.Level;0/5")}
   refined type diff ${checkError("refined")}
+  truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   """
 }
 
@@ -106,6 +107,5 @@ class DevSpec
 extends SpecBase
 {
   def is = s2"""
-  truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   """
 }

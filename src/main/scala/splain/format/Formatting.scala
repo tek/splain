@@ -120,6 +120,8 @@ with ImplicitMsgCompat
   def pathPrefix: List[String] => String = {
     case Nil =>
       ""
+    case List("<noprefix>") =>
+      ""
     case a =>
       a.mkString("", ".", ".")
   }
