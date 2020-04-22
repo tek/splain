@@ -12,6 +12,10 @@ object Formatted
       comparator(left)
     case Simple(tpe) =>
       tpe
+    case Qualified(Nil, tpe) =>
+      tpe
+    case Qualified(path, tpe) =>
+      s"${path.mkString}$tpe"
     case UnitForm =>
       "()"
     case Applied(cons, _) =>
@@ -49,37 +53,43 @@ case class Infix(infix: Formatted, left: Formatted, right: Formatted,
   top: Boolean)
 extends Formatted
 {
-  def length = List(infix, left, right).map(_.length).sum + 2
+  def length: Int = List(infix, left, right).map(_.length).sum + 2
 }
 
 case class Simple(tpe: String)
 extends Formatted
 {
-  def length = tpe.length
+  def length: Int = tpe.length
+}
+
+case class Qualified(path: List[String], tpe: String)
+extends Formatted
+{
+  def length: Int = path.map(_.length).sum + path.length + tpe.length
 }
 
 case object UnitForm
 extends Formatted
 {
-  def length = 4
+  def length: Int = 4
 }
 
 case class Applied(cons: Formatted, args: List[Formatted])
 extends Formatted
 {
-  def length = args.map(_.length).sum + (args.length - 1) * 2 + cons.length + 2
+  def length: Int = args.map(_.length).sum + (args.length - 1) * 2 + cons.length + 2
 }
 
 case class TupleForm(elems: List[Formatted])
 extends Formatted
 {
-  def length = elems.map(_.length).sum + (elems.length - 1) + 2
+  def length: Int = elems.map(_.length).sum + (elems.length - 1) + 2
 }
 
 case class FunctionForm(args: List[Formatted], ret: Formatted, top: Boolean)
 extends Formatted
 {
-  def length = args.map(_.length).sum + (args.length - 1) + 2 + ret.length + 4
+  def length: Int = args.map(_.length).sum + (args.length - 1) + 2 + ret.length + 4
 }
 
 object FunctionForm
@@ -93,31 +103,31 @@ object FunctionForm
 case class SLRecordItem(key: Formatted, value: Formatted)
 extends Formatted
 {
-  def length = key.length + value.length + 5
+  def length: Int = key.length + value.length + 5
 }
 
 case class RefinedForm(elems: List[Formatted], decls: List[Formatted])
 extends Formatted
 {
-  def length = elems.map(_.length).sum + (elems.length - 1) * 6
+  def length: Int = elems.map(_.length).sum + (elems.length - 1) * 6
 }
 
 case class Diff(left: Formatted, right: Formatted)
 extends Formatted
 {
-  def length = left.length + right.length + 1
+  def length: Int = left.length + right.length + 1
 }
 
 case class Decl(sym: Formatted, rhs: Formatted)
 extends Formatted
 {
-  def length = sym.length + rhs.length + 8
+  def length: Int = sym.length + rhs.length + 8
 }
 
 case class DeclDiff(sym: Formatted, left: Formatted, right: Formatted)
 extends Formatted
 {
-  def length = sym.length + left.length + right.length + 9
+  def length: Int = sym.length + left.length + right.length + 9
 }
 
 trait TypeRepr
@@ -142,7 +152,7 @@ case class FlatType(flat: String)
 extends TypeRepr
 {
   def broken = false
-  def length = flat.length
+  def length: Int = flat.length
   def lines = List(flat)
   def indent = FlatType("  " + flat)
 }

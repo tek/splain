@@ -135,7 +135,7 @@ trait Formatters
           val recT = rec.tupled
           val left = formatKey(k1) -> formatKey(k2)
           val right = formatType(a1, true) -> formatType(a2, true)
-          Some(formatInfix("->>", left, right, top, recT))
+          Some(formatInfix(Nil, "->>", left, right, top, recT))
         case _ => None
       }
     }

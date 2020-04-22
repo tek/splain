@@ -99,6 +99,7 @@ extends SpecBase
   type prefix stripping ${checkError("prefix", "-P:splain:keepmodules:2")}
   regex type rewriting ${checkError("regex-rewrite", "-P:splain:rewrite:\\.Level;0/5")}
   refined type diff ${checkError("refined")}
+  disambiguate types ${checkError("disambiguate")}
   truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   """
 }

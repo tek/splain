@@ -15,6 +15,6 @@ abstract class SplainPluginCompat extends SplainPluginLike {
       def featureBoundsImplicits = boolean(keyBoundsImplicits)
       def featureTruncRefined = int(keyTruncRefined).filterNot(_ == 0)
       def featureRewrite = opt(keyRewrite, "")
-      def featureKeepModules = int(keyKeepModules).getOrElse(0)
+      def featureKeepModules = int(keyKeepModules)
     }
 }
