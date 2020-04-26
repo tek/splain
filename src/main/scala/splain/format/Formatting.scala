@@ -301,7 +301,7 @@ with ImplicitMsgCompat
       case Qualified(Nil, name) => FlatType(name)
       case Qualified(path, name) => showFormattedQualified(path, name)
       case Applied(cons, args) =>
-        val reprs = args map (showFormattedL(_, break))
+        val reprs = args.map(showFormattedL(_, break))
         showTypeApply(showFormattedNoBreak(cons), reprs, break)
       case tpe @ Infix(_, _, _, top) =>
         val flat = flattenInfix(tpe)
@@ -332,6 +332,9 @@ with ImplicitMsgCompat
         val s = showFormattedNoBreak(sym)
         val diff = formattedDiff(left, right)
         FlatType(s"type $s = $diff")
+      case ByName(tpe) =>
+        val t = showFormattedNoBreak(tpe)
+        FlatType(s"(=> $t)")
     }
 
   def showFormattedL(tpe: Formatted, break: Boolean): TypeRepr = {
@@ -376,7 +379,8 @@ with ImplicitMsgCompat
       FunctionFormatter,
       TupleFormatter,
       SLRecordItemFormatter,
-      RefinedFormatter
+      RefinedFormatter,
+      ByNameFormatter,
     )
 
   def formatSpecial[A](tpe: Type, simple: String, args: List[A], formattedArgs: => List[Formatted], top: Boolean,

@@ -232,4 +232,27 @@ trait Formatters
       }
     }
   }
+
+  object ByNameFormatter
+  extends SpecialFormatter
+  {
+    def apply[A](
+      tpe: Type,
+      simple: String,
+      args: List[A],
+      formattedArgs: => List[Formatted],
+      top: Boolean,
+      rec: A => Boolean => Formatted
+    ): Option[Formatted] =
+      tpe match {
+        case TypeRef(_, sym, List(a)) if sym.name.decodedName.toString == "<byname>" =>
+          Some(ByName(formatType(a, true)))
+        case _ =>
+          None
+      }
+
+    def diff(left: Type, right: Type, top: Boolean): Option[Formatted] = {
+      None
+    }
+  }
 }

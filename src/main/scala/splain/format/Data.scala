@@ -40,6 +40,8 @@ object Formatted
       comparator(sym)
     case DeclDiff(sym, _, _) =>
       comparator(sym)
+    case ByName(tpe) =>
+      comparator(tpe)
   }
 
   implicit def Ordering_Formatted: Ordering[Formatted] =
@@ -128,6 +130,12 @@ case class DeclDiff(sym: Formatted, left: Formatted, right: Formatted)
 extends Formatted
 {
   def length: Int = sym.length + left.length + right.length + 9
+}
+
+case class ByName(tpe: Formatted)
+extends Formatted
+{
+  def length: Int = tpe.length + 5
 }
 
 trait TypeRepr
