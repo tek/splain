@@ -1,4 +1,4 @@
 ambiguous implicit values:
- both method f1 in object Ambiguous of type => types.D
- and method f2 in object Ambiguous of type => types.D
+ both method f1 in object Ambiguous of type types.D
+ and method f2 in object Ambiguous of type types.D
  match expected type types.D
