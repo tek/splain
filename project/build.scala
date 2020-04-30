@@ -25,6 +25,10 @@ extends AutoPlugin
       (unmanagedSourceDirectories in Compile) +=
         matchScala(f).value.map(b => sourceDirectory.value / "main" / s"scala-$b")
 
+    def addTestSourceDir(f: PartialFunction[(Int, Int, Int), String]): Def.Setting[Seq[File]] =
+      (unmanagedSourceDirectories in Test) +=
+        matchScala(f).value.map(b => sourceDirectory.value / "test" / s"scala-$b")
+
     val github = "https://github.com/tek"
     val repo = s"$github/splain"
   }

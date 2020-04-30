@@ -86,7 +86,6 @@ extends SpecBase
 {
   def is = s2"""
   implicit resolution chains ${checkError("chain")}
-  ambiguous implicits ${checkError("ambiguous")}
   found/required type diff ${checkError("foundreq")}
   nonconformant bounds ${checkError("bounds")}
   aux type ${checkError("aux")}

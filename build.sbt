@@ -1,7 +1,6 @@
 scalaVersion := "2.13.2"
 crossScalaVersions ++= List(
   "2.13.1",
-  "2.12.5",
   "2.12.6",
   "2.12.7",
   "2.12.8",
@@ -25,6 +24,10 @@ addSourceDir {
   case (2, 13, _) => "2.13"
 }
 addSourceDir {
+  case (2, 13, patch) if patch >= 2 => "2.13.2+"
+  case _ => "2.13.1-"
+}
+addTestSourceDir {
   case (2, 13, patch) if patch >= 2 => "2.13.2+"
   case _ => "2.13.1-"
 }
