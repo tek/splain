@@ -15,10 +15,9 @@ If you want to support scala versions both newer and older than `2.12.5`, use:
 
 ```sbt
 libraryDependencies += {
-  val v = scalaVersion.value.split(".").toList match {
-    case List("2", "12", p) if p.toInt <= 5 => "0.4.1"
-    case _ => "0.5.6"
-  }
+  val v =
+    if (scalaVersion.value.replaceFirst(raw"\.(\d)$$",".0$1") <= "2.12.04") "0.4.1"
+    else "0.5.6"
   ("io.tryp" %% "splain" % v cross CrossVersion.patch).withConfigurations(Some("plugin->default(compile)"))
 }
 ```
