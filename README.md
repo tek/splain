@@ -8,14 +8,17 @@ additional info for implicit resolution errors.
 Include this line in your `build.sbt` (_not_ `project/plugins.sbt`!!):
 
 ```sbt
-addCompilerPlugin("io.tryp" % "splain" % "0.5.5" cross CrossVersion.patch)
+addCompilerPlugin("io.tryp" % "splain" % "0.5.6" cross CrossVersion.patch)
 ```
 
-If you want to support scala versions both newer and older than `2.12.4`, use:
+If you want to support scala versions both newer and older than `2.12.5`, use:
 
 ```sbt
 libraryDependencies += {
-  val v = if (scalaVersion.value <= "2.12.4") "0.4.1" else "0.5.5"
+  val v = scalaVersion.value.split(".").toList match {
+    case List("2", "12", p) if p.toInt <= 5 => "0.4.1"
+    case _ => "0.5.6"
+  }
   ("io.tryp" %% "splain" % v cross CrossVersion.patch).withConfigurations(Some("plugin->default(compile)"))
 }
 ```
