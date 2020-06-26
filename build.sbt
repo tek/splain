@@ -1,5 +1,6 @@
-scalaVersion := "2.13.2"
+scalaVersion := "2.13.3"
 crossScalaVersions ++= List(
+  "2.13.2",
   "2.13.1",
   "2.12.6",
   "2.12.7",
