@@ -101,6 +101,7 @@ extends SpecBase
   disambiguate types ${checkError("disambiguate")}
   truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   byname higher order ${checkError("byname-higher")}
+  Tuple1 ${checkError("tuple1")}
   """
 }
 

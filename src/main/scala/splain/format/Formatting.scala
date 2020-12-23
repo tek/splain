@@ -197,6 +197,12 @@ with ImplicitMsgCompat
 
   def showTuple(args: List[String]) =
     args match {
+      case head :: Nil => s"Tuple1[$head]"
+      case _ => args.mkString("(", ",", ")")
+    }
+
+  def showFuncParams(args: List[String]) =
+    args match {
       case head :: Nil => head
       case _ => args.mkString("(", ",", ")")
     }
@@ -311,7 +317,7 @@ with ImplicitMsgCompat
         wrapParensRepr(broken, top)
       case UnitForm => FlatType("Unit")
       case FunctionForm(args, ret, top) =>
-        val a = showTuple(args map showFormattedNoBreak)
+        val a = showFuncParams(args map showFormattedNoBreak)
         val r = showFormattedNoBreak(ret)
         FlatType(wrapParens(s"$a => $r", top))
       case TupleForm(elems) =>
