@@ -10,6 +10,7 @@ crossScalaVersions ++= List(
   "2.12.10",
   "2.12.11",
   "2.12.12",
+  "2.12.13",
 )
 crossVersion := CrossVersion.full
 organization := "io.tryp"
@@ -28,6 +29,7 @@ addSourceDir {
 }
 addSourceDir {
   case (2, 13, patch) if patch >= 2 => "2.13.2+"
+  case (2, 12, patch) if patch >= 13 => "2.13.2+"
   case _ => "2.13.1-"
 }
 addTestSourceDir {
