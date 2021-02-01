@@ -22,6 +22,18 @@ libraryDependencies += {
 }
 ```
 
+If you are using gradle with scala plugin, include this line under the dependency section of your build.gradle:
+
+```groovy
+scalaCompilerPlugins group: 'io.tryp', name: 'splain_${scalaVersion}', version: '0.5.8'
+```
+
+or build.gradle.kts:
+
+```kotlin
+scalaCompilerPlugins("io.tryp:splain_${scalaVersion}:0.5.8")
+```
+
 # Configuration
 The plugin can be configured via compiler plugin parameters with the format:
 ```
@@ -49,8 +61,24 @@ The parameter `all` can be used to deactivate all features.
 
 The parameters can be applied like this:
 
+(in sbt)
+
 ```sbt
 scalacOptions += "-P:splain:implicits:false"
+```
+
+(in gradle with scala plugin)
+
+```kotlin
+withType<ScalaCompile> {
+
+    scalaCompileOptions.apply {
+
+        additionalParameters = listOf(
+            "-P:splain:implicits:false"
+        )
+    }
+}
 ```
 
 # infix types
