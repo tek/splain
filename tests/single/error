@@ -1,0 +1,2 @@
+implicit error;
+!I e: a.type *** b.type

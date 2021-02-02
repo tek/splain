@@ -22,5 +22,5 @@ object A
   }
   def f(a: B.X.Y.T): Unit = ()
   val x: C.X.Y.T = ???
-  f(x)
+  f(x: C.X.Y.T)
 }

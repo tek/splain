@@ -122,15 +122,6 @@ with ImplicitMsgCompat
       .takeWhile(_ != "type")
       .filterNot(_.contains("$"))
 
-  def modulePath: (Type, Symbol) => List[String] = {
-    case (TypeRef(pre, _, _), _) if !pre.toString.isEmpty =>
-      sanitizePath(pre.toString.split("\\.").toList)
-    case (SingleType(_, _), sym) =>
-      symbolPath(sym).dropRight(1)
-    case (_, _) =>
-      Nil
-  }
-
   def pathPrefix: List[String] => String = {
     case Nil =>
       ""
@@ -141,7 +132,7 @@ with ImplicitMsgCompat
   }
 
   def qualifiedName(path: List[String], name: String): String =
-      s"${pathPrefix(path)}$name"
+    s"${pathPrefix(path)}$name"
 
   def stripModules(path: List[String], name: String): Option[Int] => String = {
     case Some(keep) =>
@@ -150,14 +141,59 @@ with ImplicitMsgCompat
       name
   }
 
+  case class TypeParts(sym: Symbol, tt: Type) {
+
+    def modulePath: List[String] = (tt, sym) match {
+      case (TypeRef(pre, _, _), _) if !pre.toString.isEmpty =>
+        sanitizePath(pre.toString.split("\\.").toList)
+      case (SingleType(_, _), sym) =>
+        symbolPath(sym).dropRight(1)
+      case (_, _) =>
+        Nil
+    }
+
+    def ownerPath: List[String] = {
+      val chain = sym.ownerChain.reverse
+      val parts = chain.map(_.name.decodedName.toString)
+      val (paths, names) = parts.splitAt(
+        Math.max(0,parts.size - 1)
+      )
+      paths
+    }
+
+    def shortName: String = {
+      val prefixes = tt.prefixString.split('.').dropRight(1)
+      val prefix = prefixes.mkString(".") + "."
+      val name = tt.safeToString
+      name.stripPrefix(prefix)
+    }
+  }
+
   def stripType(tpe: Type): (List[String], String) = {
-    val sym = if (tpe.takesTypeArgs) tpe.typeSymbolDirect else tpe.typeSymbol
-    val symName = sym.name.decodedName.toString
-    val path = modulePath(tpe, sym)
-    val name =
-      if (sym.isModuleClass) s"$symName.type"
-      else symName
-    (path, name)
+    tpe match {
+      case tt: SingletonType =>
+        val sym = tt.termSymbol
+        val parts = TypeParts(sym, tt)
+
+        parts.modulePath -> parts.shortName
+
+      case tt: RefinedType =>
+        val sym = tt.typeSymbol
+        val parts = TypeParts(sym, tt)
+
+        parts.modulePath -> parts.shortName
+
+      case _ =>
+        // TODO: should this also use TypeParts ?
+        val sym = if (tpe.takesTypeArgs) tpe.typeSymbolDirect else tpe.typeSymbol
+        val symName = sym.name.decodedName.toString
+        val parts = TypeParts(sym, tpe)
+
+        val name =
+          if (sym.isModuleClass) s"$symName.type"
+          else symName
+        (parts.modulePath, name)
+    }
   }
 
   def formatNormalSimple(tpe: Type): (List[String], String) =
