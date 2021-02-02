@@ -1,8 +1,9 @@
-package splain
+package splain.format
+
+import splain.{Analyzer, ImplicitMsgCompat, Messages}
 
 import scala.collection.mutable
 import scala.util.matching.Regex
-
 import StringColor._
 
 class FormatCache[K, V](cache: mutable.Map[K, V], var hits: Long) {
@@ -288,7 +289,9 @@ trait Formatting extends Formatters with ImplicitMsgCompat { self: Analyzer =>
   }
 
   def showSLRecordItem(key: Formatted, value: Formatted) =
-    FlatType(s"(${showFormattedNoBreak(key)} ->> ${showFormattedNoBreak(value)})")
+    FlatType(
+      s"(${showFormattedNoBreak(key)} ->> ${showFormattedNoBreak(value)})",
+    )
 
   def bracket[A](params: List[A]) = params.mkString("[", ", ", "]")
 
@@ -419,7 +422,12 @@ trait Formatting extends Formatters with ImplicitMsgCompat { self: Analyzer =>
       case RefinedForm(elems, decls) if truncateDecls(decls) =>
         FlatType(showRefined(elems.map(showFormattedNoBreak), List("...")))
       case RefinedForm(elems, decls) =>
-        FlatType(showRefined(elems.map(showFormattedNoBreak), decls.map(showFormattedNoBreak)))
+        FlatType(
+          showRefined(
+            elems.map(showFormattedNoBreak),
+            decls.map(showFormattedNoBreak),
+          ),
+        )
       case Diff(left, right) =>
         FlatType(formattedDiff(left, right))
       case Decl(sym, rhs) =>
@@ -631,7 +639,9 @@ trait Formatting extends Formatters with ImplicitMsgCompat { self: Analyzer =>
         z,
     )
 
-  def formatImplicitChainTreeCompact(chain: List[ImpFailReason]): Option[List[String]] =
+  def formatImplicitChainTreeCompact(
+    chain: List[ImpFailReason],
+  ): Option[List[String]] =
     chain
       .headOption
       .map { head =>
@@ -720,12 +730,14 @@ trait Formatting extends Formatters with ImplicitMsgCompat { self: Analyzer =>
     val bang = "!"
     val i = "I"
     val head = s"${bang.red}${i.blue} ${paramName.yellow}$msg:"
-    showTypeBreakL(effTpe) match {
-      case single :: Nil =>
-        List(s"$head ${single.green}")
-      case l =>
-        head :: indent(l).map(_.green)
-    }
+    val result =
+      showTypeBreakL(effTpe) match {
+        case single :: Nil =>
+          List(s"$head ${single.green}")
+        case l =>
+          head :: indent(l).map(_.green)
+      }
+    result
   }
 
   def splitChains(errors: List[ImpFailReason]): List[List[ImpFailReason]] =

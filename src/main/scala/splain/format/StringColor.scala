@@ -1,4 +1,4 @@
-package splain
+package splain.format
 
 trait StringColor {
   def color(s: String, col: String): String
