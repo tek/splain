@@ -10,7 +10,10 @@ import org.specs2._
 
 object Helpers
 {
-  def base = System.getProperty("splain.tests")
+  lazy val userDir = System.getProperty("user.dir").stripSuffix("/")
+
+  def base = Option(System.getProperty("splain.tests"))
+      .getOrElse(userDir + "/" + "tests")
 
   def fileContent(name: String, fname: String): Path = {
     FileSystems.getDefault.getPath(base, name, fname)
@@ -38,7 +41,14 @@ import types._
 
   val cm = universe.runtimeMirror(getClass.getClassLoader)
 
-  val plugin = System.getProperty("splain.jar")
+  val plugin = Option(System.getProperty("splain.jar")).getOrElse {
+    val dir = FileSystems.getDefault.getPath(userDir + "/target/scala-2.13")
+    val file = Files.list(dir).toArray
+      .map(v => v.asInstanceOf[Path])
+      .filter(v => v.toString.endsWith(".jar")).head
+
+    file.toAbsolutePath.toString
+  }
 
   val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
 
@@ -84,6 +94,7 @@ extends Specification
 class ErrorsSpec
 extends SpecBase
 {
+
   def is = s2"""
   implicit resolution chains ${checkError("chain")}
   found/required type diff ${checkError("foundreq")}
@@ -102,7 +113,15 @@ extends SpecBase
   truncate refined type ${checkError("truncrefined", "-P:splain:truncrefined:10")}
   byname higher order ${checkError("byname-higher")}
   Tuple1 ${checkError("tuple1")}
+  single types ${checkError("single")}
+  single types in function ${checkError("single-fn")}
+  single types with free symbol ${checkError("single-free")}
+  witness value types ${checkError("witness-value")}
   """
+
+//  def is = s2"""
+//  single types ${checkError("witness-value")}
+//  """
 }
 
 class DevSpec
