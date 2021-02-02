@@ -14,7 +14,14 @@ trait ImplicitSearchCompat extends ImplicitSearchBounds {
     pos0: Position = NoPosition,
     isByNamePt: Boolean = false,
   )
-  extends ImplicitSearch(tree, pt, isView, context0, pos0 = pos0, isByNamePt = isByNamePt)
+  extends ImplicitSearch(
+    tree,
+    pt,
+    isView,
+    context0,
+    pos0 = pos0,
+    isByNamePt = isByNamePt,
+  )
   with Bounds {
     override val infer =
       new InferencerImpl {

@@ -1,5 +1,7 @@
 package splain
 
+import splain.format.Formatting
+
 import scala.tools.nsc._
 
 trait ImplicitChains

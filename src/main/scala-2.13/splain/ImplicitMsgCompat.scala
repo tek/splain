@@ -1,5 +1,7 @@
 package splain
 
+import splain.format.Formatters
+
 trait ImplicitMsgCompat extends Formatters { self: Analyzer =>
   import global._
 

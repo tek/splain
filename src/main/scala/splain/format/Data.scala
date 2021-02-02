@@ -1,4 +1,4 @@
-package splain
+package splain.format
 
 sealed trait Formatted {
   def length: Int

@@ -1,4 +1,6 @@
-package splain
+package splain.format
+
+import splain.Analyzer
 
 trait Formatters { self: Analyzer =>
   import global._
