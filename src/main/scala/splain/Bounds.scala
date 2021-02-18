@@ -1,28 +1,23 @@
 package splain
 
-trait ImplicitSearchBounds
-{ self: Analyzer =>
+trait ImplicitSearchBounds { self: Analyzer =>
   import global._
 
-  trait Bounds
-  { search: ImplicitSearch =>
-    trait InferencerImpl
-    extends Inferencer
-    {
+  trait Bounds { search: ImplicitSearch =>
+    trait InferencerImpl extends Inferencer {
       import InferErrorGen._
 
-      /**
-       * Duplication of the original method, because the error is created within.
-       * `NotWithinBounds` cannot simply be overridden since it is a method in `Analyzer` and `pt` is needed for
-       * `NonConfBounds`
-       */
+      /** Duplication of the original method, because the error is created within.
+        * `NotWithinBounds` cannot simply be overridden since it is a method in `Analyzer` and `pt` is needed for
+        * `NonConfBounds`
+        */
       def checkBoundsSplain(
         tree: Tree,
         pre: Type,
         owner: Symbol,
         tparams: List[Symbol],
         targs: List[Type],
-        prefix: String
+        prefix: String,
       ): Boolean = {
         def issueBoundsError() = {
           notWithinBounds(tree, prefix, targs, tparams, Nil)
@@ -32,12 +27,13 @@ trait ImplicitSearchBounds
           KindBoundErrors(tree, prefix, targs, tparams, errs)
           false
         }
-        def check() = checkKindBounds(tparams, targs, pre, owner) match {
-          case Nil =>
-            isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
-          case errs =>
-            (targs contains WildcardType) || issueKindBoundErrors(errs)
-        }
+        def check() =
+          checkKindBounds(tparams, targs, pre, owner) match {
+            case Nil =>
+              isWithinBounds(pre, owner, tparams, targs) || issueBoundsError()
+            case errs =>
+              (targs contains WildcardType) || issueKindBoundErrors(errs)
+          }
         targs.exists(_.isErroneous) || tparams.exists(_.isErroneous) || check()
       }
 
@@ -47,10 +43,12 @@ trait ImplicitSearchBounds
         owner: Symbol,
         tparams: List[Symbol],
         targs: List[Type],
-        prefix: String
+        prefix: String,
       ): Boolean =
-        if (featureBounds) checkBoundsSplain(tree, pre, owner, tparams, targs, prefix)
-        else super.checkBounds(tree, pre, owner, tparams, targs, prefix)
+        if (featureBounds)
+          checkBoundsSplain(tree, pre, owner, tparams, targs, prefix)
+        else
+          super.checkBounds(tree, pre, owner, tparams, targs, prefix)
 
       def notWithinBounds(
         tree: Tree,

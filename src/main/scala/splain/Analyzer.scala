@@ -2,10 +2,7 @@ package splain
 
 import scala.tools.nsc._
 
-trait TypeDiagnostics
-extends typechecker.TypeDiagnostics
-with Formatting
-{ self: Analyzer =>
+trait TypeDiagnostics extends typechecker.TypeDiagnostics with Formatting { self: Analyzer =>
   import global._
 
   def featureFoundReq: Boolean
@@ -21,11 +18,10 @@ with Formatting
     showStats("foundreq", showFormattedL(formatDiff(found, req, true), true))
 
   override def foundReqMsg(found: Type, req: Type): String =
-    if (featureFoundReq) ";\n" + foundReqMsgShort(found, req).indent.joinLines
-    else super.foundReqMsg(found, req)
+    if (featureFoundReq)
+      ";\n" + foundReqMsgShort(found, req).indent.joinLines
+    else
+      super.foundReqMsg(found, req)
 }
 
-trait Analyzer
-extends typechecker.Analyzer
-with ImplicitChains
-with TypeDiagnostics
+trait Analyzer extends typechecker.Analyzer with ImplicitChains with TypeDiagnostics

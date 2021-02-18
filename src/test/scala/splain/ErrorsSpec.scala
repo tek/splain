@@ -8,12 +8,11 @@ import scala.util.{Failure, Success, Try}
 
 import org.specs2._
 
-object Helpers
-{
+object Helpers {
   lazy val userDir = System.getProperty("user.dir").stripSuffix("/")
 
   def base = Option(System.getProperty("splain.tests"))
-      .getOrElse(userDir + "/" + "tests")
+    .getOrElse(userDir + "/" + "tests")
 
   def fileContent(name: String, fname: String): Path = {
     FileSystems.getDefault.getPath(base, name, fname)
@@ -43,9 +42,12 @@ import types._
 
   val plugin = Option(System.getProperty("splain.jar")).getOrElse {
     val dir = FileSystems.getDefault.getPath(userDir + "/target/scala-2.13")
-    val file = Files.list(dir).toArray
+    val file = Files
+      .list(dir)
+      .toArray
       .map(v => v.asInstanceOf[Path])
-      .filter(v => v.toString.endsWith(".jar")).head
+      .filter(v => v.toString.endsWith(".jar"))
+      .head
 
     file.toAbsolutePath.toString
   }
@@ -56,9 +58,7 @@ import types._
     ToolBox(cm).mkToolBox(options = s"$opts $extra")
 }
 
-trait SpecBase
-extends Specification
-{
+trait SpecBase extends Specification {
   import Helpers._
 
   def compile(name: String, extra: String) = {
@@ -69,8 +69,8 @@ extends Specification
   def compileError(name: String, extra: String): String = {
     Try(compile(name, extra)) match {
       case Failure(ToolBoxError(e, _)) => e.linesIterator.toList.drop(2).mkString("\n")
-      case Failure(t) => throw t
-      case Success(_) => sys.error("compiling succeeded")
+      case Failure(t)                  => throw t
+      case Success(_)                  => sys.error("compiling succeeded")
     }
   }
 
@@ -91,9 +91,7 @@ extends Specification
     compileSuccess(name, extra) must beNone
 }
 
-class ErrorsSpec
-extends SpecBase
-{
+class ErrorsSpec extends SpecBase {
 
   def is = s2"""
   implicit resolution chains ${checkError("chain")}
@@ -124,9 +122,7 @@ extends SpecBase
 //  """
 }
 
-class DevSpec
-extends SpecBase
-{
+class DevSpec extends SpecBase {
   def is = s2"""
   """
 }

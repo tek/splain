@@ -19,9 +19,10 @@ abstract class SplainPluginCompat extends SplainPluginLike {
     def featureKeepModules = int(keyKeepModules)
   }
 
-  val analyzer = if (global.settings.YmacroAnnotations) {
-    new { val global = SplainPluginCompat.this.global } with Analyzer with typechecker.MacroAnnotationNamers with Features
-  } else {
-    new { val global = SplainPluginCompat.this.global } with Analyzer with Features
-  }
+  val analyzer =
+    if (global.settings.YmacroAnnotations)
+      new { val global = SplainPluginCompat.this.global } with Analyzer with typechecker.MacroAnnotationNamers
+      with Features
+    else
+      new { val global = SplainPluginCompat.this.global } with Analyzer with Features
 }

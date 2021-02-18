@@ -1,12 +1,10 @@
 package splain
 
-trait StringColor
-{
+trait StringColor {
   def color(s: String, col: String): String
 }
 
-object StringColors
-{
+object StringColors {
   implicit val noColor =
     new StringColor {
       def color(s: String, col: String) = s
@@ -20,10 +18,8 @@ object StringColors
     }
 }
 
-object StringColor
-{
-  implicit class StringColorOps(s: String)(implicit sc: StringColor)
-  {
+object StringColor {
+  implicit class StringColorOps(s: String)(implicit sc: StringColor) {
     import Console._
     def red = sc.color(s, RED)
     def green = sc.color(s, GREEN)
