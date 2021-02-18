@@ -3,8 +3,7 @@ package splain
 import scala.collection.mutable
 import scala.tools.nsc._
 
-class SplainPlugin(val global: Global) extends SplainPluginCompat
-{
+class SplainPlugin(val global: Global) extends SplainPluginCompat {
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
@@ -22,28 +21,31 @@ class SplainPlugin(val global: Global) extends SplainPluginCompat
       phasesSet
         .find(_.phaseName == name)
         .head
-    val oldScs @ List(oldNamer@_, oldPackageobjects@_, oldTyper@_) =
-      List(subcomponentNamed("namer"),
-        subcomponentNamed("packageobjects"),
-        subcomponentNamed("typer"))
-    val newScs = List(analyzer.namerFactory,
-      analyzer.packageObjects,
-      analyzer.typerFactory)
+    val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
+      subcomponentNamed("namer"),
+      subcomponentNamed("packageobjects"),
+      subcomponentNamed("typer"),
+    )
+    val newScs = List(analyzer.namerFactory, analyzer.packageObjects, analyzer.typerFactory)
     phasesSet --= oldScs
     phasesSet ++= newScs
   }
 
   override def init(options: List[String], error: String => Unit): Boolean = {
     def invalid(opt: String) = error(s"splain: invalid option `$opt`")
-    def setopt(key: String, value: String) = {
-      if (opts.contains(key)) opts.update(key, value)
-      else invalid(key)
-    }
+    def setopt(key: String, value: String) =
+      if (opts.contains(key))
+        opts.update(key, value)
+      else
+        invalid(key)
     options.foreach { opt =>
       opt.split(":").toList match {
-        case key :: value :: Nil => setopt(key, value)
-        case key :: Nil => setopt(key, "true")
-        case _ => invalid(opt)
+        case key :: value :: Nil =>
+          setopt(key, value)
+        case key :: Nil =>
+          setopt(key, "true")
+        case _ =>
+          invalid(opt)
       }
     }
     enabled
@@ -83,7 +85,7 @@ abstract class SplainPluginLike extends plugins.Plugin {
     keyBoundsImplicits -> "true",
     keyTruncRefined -> "0",
     keyRewrite -> "",
-    keyKeepModules -> "0"
+    keyKeepModules -> "0",
   )
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)
@@ -93,6 +95,8 @@ abstract class SplainPluginLike extends plugins.Plugin {
   def boolean(key: String) = enabled && opt(key, "true") == "true"
 
   def int(key: String): Option[Int] =
-    if (enabled) opts.get(key).flatMap(a => scala.util.Try(a.toInt).toOption)
-    else None
+    if (enabled)
+      opts.get(key).flatMap(a => scala.util.Try(a.toInt).toOption)
+    else
+      None
 }
