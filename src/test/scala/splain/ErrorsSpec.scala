@@ -115,6 +115,7 @@ class ErrorsSpec extends SpecBase {
   single types in function ${checkError("single-fn")}
   single types with free symbol ${checkError("single-free")}
   witness value types ${checkError("witness-value")}
+  zio test ${checkError("zlayer")}
   """
 
 //  def is = s2"""

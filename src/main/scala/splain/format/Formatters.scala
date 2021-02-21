@@ -5,18 +5,6 @@ trait Formatters { self: Analyzer =>
 
   def formatType(tpe: Type, top: Boolean): Formatted
 
-  object Refined {
-    def unapply(tpe: Type): Option[(List[Type], Scope)] =
-      tpe match {
-        case RefinedType(parents, decls) =>
-          Some((parents, decls))
-        case t @ SingleType(_, _) =>
-          unapply(t.underlying)
-        case _ =>
-          None
-      }
-  }
-
   trait SpecialFormatter {
     def apply[A](
       tpe: Type,
@@ -167,6 +155,34 @@ trait Formatters { self: Analyzer =>
         List(tpe)
       case tpes =>
         tpes.filterNot(t => ignoredTypes.exists(_ =:= t))
+    }
+
+    object Refined {
+      def unapply(tpe: Type): Option[(List[Type], Scope)] =
+        tpe match {
+          case TypeRef(pre, sym, List(RefinedType(parents, decls)))
+              if decls.isEmpty && pre.typeSymbol.fullName == "zio" && sym.fullName == "zio.Has" =>
+            val sanitized = sanitizeParents(parents)
+            if (sanitized.length == 1) {
+              Some((List(TypeRef(pre, sym, sanitized.headOption.toList)), decls))
+            } else {
+              None
+            }
+          case RefinedType(types, scope) =>
+            if (scope.isEmpty) {
+              val subtypes = types.map(_.dealias).flatMap {
+                case Refined(types, _) => types
+                case tpe => List(tpe)
+              }
+              Some((subtypes, scope))
+            } else {
+              Some((types, scope))
+            }
+          case t @ SingleType(_, _) =>
+            unapply(t.underlying)
+          case _ =>
+            None
+        }
     }
 
     def formatDecl: Symbol => Formatted = {
