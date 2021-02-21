@@ -20,6 +20,7 @@ fork := true
 libraryDependencies ++= List(
   scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided",
   "com.chuusai" %% "shapeless" % "2.3.3" % "test",
+  "dev.zio" %% "zio" % "1.0.4" % "test"
 )
 
 libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
