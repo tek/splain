@@ -39,6 +39,10 @@ import types._
         .toArray
         .map(v => v.asInstanceOf[Path])
         .filter(v => v.toString.endsWith(".jar"))
+        .filterNot{ v =>
+          v.toString.endsWith("-javadoc.jar") ||
+            v.toString.endsWith("-sources.jar")
+        }
         .head
 
     file.toAbsolutePath.toString
