@@ -203,5 +203,14 @@ If it is absent, the empty string is substituted.
 The option `keepmodules` determines how many segments of the module path before the type name will be displayed, but
 only if the `rewrite` mechanism hasn't changed anything.
 
-So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` will be displayed as `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
+So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` will be displayed as
+`free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
+
+# bugs
+
+Due to the nature of the hack that allows _splain_ to hook into the implicit search algorithm, other plugins using the
+same trick may not work or cause _splain_ to be inactive.
+
+Another victim of _splain_ is scaladoc – doc comments might disappear when running the task with _splain_ active, so
+make sure it is disabled before doing so.
