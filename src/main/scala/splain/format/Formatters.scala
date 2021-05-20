@@ -165,21 +165,21 @@ trait Formatters { self: Analyzer =>
           case TypeRef(pre, sym, List(RefinedType(parents, decls)))
               if decls.isEmpty && pre.typeSymbol.fullName == "zio" && sym.fullName == "zio.Has" =>
             val sanitized = sanitizeParents(parents)
-            if (sanitized.length == 1) {
+            if (sanitized.length == 1)
               Some((List(TypeRef(pre, sym, sanitized.headOption.toList)), decls))
-            } else {
+            else
               None
-            }
           case RefinedType(types, scope) =>
             if (scope.isEmpty) {
               val subtypes = types.map(_.dealias).flatMap {
-                case Refined(types, _) => types
-                case tpe => List(tpe)
+                case Refined(types, _) =>
+                  types
+                case tpe =>
+                  List(tpe)
               }
               Some((subtypes, scope))
-            } else {
+            } else
               Some((types, scope))
-            }
           case t @ SingleType(_, _) =>
             unapply(t.underlying)
           case _ =>
