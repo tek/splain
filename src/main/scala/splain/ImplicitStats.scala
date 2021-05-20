@@ -6,29 +6,38 @@ trait ImplicitStats { self: Analyzer =>
   import global._
   import statistics._
 
-  def withImplicitStats[A](run: () => A) = {
-    val findMemberStart =
-      if (StatisticsStatics.areSomeColdStatsEnabled)
-        statistics.startCounter(findMemberImpl)
+  def withImplicitStats[A](run: () => A): A = {
+
+    def areSomeColdStatsEnabled = StatisticsStatics.areSomeColdStatsEnabled
+//        .COLD_STATS_GETTER
+//        .invokeExact()
+//        .asInstanceOf[Boolean]
+
+    val (
+      findMemberStart,
+      subtypeStart,
+      start,
+    ) = {
+
+      if (areSomeColdStatsEnabled)
+        (
+          statistics.startCounter(findMemberImpl),
+          statistics.startCounter(subtypeImpl),
+          statistics.startTimer(implicitNanos),
+        )
       else
-        null
-    val subtypeStart =
-      if (StatisticsStatics.areSomeColdStatsEnabled)
-        statistics.startCounter(subtypeImpl)
-      else
-        null
-    val start =
-      if (StatisticsStatics.areSomeColdStatsEnabled)
-        statistics.startTimer(implicitNanos)
-      else
-        null
+        (null, null, null)
+    }
+
     val result = run()
-    if (StatisticsStatics.areSomeColdStatsEnabled)
+
+    if (areSomeColdStatsEnabled) {
+
       statistics.stopTimer(implicitNanos, start)
-    if (StatisticsStatics.areSomeColdStatsEnabled)
       statistics.stopCounter(findMemberImpl, findMemberStart)
-    if (StatisticsStatics.areSomeColdStatsEnabled)
       statistics.stopCounter(subtypeImpl, subtypeStart)
+    }
+
     result
   }
 }
