@@ -13,6 +13,7 @@ crossScalaVersions ++= List(
   "2.12.11",
   "2.12.12",
   "2.12.13",
+  "2.12.14",
 )
 crossVersion := CrossVersion.full
 organization := "io.tryp"
