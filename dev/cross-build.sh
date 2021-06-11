@@ -18,5 +18,6 @@ done
 
 echo "COMPILED: ${COMPILED}"
 echo "TESTED: ${TESTED}"
+echo "EXIT: ${EXIT}"
 
-$EXIT
+${EXIT}
