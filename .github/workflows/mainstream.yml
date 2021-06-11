@@ -1,4 +1,4 @@
-name: CI
+name: CI-mainstream
 
 on: [push]
 
@@ -14,4 +14,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Run tests
-        run: sbt clean publishM2 test
+        run: ./dev/CI-mainstream
