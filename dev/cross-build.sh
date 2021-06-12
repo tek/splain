@@ -12,7 +12,7 @@ for VV in ${VERSIONS}; do
   sbt ++${VV} clean publishM2 && \
   COMPILED="${COMPILED} ${VV}" && \
   sbt ++${VV} test && \
-  TESTED="${TESTED} ${VV}"
+  TESTED="${TESTED} ${VV}" && \
   EXIT=true
 done
 
