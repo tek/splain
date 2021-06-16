@@ -5,6 +5,8 @@ FWDIR="$(
   pwd
 )"
 
+EXIT=false
+
 cd ${FWDIR} && \
 sbt ++${VERSION} clean publishM2 && \
 sbt ++${VERSION} test && \
