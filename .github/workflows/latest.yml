@@ -2,14 +2,14 @@ name: CI-latest
 
 on: [push]
 
-strategy:
-  matrix:
-    version: [2.13.0,2.13.1,2.13.2,2.13.3,2.13.4,2.13.5]
-
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        version: ["2.13.0","2.13.1","2.13.2","2.13.3","2.13.4","2.13.5"]
 
     steps:
       - uses: actions/checkout@v2
