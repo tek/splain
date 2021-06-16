@@ -19,3 +19,9 @@ jobs:
           java-version: 1.8
       - name: Run tests
         run: VERSION=${{matrix.version}} ./dev/build.sh
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: |
+            **/test-reports/*.xml
