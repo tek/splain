@@ -2,6 +2,10 @@ name: CI-latest
 
 on: [push]
 
+strategy:
+  matrix:
+    version: [2.13.0,2.13.1,2.13.2,2.13.3,2.13.4,2.13.5]
+
 jobs:
   build:
 
@@ -14,4 +18,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Run tests
-        run: ./dev/CI-latest.sh
+        run: VERSION=${{matrix.version}} ./dev/build.sh
