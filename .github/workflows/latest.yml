@@ -26,3 +26,5 @@ jobs:
         with:
           files: |
             **/test-reports/*.xml
+          check_name: |
+            Test Report (${{matrix.version}})
