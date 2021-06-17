@@ -41,6 +41,14 @@ addSourceDir {
   case _ =>
     "2.13.1-"
 }
+addSourceDir {
+  case (2, 13, patch) if patch >= 6 =>
+    "2.13.6+"
+  case (2, 12, patch) if patch >= 14 =>
+    "2.13.6+"
+  case _ =>
+    "2.13.5-"
+}
 addTestSourceDir {
   case (2, 13, patch) if patch >= 2 =>
     "2.13.2+"
