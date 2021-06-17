@@ -1,23 +1,20 @@
-package tryp
-
 import java.io.File
 
 import sbt._
 
 import Keys._
 
-object P
-extends AutoPlugin
-{
-  object autoImport
-  {
+object P extends AutoPlugin {
+  object autoImport {
     val versionRex = raw"(\d+)\.(\d+).(\d+).*".r
 
     def matchScala[A](f: PartialFunction[(Int, Int, Int), A]): Def.Initialize[Option[A]] =
       Def.settingDyn {
         scalaVersion.value match {
-          case versionRex(ma, mi, pa) => Def.setting(f.lift(ma.toInt, mi.toInt, pa.toInt))
-          case _ => Def.setting(None)
+          case versionRex(ma, mi, pa) =>
+            Def.setting(f.lift(ma.toInt, mi.toInt, pa.toInt))
+          case _ =>
+            Def.setting(None)
         }
       }
 

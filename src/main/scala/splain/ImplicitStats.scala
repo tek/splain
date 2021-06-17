@@ -1,17 +1,10 @@
 package splain
 
-import scala.reflect.internal.util.StatisticsStatics
-
 trait ImplicitStats { self: Analyzer =>
   import global._
   import statistics._
 
   def withImplicitStats[A](run: () => A): A = {
-
-    def areSomeColdStatsEnabled = StatisticsStatics.areSomeColdStatsEnabled
-//        .COLD_STATS_GETTER
-//        .invokeExact()
-//        .asInstanceOf[Boolean]
 
     val (
       findMemberStart,
@@ -19,7 +12,7 @@ trait ImplicitStats { self: Analyzer =>
       start,
     ) = {
 
-      if (areSomeColdStatsEnabled)
+      if (StatisticsStaticsHelper.areSomeColdStatsEnabled)
         (
           statistics.startCounter(findMemberImpl),
           statistics.startCounter(subtypeImpl),
@@ -31,7 +24,7 @@ trait ImplicitStats { self: Analyzer =>
 
     val result = run()
 
-    if (areSomeColdStatsEnabled) {
+    if (StatisticsStaticsHelper.areSomeColdStatsEnabled) {
 
       statistics.stopTimer(implicitNanos, start)
       statistics.stopCounter(findMemberImpl, findMemberStart)
