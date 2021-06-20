@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try}
 trait SpecBase extends Specification {
   import Helpers._
 
-  def compile(name: String, extra: String) = {
+  def compile(name: String, extra: String): Any = {
     val tb = toolbox(extra)
     tb.eval(tb.parse(code(name)))
   }

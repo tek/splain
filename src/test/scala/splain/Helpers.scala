@@ -39,9 +39,9 @@ import types._
         .toArray
         .map(v => v.asInstanceOf[Path])
         .filter(v => v.toString.endsWith(".jar"))
-        .filterNot{ v =>
+        .filterNot { v =>
           v.toString.endsWith("-javadoc.jar") ||
-            v.toString.endsWith("-sources.jar")
+          v.toString.endsWith("-sources.jar")
         }
         .head
 
@@ -49,6 +49,7 @@ import types._
   }
 
   val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
+//  val opts = ""
 
   def toolbox(extra: String) = ToolBox(cm).mkToolBox(options = s"$opts $extra")
 }
