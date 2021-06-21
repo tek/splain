@@ -1,6 +1,7 @@
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.6"
 crossScalaVersions ++= List(
-//  "2.13.6",
+  "2.13.6",
+  "2.13.5",
   "2.13.4",
   "2.13.3",
   "2.13.2",
@@ -29,32 +30,40 @@ libraryDependencies ++= List(
 libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
 
 addSourceDir {
-  case (2, 12, _) =>
+  case (12, _) =>
     "2.12"
-  case (2, 13, _) =>
-    "2.13"
+  case NoAnalyzer((13, patch)) if patch < 6 =>
+    "2.13-"
 }
 addSourceDir {
-  case (2, 13, patch) if patch >= 2 =>
+  case NoAnalyzer((13, patch)) if patch >= 2 =>
     "2.13.2+"
-  case (2, 12, patch) if patch >= 13 =>
+  case (12, patch) if patch >= 13 =>
     "2.13.2+"
-  case _ =>
+  case NoAnalyzer((_, _)) =>
     "2.13.1-"
 }
 addSourceDir {
-  case (2, 13, patch) if patch >= 6 =>
-    "2.13.6+"
-  case (2, 12, patch) if patch >= 14 =>
+  case (12, patch) if patch >= 14 =>
+    "2.12.14+"
+  case (12, _) =>
+    "2.12.13-"
+  case NoAnalyzer((13, _)) =>
+    "2.12.13-"
+}
+addSourceDir {
+  case (13, patch) if patch >= 6 =>
     "2.13.6+"
   case _ =>
     "2.13.5-"
 }
 addTestSourceDir {
-  case (2, 13, patch) if patch >= 2 =>
+  case NoAnalyzer((13, patch)) if patch >= 2 =>
     "2.13.2+"
-  case _ =>
+  case NoAnalyzer((_, _)) =>
     "2.13.1-"
+  case _ =>
+    "2.13.6+"
 }
 javaOptions in Test ++= {
   val jar = (Keys.`package` in Compile).value.getAbsolutePath
