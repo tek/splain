@@ -3,7 +3,33 @@
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
 
+# Releases
+
+### built-in - Scala 2.13.6+
+
+Most features in splain 0.5.8 has been integrated into Scala 2.13.6 compiler through [this patch](https://github.com/scala/scala/pull/7785).
+
+- Recommended if using Scala 2.13 and only splain 0.5.8 features. However, ... 
+- **This integration is not 100%!** Configuration parameters have to be given new names to be compliant with the compiler standard. Many features are also discarded.
+
+### v1.x (current) - Scala 2.13.6+
+
+The above integration introduces a new compiler extension type (AnalyzerPlugin) that rendered most of old source code for splain v0.x incompatible or redundant. Thus, the team have decided to move on to the next major version, designed from scratch to have a cleaner architecture and better test coverage. Unfortunately, it will **not be available for Scala 2.13.5-**
+
+- Recommended if using Scala 2.13 and the latest splain features/bugfixes.
+- PRs and issues submitted for it will be given priority.
+
+### v0.x (maintenance) - Scala 2.12, 2.13.5-
+
+The latest v0.x will continue to be maintained and published regularly to stay compatible with the latest Scala 2.12.x release (until it's end-of-life), but no newer version will be published for Scala 2.13, **splain 0.5.8 will be the last release for Scala 2.13**.
+
+If you are already using Scala 2.13, the team strongly recommend you to upgrade, and submit bug report and test cases directly to the latest v1.x.
+
+- Recommended if using Scala 2.12.
+
 # Usage
+
+### v1.x, v0.x
 
 Include this line in your `build.sbt` (_not_ `project/plugins.sbt`!!):
 
@@ -34,25 +60,39 @@ or build.gradle.kts:
 scalaCompilerPlugins("io.tryp:splain_${scalaVersion}:0.5.8")
 ```
 
+### built-in
+
+Do nothing! It is already built-in. Its 2 minimal features however has to be enabled manually, by the following 2 compiler arguments (see Configuration for details):
+
+```
+-Vimplicits -Vtype-diffs
+```
+
 # Configuration
-The plugin can be configured via compiler plugin parameters with the format:
-```
--P:splain:<param>[:<value>]
-```
+
+The plugin can be configured via compiler arguments with the format:
+
+| v0.x                          | built-in, v1.x       |
+| :---------------------------- | -------------------- |
+| `-P:splain:<param>[:<value>]` | `-<param>[ <value>]` |
+
 `param` can be one of the following:
-* `all`
-* `infix`
-* `foundreq`
-* `implicits`
-* `bounds` (default off)
-* `color`
-* `breakinfix` (default 0)
-* `tree`
-* `compact` (default off)
-* `boundsimplicits`
-* `truncrefined` (default 0)
-* `rewrite` (string)
-* `keepmodules` (default 0)
+
+| v0.x              | built-in, v1.x            | default value    |
+| ----------------- | ------------------------- | ---------------- |
+| `all`             | (dropped)                 |                  |
+| `infix`           | (dropped)                 |                  |
+| `foundreq`        | `Vtype-diffs`             |                  |
+| `implicits`       | `Vimplicits`              |                  |
+| `bounds`          | (dropped)                 | false            |
+| `color`           | (dropped)                 |                  |
+| `breakinfix`      | (dropped)                 | 0                |
+| `tree`            | `Vimplicits-verbose-tree` |                  |
+| `compact`         | (dropped)                 | false            |
+| `boundsimplicits` | (dropped)                 |                  |
+| `truncrefined`    | `Vimplicits-max-refined`  | 0                |
+| `rewrite`         | (dropped)                 | (do not rewrite) |
+| `keepmodules`     | (dropped)                 | 0                |
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -71,12 +111,8 @@ scalacOptions += "-P:splain:implicits:false"
 
 ```kotlin
 withType<ScalaCompile> {
-
     scalaCompileOptions.apply {
-
-        additionalParameters = listOf(
-            "-P:splain:implicits:false"
-        )
+        additionalParameters = listOf("-P:splain:implicits:false")
     }
 }
 ```
@@ -207,10 +243,63 @@ So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` 
 `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
 
-# bugs
+# Development
+
+## Bugs
 
 Due to the nature of the hack that allows _splain_ to hook into the implicit search algorithm, other plugins using the
 same trick may not work or cause _splain_ to be inactive.
 
 Another victim of _splain_ is scaladoc – doc comments might disappear when running the task with _splain_ active, so
 make sure it is disabled before doing so.
+
+Users are encouraged to submit issues and test cases directly through pull requests, by forking the project and adding new test cases under:
+
+| v0.x                                   | v1.x                                               |
+| :------------------------------------- | -------------------------------------------------- |
+| `<project root>/src/test/scala/splain` | `<project root>/core/src/test/scala/splain/plugin` |
+
+The bug can thus be identified by the team quickly on our [continuous integration environment](https://github.com/tek/splain/actions). Submission on our GitHub issue tracker is also welcomed, but it generally takes much longer for the team to respond.
+
+## How to compile
+
+### v0.x
+
+Built with the latest stable (SBT)[https://www.scala-sbt.org/]. to compile and publish locally:
+
+```
+sbt clean publishM2
+```
+
+to run all tests:
+
+```
+sbt test
+```
+
+### v1.x
+
+Built with the latest Gradle (https://gradle.org/), to compile and publish locally:
+
+```
+./gradlew clean testClasses publishToMavenLocal
+```
+
+to run all tests:
+
+```
+./gradlew test
+```
+
+## How to edit
+
+Most project contributors uses neovim, IntelliJ IDEA or visual studio code.
+
+The team strive for a strong discipline in software engineering. All commits (including SNAPSHOTs and PRs) will be compliant with (scalalfmt)[https://scalameta.org/scalafmt/] standard.
+
+## Communication
+
+- @tek - reviewer for built-in/v0.x bugfix, new features
+- @tribbloid - reviewer for v1.x bugfix
+- @dwijnand - reviewer for scala compiler integration
+

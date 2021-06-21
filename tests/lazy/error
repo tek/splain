@@ -1,8 +1,0 @@
-implicit error;
-!I e: C
-c invalid because
-!I a: D
-d invalid because
-!I a: D *** C
-dc invalid because
-!I a: C *** D
