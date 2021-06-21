@@ -1,6 +1,7 @@
 package splain
 
 import java.nio.file.{FileSystems, Files, Path}
+
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
@@ -49,7 +50,6 @@ import types._
   }
 
   val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
-//  val opts = ""
 
   def toolbox(extra: String) = ToolBox(cm).mkToolBox(options = s"$opts $extra")
 }
