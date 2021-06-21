@@ -1,0 +1,4 @@
+newSource1.scala:18: error: implicit error;
+!I e: a.type *** b.type
+    implicitly[a.type *** b.type]
+              ^

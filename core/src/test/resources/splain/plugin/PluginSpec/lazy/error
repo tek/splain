@@ -1,0 +1,12 @@
+newSource1.scala:17: error: implicit error;
+!I e: C
+c invalid because
+!I a: Lazy[D]
+  could not find Lazy implicit value of type types.D
+  
+――d invalid because
+  !I a: D *** C
+――――dc invalid because
+    !I a: C *** D
+  implicitly[C]
+            ^

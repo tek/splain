@@ -1,0 +1,99 @@
+package splain.plugin
+
+import splain.SpecBase
+
+class PluginSpec extends SpecBase.File {
+
+  override lazy val predefCode: String =
+    """
+      |object types
+      |{
+      |  class ***[A, B]
+      |  class >:<[A, B]
+      |  class C
+      |  trait D
+      |}
+      |import types._
+      |""".trim.stripMargin
+
+  check("implicit resolution chains", "chain") {
+    checkError()
+  }
+
+  check("found/required type", "foundreq") {
+    checkError()
+  }
+
+  check("bounds") {
+    checkError()
+  }
+
+  check("auxPattern") {
+    checkError()
+  }
+
+  check("lazy") {
+    checkError()
+  }
+
+  // TODO: cleanup, breakinfix is gone
+  skip("linebreak long infix types", "break") {
+    checkErrorWithBreak()
+  }
+
+  check("deephole") {
+    checkError()
+  }
+
+  check("tree", extra = "-P:splain:tree") {
+    checkError()
+  }
+
+  // TODO: what's the new args?
+  skip("compact tree printing", "tree", extra = "-P:splain:tree -P:splain:compact") {
+    checkError(Some("errorCompact"))
+  }
+
+  //  TODO: what's the new args?
+  skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
+    checkError()
+  }
+
+  //  TODO: what's the new args?
+  skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
+    checkError()
+  }
+
+  check("refined type diff", "refined") {
+    checkError()
+  }
+
+  check("disambiguate types", "disambiguate") {
+    checkError()
+  }
+
+  check("truncate refined type", "truncrefined", extra = "-Vimplicits-max-refined 10") {
+    checkError()
+  }
+
+  check("byname higher order", "byname-higher") {
+    checkError()
+  }
+
+  check("tuple1") {
+    checkError()
+  }
+
+  check("single types", "single") {
+    checkError()
+  }
+
+  check("single types in function", "single-fn") {
+    checkError()
+  }
+
+  check("single types with free symbol", "single-free") {
+    checkError()
+  }
+
+}
