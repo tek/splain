@@ -4,5 +4,6 @@ target/
 
 .vscode/
 **/.bloop
+**/.bsp
 .metals/
 **/metals.sbt
