@@ -49,7 +49,19 @@ import types._
     file.toAbsolutePath.toString
   }
 
-  val opts = s"-Xplugin:$plugin -P:splain:color:false -P:splain:bounds -P:splain:tree:false"
+  val opts = {
+    val rows = s"""
+         |-Vimplicits -Vtype-diffs
+         |-Xplugin:$plugin
+         |-P:splain:color:false
+         |-P:splain:bounds
+         |-P:splain:tree:false
+         |""".trim.stripMargin
 
-  def toolbox(extra: String) = ToolBox(cm).mkToolBox(options = s"$opts $extra")
+    rows.split('\n').mkString(" ")
+  }
+
+  def toolbox(extra: String) = {
+    ToolBox(cm).mkToolBox(options = s"$opts $extra")
+  }
 }
