@@ -53,6 +53,7 @@ import types._
     val rows = s"""
          |-Vimplicits -Vtype-diffs
          |-Xplugin:$plugin
+         |-P:splain:breakinfix:200
          |-P:splain:color:false
          |-P:splain:bounds
          |-P:splain:tree:false

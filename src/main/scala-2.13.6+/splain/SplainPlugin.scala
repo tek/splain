@@ -37,7 +37,7 @@ trait SplainPluginLike extends plugins.Plugin {
     keyBoundsImplicits -> "true",
     keyTruncRefined -> "0",
     keyRewrite -> "",
-    keyKeepModules -> "0",
+    keyKeepModules -> "0"
   )
 
   def opt(key: String, default: String) = opts.getOrElse(key, default)
@@ -53,10 +53,7 @@ trait SplainPluginLike extends plugins.Plugin {
       None
 }
 
-trait Plugin
-extends plugins.Plugin
-with SplainPluginLike
-{
+trait Plugin extends plugins.Plugin with SplainPluginLike {
   override def init(options: List[String], error: String => Unit): Boolean = {
     def invalid(opt: String) = error(s"splain: invalid option `$opt`")
     def setopt(key: String, value: String) =
@@ -78,9 +75,7 @@ with SplainPluginLike
   }
 }
 
-class SAnalyzer(val global: Global)
-extends typechecker.Analyzer
-{
+class SAnalyzer(val global: Global) extends typechecker.Analyzer {
   import global._
 
   object SLRecordItemFormatter extends SpecialFormatter {
@@ -137,11 +132,11 @@ extends typechecker.Analyzer
     def recordItem(actual: Type, key: Type) = Infix(Simple("->>"), formatKey(key), formatType(actual, true), false)
 
     def apply[A](
-      tpe: Type,
-      simple: String,
-      args: List[A],
-      formattedArgs: => List[Formatted],
-      top: Boolean,
+        tpe: Type,
+        simple: String,
+        args: List[A],
+        formattedArgs: => List[Formatted],
+        top: Boolean
     )(rec: (A, Boolean) => Formatted) =
       tpe match {
         case extractRecord(actual, key) =>
@@ -155,10 +150,10 @@ extends typechecker.Analyzer
         case (extractRecord(a1, k1), extractRecord(a2, k2)) =>
           val rec: ((Formatted, Formatted), Boolean) => Formatted = {
             case ((l, r), _) =>
-                if (l == r)
-                  l
-                else
-                  Diff(l, r)
+              if (l == r)
+                l
+              else
+                Diff(l, r)
           }
           val left = formatKey(k1) -> formatKey(k2)
           val right = formatType(a1, true) -> formatType(a2, true)
@@ -174,13 +169,11 @@ extends typechecker.Analyzer
       TupleFormatter,
       SLRecordItemFormatter,
       RefinedFormatter,
-      ByNameFormatter,
+      ByNameFormatter
     )
 }
 
-class SplainPlugin(val global: Global)
-extends Plugin
-{
+class SplainPlugin(val global: Global) extends Plugin {
   import global._
   import analyzer._
 
@@ -191,7 +184,7 @@ extends Plugin
       sAnalyzer.ImplicitErrorSpecifics.NonconformantBounds(
         targs.asInstanceOf[List[sAnalyzer.global.Type]],
         tparams.asInstanceOf[List[sAnalyzer.global.Symbol]],
-        originalError.asInstanceOf[Option[sAnalyzer.AbsTypeError]],
+        originalError.asInstanceOf[Option[sAnalyzer.AbsTypeError]]
       )
     case ImplicitErrorSpecifics.NotFound(param) =>
       sAnalyzer.ImplicitErrorSpecifics.NotFound(param.asInstanceOf[sAnalyzer.global.Symbol])
@@ -203,18 +196,16 @@ extends Plugin
         tpe.asInstanceOf[sAnalyzer.global.Type],
         candidate.asInstanceOf[sAnalyzer.global.Tree],
         nesting,
-        convertSpecifics(specifics),
+        convertSpecifics(specifics)
       )
   }
 
-  object splainPlugin
-  extends AnalyzerPlugin
-  {
+  object splainPlugin extends AnalyzerPlugin {
     override def noImplicitFoundError(param: Symbol, errors: List[ImplicitError], previous: String): String = {
       sAnalyzer.formatImplicitError(
         param.asInstanceOf[sAnalyzer.global.Symbol],
         errors.map(convert),
-        "",
+        ""
       )
     }
   }
