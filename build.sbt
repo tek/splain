@@ -12,7 +12,7 @@ libraryDependencies ++= List(
   "dev.zio" %% "zio" % "1.0.4" % "test"
 )
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.12.12" % Test
 
 addSourceDir {
   case (12, _) =>
@@ -52,7 +52,7 @@ addTestSourceDir {
 }
 Test / javaOptions ++= {
   val jar = (Compile / Keys.`package`).value.getAbsolutePath
-  val tests = baseDirectory.value / "tests"
+  val tests = baseDirectory.value / "src/test/run"
   List(s"-Dsplain.jar=$jar", s"-Dsplain.tests=$tests")
 }
 

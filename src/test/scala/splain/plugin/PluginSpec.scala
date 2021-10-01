@@ -1,34 +1,42 @@
-package splain
+package splain.plugin
 
-class ErrorsSpec extends SpecBase {
+import org.specs2.specification.core.SpecStructure
+import splain.SpecBase
 
-  def is =
-    s2"""
+class PluginSpec extends SpecBase {
+
+  // TODO: enable auto-discovery?
+  def is: SpecStructure = {
+
+    val runner = FileRunner()
+    import runner._
+
+    sequential ^ s2"""
     implicit resolution chains ${checkError("chain")}
     found/required type diff ${checkError("foundreq")}
     nonconformant bounds ${checkError("bounds")}
     aux type ${checkError("aux")}
     shapeless Lazy ${checkError("lazy")}
     linebreak long infix types ${checkErrorWithBreak("break")}
-    shapeless Record ${checkErrorWithBreak("record", 30)}
+    shapeless Record ${checkErrorWithBreak("record", length = 30)}
     deep hole ${checkError("deephole")}
     tree printing ${checkError("tree", "-P:splain:tree")}
     compact tree printing ${checkError(
-        "tree",
-        "-P:splain:tree -P:splain:compact",
-        Some("errorCompact"),
-      )}
+      "tree",
+      "-P:splain:tree -P:splain:compact",
+      Some("errorCompact")
+    )}
     type prefix stripping ${checkError("prefix", "-P:splain:keepmodules:2")}
     regex type rewriting ${checkError(
-        "regex-rewrite",
-        "-P:splain:rewrite:\\.Level;0/5",
-      )}
+      "regex-rewrite",
+      "-P:splain:rewrite:\\.Level;0/5"
+    )}
     refined type diff ${checkError("refined")}
     disambiguate types ${checkError("disambiguate")}
     truncate refined type ${checkError(
-        "truncrefined",
-        "-P:splain:truncrefined:10",
-      )}
+      "truncrefined",
+      "-P:splain:truncrefined:10"
+    )}
     byname higher order ${checkError("byname-higher")}
     Tuple1 ${checkError("tuple1")}
     single types ${checkError("single")}
@@ -37,8 +45,5 @@ class ErrorsSpec extends SpecBase {
     witness value types ${checkError("witness-value")}
     zio test ${checkError("zlayer")}
     """
-
-//  def is = s2"""
-//  single types ${checkError("witness-value")}
-//  """
+  }
 }
