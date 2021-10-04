@@ -14,40 +14,40 @@ libraryDependencies ++= List(
 
 libraryDependencies += "org.specs2" %% "specs2-core" % "4.12.12" % Test
 
-addSourceDir {
-  case (12, _) =>
-    "2.12"
-  case NoAnalyzer((13, patch)) if patch < 6 =>
-    "2.13-"
-}
-addSourceDir {
-  case NoAnalyzer((13, patch)) if patch >= 2 =>
-    "2.13.2+"
-  case (12, patch) if patch >= 13 =>
-    "2.13.2+"
-  case NoAnalyzer((_, _)) =>
-    "2.13.1-"
-}
-addSourceDir {
-  case (12, patch) if patch >= 14 =>
-    "2.12.14+"
-  case (12, _) =>
-    "2.12.13-"
-  case NoAnalyzer((13, _)) =>
-    "2.12.13-"
-}
+//addSourceDir {
+//  case (12, _) =>
+//    "2.12"
+//  case NoAnalyzer((13, patch)) if patch < 6 =>
+//    "2.13-"
+//}
+//addSourceDir {
+//  case NoAnalyzer((13, patch)) if patch >= 2 =>
+//    "2.13.2+"
+//  case (12, patch) if patch >= 13 =>
+//    "2.13.2+"
+//  case NoAnalyzer((_, _)) =>
+//    "2.13.1-"
+//}
+//addSourceDir {
+//  case (12, patch) if patch >= 14 =>
+//    "2.12.14+"
+//  case (12, _) =>
+//    "2.12.13-"
+//  case NoAnalyzer((13, _)) =>
+//    "2.12.13-"
+//}
 addSourceDir {
   case (13, patch) if patch >= 6 =>
     "2.13.6+"
-  case _ =>
-    "2.13.5-"
+//  case _ =>
+//    "2.13.5-"
 }
 addTestSourceDir {
-  case NoAnalyzer((13, patch)) if patch >= 2 =>
-    "2.13.2+"
-  case NoAnalyzer((_, _)) =>
-    "2.13.1-"
-  case _ =>
+//  case NoAnalyzer((13, patch)) if patch >= 2 =>
+//    "2.13.2+"
+//  case NoAnalyzer((_, _)) =>
+//    "2.13.1-"
+  case (13, patch) if patch >= 6 =>
     "2.13.6+"
 }
 Test / javaOptions ++= {
