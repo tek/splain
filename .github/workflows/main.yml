@@ -21,10 +21,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Compile
-        run: sbt ++${{matrix.version}} clean publishM2
-      - name: Test
-        run: sbt ++${{matrix.version}} test
+      - name: Compile & Test
+        run: ./dev/make-all.sh
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
