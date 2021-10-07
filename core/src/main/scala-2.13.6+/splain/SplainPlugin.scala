@@ -66,6 +66,23 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
 
       result
     }
+
+    override def pluginsNotifyImplicitSearchResult(result: global.analyzer.SearchResult): Unit = {
+      val r = super.pluginsNotifyImplicitSearchResult(result)
+      r
+    }
+
+    override def pluginsNotifyImplicitSearch(search: global.analyzer.ImplicitSearch): Unit = {
+
+//      error("dummy!")
+      val tree = search.tree
+      val pos = search.pos
+
+      val tt = search.pt
+      val context: global.analyzer.Context = search.context
+
+      super.pluginsNotifyImplicitSearch(search)
+    }
   }
 
   global.analyzer.addAnalyzerPlugin(SplainAnalyzerPlugin)

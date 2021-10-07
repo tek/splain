@@ -1,12 +1,9 @@
 package splain.native
 
-import org.specs2.specification.core.SpecStructure
 import splain.SpecBase
 
-class TreeSpec extends SpecBase {
-  override def extraSettings: String = "-usejavacp -Vimplicits -Vimplicits-verbose-tree"
-
-  def code: String = ""
+class TreeSpec extends SpecBase.Direct {
+  override protected def extraSettings: String = "-usejavacp -Vimplicits -Vimplicits-verbose-tree"
 
   def verboseTree: String = """
 object tpes
@@ -40,14 +37,5 @@ object Tree
 }
   """
 
-//  def show(): Unit = {
-//    val global = newCompiler()
-//
-//    def run(code: String): Unit =
-//      compileString(global)(code.trim)
-//
-//    run(verboseTree)
-//  }
-
-  override def is: SpecStructure = ???
+  check(verboseTree)
 }

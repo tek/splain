@@ -1,16 +1,10 @@
 package splain.plugin
 
-import org.specs2.specification.core.SpecStructure
 import splain.SpecBase
 
-class DevSpec extends SpecBase {
-  def is = {
+class DevSpec extends SpecBase.File {
 
-    val runner = FileRunner()
-    import runner._
-
-    s2"""
-    diverging ${checkError("diverging")}
-    """
+  ignore("diverging") {
+    checkError()
   }
 }

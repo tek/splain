@@ -1,12 +1,9 @@
 package splain.native
 
-import org.specs2.specification.core.SpecStructure
 import splain.SpecBase
 
-class TruncRefinedSpec extends SpecBase {
-  override def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs -Vimplicits-max-refined 5"
-
-  def code: String = ""
+class TruncRefinedSpec extends SpecBase.Direct {
+  override protected def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs -Vimplicits-max-refined 5"
 
   def truncrefined: String = """
 object TruncRefined
@@ -20,14 +17,5 @@ object TruncRefined
 
   """
 
-//  def show(): Unit = {
-//    val global = newCompiler()
-//
-//    def run(code: String): Unit =
-//      compileString(global)(code.trim)
-//
-//    run(truncrefined)
-//  }
-
-  override def is: SpecStructure = ???
+  check(truncrefined)
 }

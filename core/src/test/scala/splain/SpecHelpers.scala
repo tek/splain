@@ -2,7 +2,7 @@ package splain
 
 import java.nio.file.{FileSystems, Files, Path}
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
+import scala.tools.reflect.{FrontEnd, ToolBox}
 
 object SpecHelpers {
   lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")
@@ -17,11 +17,12 @@ object SpecHelpers {
       |  trait D
       |}
       |import types._
-      |""".stripMargin
+      |""".trim.stripMargin
+  // in all error messages from toolbox, line number has to -8 to get the real line number
 
   lazy val base: String = {
     Option(System.getProperty("splain.tests"))
-      .getOrElse(s"$userDir/src/test/run")
+      .getOrElse(s"$userDir/src/test/resources")
   }
 
 //  def fileContent(name: String, fname: String): Path = FileSystems.getDefault.getPath(base, name, fname)
@@ -64,6 +65,23 @@ object SpecHelpers {
   }
 
   def toolbox(extra: String): ToolBox[universe.type] = {
+
+//    val frontEnd: FrontEnd = {
+//      new FrontEnd {
+//        override def display(info: Info): Unit = {
+//
+//          def display(info: Info): Unit = info.severity match {
+//            case API_INFO => reporter.echo(info.pos, info.msg)
+//            case API_WARNING => reporter.warning(info.pos, info.msg)
+//            case API_ERROR => reporter.error(info.pos, info.msg)
+//            case x => throw new MatchError(x)
+//          }
+//        }
+//      }
+//    }
+//
+//    ToolBox(cm).mkToolBox(frontEnd = frontEnd, options = s"$opts $extra")
+
     ToolBox(cm).mkToolBox(options = s"$opts $extra")
   }
 }

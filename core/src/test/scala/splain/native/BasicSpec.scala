@@ -1,11 +1,10 @@
 package splain.native
 
-import org.specs2.specification.core.SpecStructure
 import splain.SpecBase
 
-class BasicSpec extends SpecBase {
+class BasicSpec extends SpecBase.Direct {
 
-  override def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs"
+  override protected def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs"
 
   // from scalac tests START HERE
   def chain: String = """
@@ -202,27 +201,33 @@ object SingleImp
   """
   // from scalac tests END HERE
 
-  override def is: SpecStructure = {
+  check(chain)
 
-    val runner = DirectRunner()
-    import runner._
+  check(foundReq)
 
-    sequential ^ s2"""
-      chain ${run(chain)}
-      foundReq ${run(foundReq)}
-      bounds ${run(bounds)}
-      longAnnotationMessage ${run(longAnnotationMessage)}
-      longInfix ${run(longInfix)}
-      deeplyNestedHole ${run(deeplyNestedHole)}
-      auxType ${run(auxType)}
-      refined ${run(refined)}
-      disambiguateQualified ${run(disambiguateQualified)}
-      bynameParam ${run(bynameParam)}
-      tuple1 ${run(tuple1)}
-      singleType ${run(singleType)}
-      singleTypeInFunction ${run(singleTypeInFunction)}
-      singleTypeWithFreeSymbol ${run(singleTypeWithFreeSymbol)}
-      parameterAnnotation ${run(parameterAnnotation)}
-      """
-  }
+  check(bounds)
+
+  check(longAnnotationMessage)
+
+  check(longInfix)
+
+  check(deeplyNestedHole)
+
+  check(auxType)
+
+  check(refined)
+
+  check(disambiguateQualified)
+
+  check(bynameParam)
+
+  check(tuple1)
+
+  check(singleType)
+
+  check(singleTypeInFunction)
+
+  check(singleTypeWithFreeSymbol)
+
+  check(parameterAnnotation)
 }

@@ -109,4 +109,17 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
       RefinedFormatter,
       ByNameFormatter
     )
+
+  // TODO: cleanup, useless
+  override def inferImplicitFor(
+      pt: global.Type,
+      tree: global.Tree,
+      context: Context,
+      reportAmbiguous: Boolean
+  ): SearchResult = {
+
+    error("dummy!")
+
+    super.inferImplicitFor(pt, tree, context, reportAmbiguous)
+  }
 }

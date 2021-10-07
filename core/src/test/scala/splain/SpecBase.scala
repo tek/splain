@@ -1,141 +1,66 @@
 package splain
 
-import org.junit.runner.RunWith
-import org.specs2.Specification
-import org.specs2.matcher.MatchResult
-import org.specs2.runner.JUnitRunner
+import org.scalatest.funspec.AnyFunSpec
 
-import java.nio.file.{FileSystems, Files, Path}
-import java.util.concurrent.atomic.AtomicInteger
-import scala.tools.reflect.ToolBoxError
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
-@RunWith(classOf[JUnitRunner])
-trait SpecBase extends Specification {
+trait SpecBase extends AnyFunSpec with SpecFeatures {
 
-  def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs"
+  protected def _it: ItWord = it
+}
 
-  lazy val dir: String = SpecHelpers.base + "/" + this.getClass.getCanonicalName.split('.').mkString("/")
+object SpecBase {
 
-  def filePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
+  trait Direct extends SpecBase {
 
-  def fileContentString(name: String, fname: String): String = new String(Files.readAllBytes(filePath(name, fname)))
+    // will use reflection to discover all type `() => String` method under this instance
+    lazy val codeToName: Map[String, String] = {
 
-  def groundTruth(name: String, fname: Option[String]): String =
-    Try {
-      fileContentString(name, fname.getOrElse("error")).stripLineEnd
-    }.recover { ee: Throwable =>
-      fileContentString(name, fname.getOrElse("check")).stripLineEnd
-    }.get
-
-  class TestCase(code: String, extra: String) {
-
-    val codeWithTypes: String = SpecHelpers.types + code
-
-    def compile(): Any = {
-      import SpecHelpers._
-
-      val tb = toolbox(extra)
-      tb.eval(tb.parse(codeWithTypes))
-    }
-
-    def compileError(): String =
-      Try(compile()) match {
-        case Failure(ee) =>
-          ee match {
-            case te: ToolBoxError =>
-              te.message.linesIterator.toList.drop(2).mkString("\n")
-            case t =>
-              throw t
-          }
-        case Success(_) =>
-          sys.error("compiling succeeded")
-      }
-  }
-
-  case class FileCase(name: String, extra: String = extraSettings)
-      extends TestCase(fileContentString(name, "code.scala"), extra) {
-
-    def checkError(errorFile: Option[String] = None): MatchResult[Any] = {
-
-      compileError() must_== groundTruth(name, errorFile)
-    }
-
-    def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): MatchResult[Any] = {
-      this.copy(extra = s"-P:splain:breakinfix:$length").checkError(errorFile)
-    }
-
-    def compileSuccess(): Option[String] =
-      Try(compile()) match {
-        case Success(_) =>
-          None
-        case Failure(t) =>
-          Some(t.getMessage)
+      val methods = this.getClass.getDeclaredMethods.filter { method =>
+        method.getParameterCount == 0 &&
+        method.getReturnType == classOf[String]
+//        method.isAccessible
       }
 
-    def checkSuccess(): MatchResult[Option[String]] =
-      compileSuccess() must beNone
+      val seq = methods.flatMap { method =>
+        Try {
+          val code = method.invoke(this).asInstanceOf[String]
+          code -> method.getName
+        }.toOption
+      }
+      Map(seq: _*)
+    }
+
+    lazy val runner = DirectRunner()
+
+    def check(code: String): Unit = {
+
+      val name = codeToName(code)
+
+      _it(name) {
+        runner.run(code)
+      }
+    }
   }
 
-  case class FileRunner() {
+  trait File extends SpecBase {
 
-    def checkSuccess(
-        file: String,
+    def check(
+        name: String,
+        file: String = "",
         extra: String = extraSettings
-    ): MatchResult[Option[String]] = FileCase(file, extra).checkSuccess()
+    )(
+        check: CheckFile
+    ): Unit = {
 
-    def checkError(
-        file: String,
-        extra: String = extraSettings,
-        errorFile: Option[String] = None
-    ): MatchResult[Any] = {
+      val _file =
+        if (file.isEmpty) name
+        else file
 
-      FileCase(file, extra).checkError(errorFile)
-    }
+      _it(name) {
 
-    def checkErrorWithBreak(
-        file: String,
-        extra: String = extraSettings,
-        errorFile: Option[String] = None,
-        length: Int = 20
-    ): MatchResult[Any] = {
-      FileCase(file, extra).checkErrorWithBreak(errorFile, length)
-    }
-  }
-
-  case class DirectCase(code: String, extra: String = extraSettings) extends TestCase(code, extra)
-
-  case class DirectRunner() {
-
-    def aggregatedGroundTruth(fname: Option[String]): Seq[String] = {
-
-      val startsWith = "newSource1.scala:"
-
-      val gt = groundTruth("__direct", fname)
-
-      val result = gt
-        .split(
-          startsWith
-        )
-        .filter(_.nonEmpty)
-        .map { line =>
-          (startsWith + line).trim
-        }
-
-      result
-    }
-
-    lazy val groundTruths = aggregatedGroundTruth(None)
-
-    val pointer = new AtomicInteger(0)
-
-    def run(code: String, extra: String = extraSettings): MatchResult[Any] = {
-
-      val cc = DirectCase(code, extra)
-
-      cc.compileError() must_== groundTruths(pointer.getAndIncrement())
+        check(FileCase(_file, extra))
+      }
     }
   }
 }
-
-trait DirectRunSpecBase extends SpecBase {}

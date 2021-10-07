@@ -68,17 +68,17 @@ allprojects {
 //            bothImpl("${vs.scalaGroup}:scala-reflect:${vs.scalaV}")
         }
 
-        val specs2V = "4.12.12"
+//        val specs2V = "4.12.12"
+//        testImplementation("org.specs2:specs2-core_${vs.scalaBinaryV}:$specs2V")// https://mvnrepository.com/artifact/org.specs2/specs2-junit
+//        testImplementation("org.specs2:specs2-junit_${vs.scalaBinaryV}:$specs2V")
+//        testImplementation("junit:junit:4.13.2")
 
-        testImplementation("org.specs2:specs2-core_${vs.scalaBinaryV}:$specs2V")// https://mvnrepository.com/artifact/org.specs2/specs2-junit
-        testImplementation("org.specs2:specs2-junit_${vs.scalaBinaryV}:$specs2V")
-
-//        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${vs.scalatestV}")
-//        testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
-        testImplementation("junit:junit:4.13.2")
+        val scalaTestV = "3.2.3"
+        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 
         // TODO: alpha project, switch to mature solution once https://github.com/scalatest/scalatest/issues/1454 is solved
-//        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.9")
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.9")
     }
 
     sourceSets {
