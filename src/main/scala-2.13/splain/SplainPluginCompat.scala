@@ -21,8 +21,7 @@ abstract class SplainPluginCompat extends SplainPluginLike {
 
   val analyzer =
     if (global.settings.YmacroAnnotations)
-      new { val global = SplainPluginCompat.this.global } with Analyzer with typechecker.MacroAnnotationNamers
-      with Features
+      new Analyzer(SplainPluginCompat.this.global) with typechecker.MacroAnnotationNamers with Features
     else
-      new { val global = SplainPluginCompat.this.global } with Analyzer with Features
+      new Analyzer(SplainPluginCompat.this.global) with Features
 }
