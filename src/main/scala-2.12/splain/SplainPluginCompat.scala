@@ -3,7 +3,7 @@ package splain
 abstract class SplainPluginCompat extends SplainPluginLike {
 
   val analyzer =
-    new { val global = SplainPluginCompat.this.global } with Analyzer {
+    new Analyzer(global = SplainPluginCompat.this.global) {
       def featureImplicits = boolean(keyImplicits)
       def featureFoundReq = boolean(keyFoundReq)
       def featureInfix = boolean(keyInfix)
