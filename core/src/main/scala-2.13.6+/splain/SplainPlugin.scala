@@ -1,17 +1,51 @@
 package splain
 
 import scala.tools.nsc._
+import scala.tools.nsc.typechecker.MacroAnnotationNamers
 
 class SplainPlugin(val global: Global) extends SplainPluginLike {
+
+  //  lazy val splainAnalyzer: SplainAnalyzer = new SplainAnalyzer(global)
+
+  lazy val splainAnalyzer: SplainAnalyzer =
+    if (global.settings.YmacroAnnotations)
+      new SplainAnalyzer(global) with MacroAnnotationNamers
+    else
+      new SplainAnalyzer(global)
+
+  val analyzerField = classOf[Global].getDeclaredField("analyzer")
+  analyzerField.setAccessible(true)
+  analyzerField.set(global, splainAnalyzer)
+
+  val phasesSetMapGetter = classOf[Global]
+    .getDeclaredMethod("phasesSet")
+
+  val phasesSet = phasesSetMapGetter
+    .invoke(global)
+    .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
+
+  if (phasesSet.exists(_.phaseName == "typer")) {
+    def subcomponentNamed(name: String) =
+      phasesSet
+        .find(_.phaseName == name)
+        .head
+    val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
+      subcomponentNamed("namer"),
+      subcomponentNamed("packageobjects"),
+      subcomponentNamed("typer")
+    )
+    val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
+    phasesSet --= oldScs
+    phasesSet ++= newScs
+  }
+  // TODO: remove them after AnalyzerPlugin interface becomes stable
 
   import global._
   import analyzer._
 
-  lazy val splainAnalyzer: SplainAnalyzer = new SplainAnalyzer(global)
-
   override def init(options: List[String], error: String => Unit): Boolean = {
     def invalid(opt: String) = error(s"splain: invalid option `$opt`")
-    def setopt(key: String, value: String) =
+    def setOpt(key: String, value: String) =
       if (opts.contains(key))
         opts.update(key, value)
       else
@@ -19,9 +53,9 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
     options.foreach { opt =>
       opt.split(":").toList match {
         case key :: value :: Nil =>
-          setopt(key, value)
+          setOpt(key, value)
         case key :: Nil =>
-          setopt(key, "true")
+          setOpt(key, "true")
         case _ =>
           invalid(opt)
       }

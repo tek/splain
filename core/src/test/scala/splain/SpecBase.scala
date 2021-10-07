@@ -31,7 +31,7 @@ object SpecBase {
       Map(seq: _*)
     }
 
-    lazy val runner = DirectRunner()
+    lazy val runner: DirectRunner = DirectRunner()
 
     def check(code: String): Unit = {
 

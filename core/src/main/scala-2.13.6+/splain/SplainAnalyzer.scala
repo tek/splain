@@ -96,7 +96,7 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
     (
       "implicit error;" ::
         implicitMessage(param, annotationMsg) :::
-        "^^^" ::
+//        "^^^" ::
         formatNestedImplicits(errors)
     ).mkString("\n")
   }
@@ -118,7 +118,7 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
       reportAmbiguous: Boolean
   ): SearchResult = {
 
-    error("dummy!")
+//    error("dummy!")
 
     super.inferImplicitFor(pt, tree, context, reportAmbiguous)
   }

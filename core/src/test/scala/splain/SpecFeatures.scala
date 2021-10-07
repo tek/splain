@@ -1,15 +1,20 @@
 package splain
 
-import org.scalatest.Suite
+import org.scalatest.{Assertion, Suite}
+import splain.SpecHelpers.{cm, opts}
 
 import java.nio.file.{FileSystems, Files, Path}
 import java.util.concurrent.atomic.AtomicInteger
-import scala.tools.reflect.ToolBoxError
+import scala.reflect.internal.util.{BatchSourceFile, Position}
+import scala.reflect.runtime.universe
+import scala.tools.reflect.{FrontEnd, ToolBox, ToolBoxError}
 import scala.util.{Failure, Success, Try}
 
 trait SpecFeatures extends Suite {
 
   protected def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs"
+
+  protected def sourceName: String = "newSource1.scala"
 
   protected lazy val dir: String = SpecHelpers.base + "/" + this.getClass.getCanonicalName.split('.').mkString("/")
 
@@ -26,14 +31,49 @@ trait SpecFeatures extends Suite {
 
   class TestCase(code: String, extra: String) {
 
-    val codeWithTypes: String = SpecHelpers.types + code
+    object InMemoryFrontEnd extends FrontEnd {
+
+      @volatile var msg: String = _
+
+      override def display(info: Info): Unit = {
+
+        val posWithFileName = info.pos.withSource(
+          new BatchSourceFile(sourceName, info.pos.source.content)
+        )
+
+        val infoStr = s"${info.severity.toString().toLowerCase}: ${info.msg}"
+
+        val msg = Position.formatMessage(posWithFileName, infoStr, shortenFile = true)
+        this.msg = msg
+      }
+    }
+
+    lazy val toolbox: ToolBox[universe.type] = {
+
+      ToolBox(cm).mkToolBox(frontEnd = InMemoryFrontEnd, options = s"$opts $extra")
+      //    ToolBox(cm).mkToolBox(options = s"$opts $extra")
+    }
+
+//    lazy val predefCode: String =
+//      """
+//        |object types
+//        |{
+//        |  class ***[A, B]
+//        |  class >:<[A, B]
+//        |  class C
+//        |  trait D
+//        |}
+//        |import types._
+//        |""".trim.stripMargin
+// in all error messages from toolbox, line number has to -8 to get the real line number
+    lazy val predefCode = ""
+
+    val codeWithPredef: String = (predefCode.trim + "\n" + code).trim
 
     def compile(): Any = {
-      import SpecHelpers._
 
-      val tb = toolbox(extra)
-      val parsed = tb.parse(codeWithTypes)
-      tb.eval(parsed)
+      val parsed = toolbox.parse(codeWithPredef)
+      toolbox.eval(parsed)
     }
 
     def compileError(): String =
@@ -41,7 +81,8 @@ trait SpecFeatures extends Suite {
         case Failure(ee) =>
           ee match {
             case te: ToolBoxError =>
-              te.message.linesIterator.toList.drop(2).mkString("\n")
+              InMemoryFrontEnd.msg
+//              te.message.linesIterator.toList.drop(2).mkString("\n")
             case t =>
               throw t
           }
@@ -60,12 +101,12 @@ trait SpecFeatures extends Suite {
   case class FileCase(name: String, extra: String = extraSettings)
       extends TestCase(fileContentString(name, "code.scala"), extra) {
 
-    def checkError(errorFile: Option[String] = None) = {
+    def checkError(errorFile: Option[String] = None): Unit = {
 
       compileError() must_== groundTruth(name, errorFile)
     }
 
-    def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20) = {
+    def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): Unit = {
       this.copy(extra = s"-P:splain:breakinfix:$length").checkError(errorFile)
     }
 
@@ -77,7 +118,7 @@ trait SpecFeatures extends Suite {
           Some(t.getMessage)
       }
 
-    def checkSuccess() =
+    def checkSuccess(): Assertion =
       assert(compileSuccess().isEmpty)
   }
 
@@ -155,7 +196,7 @@ trait SpecFeatures extends Suite {
 
     val pointer = new AtomicInteger(0)
 
-    def run(code: String, extra: String = extraSettings) = {
+    def run(code: String, extra: String = extraSettings): Unit = {
 
       val cc = DirectCase(code, extra)
 
