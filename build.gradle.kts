@@ -167,13 +167,13 @@ allprojects {
                 showStandardStreams = true
             }
 
-            useJUnit()
-//            useJUnitPlatform {
-//                includeEngines("specs2")
-//                testLogging {
-//                    events("passed", "skipped", "failed")
-//                }
-//            }
+//            useJUnit()
+            useJUnitPlatform {
+                includeEngines("scalatest")
+                testLogging {
+                    events("passed", "skipped", "failed")
+                }
+            }
         }
     }
 

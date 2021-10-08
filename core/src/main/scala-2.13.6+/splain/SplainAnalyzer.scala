@@ -93,12 +93,14 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
   }
 
   override def formatImplicitError(param: Symbol, errors: List[ImplicitError], annotationMsg: String): String = {
-    (
+    val result = (
       "implicit error;" ::
         implicitMessage(param, annotationMsg) :::
 //        "^^^" ::
         formatNestedImplicits(errors)
     ).mkString("\n")
+
+    result
   }
 
   override val specialFormatters: List[SpecialFormatter] =

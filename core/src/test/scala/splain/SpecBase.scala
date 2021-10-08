@@ -36,10 +36,22 @@ object SpecBase {
     def check(code: String): Unit = {
 
       val name = codeToName(code)
+      val cc = DirectCase(code)
+
+      val groundTruth = runner.groundTruths(runner.pointer.getAndIncrement())
 
       _it(name) {
-        runner.run(code)
+        cc.compileError() must_== groundTruth
       }
+    }
+
+    def skip(code: String): Unit = {
+
+      val name = codeToName(code)
+
+      runner.pointer.getAndIncrement()
+
+      ignore(name) {}
     }
   }
 

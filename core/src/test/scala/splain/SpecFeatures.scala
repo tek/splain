@@ -195,12 +195,5 @@ trait SpecFeatures extends Suite {
     lazy val groundTruths: Seq[String] = aggregatedGroundTruth(None)
 
     val pointer = new AtomicInteger(0)
-
-    def run(code: String, extra: String = extraSettings): Unit = {
-
-      val cc = DirectCase(code, extra)
-
-      cc.compileError() must_== groundTruths(pointer.getAndIncrement())
-    }
   }
 }
