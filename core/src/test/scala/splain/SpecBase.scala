@@ -41,7 +41,8 @@ object SpecBase {
       val groundTruth = runner.groundTruths(runner.pointer.getAndIncrement())
 
       _it(name) {
-        cc.compileError() must_== groundTruth
+        val error = cc.compileError()
+        error must_== groundTruth
       }
     }
 
