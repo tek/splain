@@ -78,8 +78,8 @@ case class FunctionForm(args: List[Formatted], ret: Formatted, top: Boolean) ext
 
 object FunctionForm {
   def fromArgs(args: List[Formatted], top: Boolean) = {
-    val (params, returnt) = args.splitAt(args.length - 1)
-    FunctionForm(params, returnt.headOption.getOrElse(UnitForm), top)
+    val (params, returned) = args.splitAt(args.length - 1)
+    FunctionForm(params, returned.headOption.getOrElse(UnitForm), top)
   }
 }
 

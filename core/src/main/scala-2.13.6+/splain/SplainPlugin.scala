@@ -63,35 +63,35 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
     enabled
   }
 
-  def convertSpecifics: ImplicitErrorSpecifics => splainAnalyzer.ImplicitErrorSpecifics = {
-    case ImplicitErrorSpecifics.NonconformantBounds(targs, tparams, originalError) =>
-      splainAnalyzer.ImplicitErrorSpecifics.NonconformantBounds(
-        targs.asInstanceOf[List[splainAnalyzer.global.Type]],
-        tparams.asInstanceOf[List[splainAnalyzer.global.Symbol]],
-        originalError.asInstanceOf[Option[splainAnalyzer.AbsTypeError]]
+  object SplainAnalyzerPlugin extends AnalyzerPlugin {
+
+    protected lazy val convertSpecifics: ImplicitErrorSpecifics => splainAnalyzer.ImplicitErrorSpecifics = {
+      case ImplicitErrorSpecifics.NonconformantBounds(targs, tparams, originalError) =>
+        splainAnalyzer.ImplicitErrorSpecifics.NonconformantBounds(
+          targs.asInstanceOf[List[splainAnalyzer.global.Type]],
+          tparams.asInstanceOf[List[splainAnalyzer.global.Symbol]],
+          originalError.asInstanceOf[Option[splainAnalyzer.AbsTypeError]]
+        )
+      case ImplicitErrorSpecifics.NotFound(param) =>
+        splainAnalyzer.ImplicitErrorSpecifics.NotFound(param.asInstanceOf[splainAnalyzer.global.Symbol])
+    }
+
+    protected lazy val convertError: ImplicitError => splainAnalyzer.ImplicitError = { ee =>
+      import ee._
+
+      val result = splainAnalyzer.ImplicitError(
+        tpe.asInstanceOf[splainAnalyzer.global.Type],
+        candidate.asInstanceOf[splainAnalyzer.global.Tree],
+        nesting,
+        convertSpecifics(specifics)
       )
-    case ImplicitErrorSpecifics.NotFound(param) =>
-      splainAnalyzer.ImplicitErrorSpecifics.NotFound(param.asInstanceOf[splainAnalyzer.global.Symbol])
-  }
 
-  def convert: ImplicitError => splainAnalyzer.ImplicitError = { ee =>
-    import ee._
-
-    val result = splainAnalyzer.ImplicitError(
-      tpe.asInstanceOf[splainAnalyzer.global.Type],
-      candidate.asInstanceOf[splainAnalyzer.global.Tree],
-      nesting,
-      convertSpecifics(specifics)
-    )
-
-    result
-  }
-
-  object SplainAnalyzerPlugin extends global.analyzer.AnalyzerPlugin {
+      result
+    }
 
     override def noImplicitFoundError(param: Symbol, errors: List[ImplicitError], previous: String): String = {
 
-      val convertedErrors = errors.map(convert)
+      val convertedErrors = errors.map(convertError)
       val result = splainAnalyzer.formatImplicitError(
         param.asInstanceOf[splainAnalyzer.global.Symbol],
         convertedErrors,
@@ -101,23 +101,49 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
       result
     }
 
-    override def pluginsNotifyImplicitSearchResult(result: global.analyzer.SearchResult): Unit = {
-      val r = super.pluginsNotifyImplicitSearchResult(result)
-      r
-    }
+//    case class ImplicitSearchSession(search: ImplicitSearch) {
+//
+//      case class Completed(result: SearchResult) {
+//
+//        lazy val computation = new search.ImplicitComputation(search.context.implicitss, true)
+//
+//        lazy val allResults = {
+//
+//          computation.findAll()
+//        }
+//      }
+//    }
 
-    override def pluginsNotifyImplicitSearch(search: global.analyzer.ImplicitSearch): Unit = {
+//    @volatile var currentSession: ImplicitSearchSession = _
+//
+//    override def pluginsNotifyImplicitSearch(search: ImplicitSearch): Unit = {
+//
+//      currentSession = ImplicitSearchSession(search)
+//    }
+//
+//    // TODO: cleanup
+//    override def pluginsNotifyImplicitSearchResult(result: SearchResult): Unit = {
+//
+//      if (result.isFailure) {
+//        // start recovering all the lost diverging implicit messages
+//        val completed = currentSession.Completed(result)
+//
+//      }
 
-//      error("dummy!")
-      val tree = search.tree
-      val pos = search.pos
+//      val a = 1
+//    }
 
-      val tt = search.pt
-      val context: global.analyzer.Context = search.context
-
-      super.pluginsNotifyImplicitSearch(search)
-    }
+//    override def pluginsNotifyImplicitSearch(search: ImplicitSearch): Unit = {}
+//
+//    override def pluginsNotifyImplicitSearchResult(result: SearchResult): Unit = {
+//
+//      setAddendum(
+//        ,
+//        () =>
+//          s"\n Note: implicit ${invalidImplicits.head} is not applicable here because it comes after the application point and it lacks an explicit result type"
+//      )
+//    }
   }
 
-  global.analyzer.addAnalyzerPlugin(SplainAnalyzerPlugin)
+  addAnalyzerPlugin(SplainAnalyzerPlugin)
 }

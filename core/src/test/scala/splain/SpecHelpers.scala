@@ -2,7 +2,6 @@ package splain
 
 import java.nio.file.{FileSystems, Files, Path}
 import scala.reflect.runtime.universe
-import scala.tools.reflect.{FrontEnd, ToolBox}
 
 object SpecHelpers {
   lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")

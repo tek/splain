@@ -5,5 +5,5 @@ object Messages {
 
   val typingTypeApply = "typing TypeApply reported errors for the implicit tree: "
 
-  val lazyderiv = "could not find Lazy implicit"
+  val lazyDeriv = "could not find Lazy implicit"
 }

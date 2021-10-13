@@ -3,7 +3,12 @@ package splain
 import scala.tools.nsc._
 import scala.tools.nsc.typechecker.splain._
 
-class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
+class SplainAnalyzer(val global: Global)
+    extends typechecker.Analyzer
+    with SplainFormattingExtension
+    with ImplicitsExtension
+    with SplainDataExtension {
+
   import global._
 
   object SLRecordItemFormatter extends SpecialFormatter {
@@ -92,106 +97,6 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
       }
   }
 
-  case class ImplicitErrorTree(
-      error: ImplicitError,
-      children: Seq[ImplicitErrorTree] = Nil
-  ) {
-
-    lazy val asChain: List[ImplicitError] = List(error) ++ children.flatMap(_.asChain)
-
-    override def toString: String = {
-      formatImplicitChain(asChain).mkString("\n")
-    }
-  }
-
-  object ImplicitErrorTree {
-
-    def toTree(
-        Node: ImplicitError,
-        offsprings: List[ImplicitError]
-    ): ImplicitErrorTree = {
-      val topNesting = Node.nesting
-
-      val children = toChildren(
-        offsprings,
-        topNesting + 1
-      )
-
-      ImplicitErrorTree(Node, children)
-    }
-
-    def toChildren(
-        offsprings: List[ImplicitError],
-        minNesting: Int
-    ): List[ImplicitErrorTree] = {
-
-      if (offsprings.isEmpty)
-        return Nil
-
-      val wII = offsprings.zipWithIndex
-
-      val childrenII = wII
-        .filter {
-          case (sub, _) =>
-            require(
-              sub.nesting >= minNesting,
-              s"Sub-node in implicit tree can only have nesting level larger than top node," +
-                s" but (${sub.nesting} < $minNesting)"
-            )
-            sub.nesting == minNesting
-        }
-        .map(_._2)
-
-      val ranges = {
-
-        val seqs = (childrenII ++ Seq(offsprings.size))
-          .sliding(2)
-          .toList
-
-        seqs.map {
-          case Seq(from, until) =>
-            from -> until
-        }
-      }
-
-      val children = ranges.map { range =>
-        val _top = offsprings(range._1)
-
-        val _offsprings = offsprings.slice(range._1 + 1, range._2)
-
-        toTree(
-          _top,
-          _offsprings
-        )
-      }
-
-      val distinctChildren = {
-        children.distinctBy { child =>
-          child.error
-        }
-      }
-
-      distinctChildren
-    }
-  }
-
-  override def formatImplicitError(
-      param: Symbol,
-      errors: List[ImplicitError],
-      annotationMsg: String
-  ): String = {
-
-    val treeNodes = ImplicitErrorTree.toChildren(errors, 0)
-
-    val result =
-      s"""
-         |implicit error;
-         |${(implicitMessage(param, annotationMsg) ++ treeNodes).mkString("\n\n")}
-         |""".stripMargin.trim
-
-    result
-  }
-
   override val specialFormatters: List[SpecialFormatter] =
     List(
       FunctionFormatter,
@@ -201,15 +106,4 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer {
       ByNameFormatter
     )
 
-  override def inferImplicitFor(
-      pt: global.Type,
-      tree: global.Tree,
-      context: Context,
-      reportAmbiguous: Boolean
-  ): SearchResult = {
-
-//    error("dummy!")
-
-    super.inferImplicitFor(pt, tree, context, reportAmbiguous)
-  }
 }

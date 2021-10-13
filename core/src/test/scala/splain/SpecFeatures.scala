@@ -184,6 +184,7 @@ trait SpecFeatures extends Suite {
         .split(
           startsWith
         )
+        .toSeq
         .filter(_.nonEmpty)
         .map { line =>
           (startsWith + line).trim
