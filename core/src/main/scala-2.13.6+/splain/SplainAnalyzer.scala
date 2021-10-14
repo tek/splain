@@ -2,9 +2,10 @@ package splain
 
 import scala.tools.nsc._
 
-class SplainAnalyzer(val global: Global) extends typechecker.Analyzer with SplainFormattingExtension {
-
-  import global._
+class SplainAnalyzer(val global: Global)
+    extends typechecker.Analyzer
+    with SplainFormattingExtension
+    with ImplicitsExtension {
 
   override val specialFormatters: List[SpecialFormatter] =
     List(

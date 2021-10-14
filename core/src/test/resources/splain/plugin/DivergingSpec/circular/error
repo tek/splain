@@ -1,0 +1,12 @@
+newSource1.scala:17: error: implicit error;
+!I e: C
+g invalid because
+!I d: D
+Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+――f invalid because
+  !I c: C
+――――g invalid because
+    !I d: D
+    Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+    implicitly[C]
+              ^

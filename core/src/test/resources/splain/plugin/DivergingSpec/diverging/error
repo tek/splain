@@ -1,0 +1,9 @@
+newSource1.scala:16: error: implicit error;
+!I e: C :: D
+Diverging.f invalid because
+!I ii: Int :: C :: D
+――Diverging.f invalid because
+  !I ii: Int :: Int :: C :: D
+  Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+    implicitly[C :: D]
+              ^

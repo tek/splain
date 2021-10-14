@@ -15,8 +15,53 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     lazy val asChain: List[ImplicitError] = List(error) ++ children.flatMap(_.asChain)
 
     override def toString: String = {
-      formatImplicitChain(asChain).mkString("\n")
+      val formattedChain = formatImplicitChain(asChain)
+
+      formattedChain.mkString("\n")
     }
+
+  }
+
+  override def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
+
+    val base = super.formatNestedImplicit(err)
+
+    lazy val ii = ImplicitSession.PositionIndex(
+      err.candidate.pos
+//      err.candidate.symbol
+    )
+
+    object AnnotatedErrors {
+
+      lazy val diverging: Seq[DivergentImplicitTypeError] = {
+        val vsOpt = ImplicitSession.current.Diverging.byPosition.get(ii)
+        vsOpt.toSeq.flatten
+      }
+    }
+
+    val reason = err.specifics match {
+      case _err: ImplicitErrorSpecifics.NotFound =>
+        val annotation = NoImplicitFoundAnnotation(err.candidate, _err.param)._2
+        val base = implicitMessage(_err.param, annotation)
+
+        val regardingSameMissingType = AnnotatedErrors.diverging.find { ee =>
+          ee.pt0 =:= _err.param.tpe
+        }
+
+        regardingSameMissingType match {
+          case Some(ee) =>
+            base ++
+              Seq(
+                s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
+              ).filter(_.trim.nonEmpty)
+
+          case _ =>
+            base
+        }
+
+      case e: ImplicitErrorSpecifics.NonconformantBounds => formatNonConfBounds(e)
+    }
+    (base._1, reason, base._3)
   }
 
   object ImplicitErrorTree {
