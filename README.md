@@ -1,4 +1,4 @@
-# A scala compiler plugin for more concise errors
+_# A scala compiler plugin for more concise errors
 
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
@@ -78,21 +78,23 @@ The plugin can be configured via compiler arguments with the format:
 
 `param` can be one of the following:
 
-| v0.x              | built-in, v1.x            | default value    |
-| ----------------- | ------------------------- | ---------------- |
-| `all`             | (dropped)                 |                  |
-| `infix`           | (dropped)                 |                  |
-| `foundreq`        | `Vtype-diffs`             |                  |
-| `implicits`       | `Vimplicits`              |                  |
-| `bounds`          | (dropped)                 | false            |
-| `color`           | (dropped)                 |                  |
-| `breakinfix`      | (dropped)                 | 0                |
-| `tree`            | `Vimplicits-verbose-tree` |                  |
-| `compact`         | (dropped)                 | false            |
-| `boundsimplicits` | (dropped)                 |                  |
-| `truncrefined`    | `Vimplicits-max-refined`  | 0                |
-| `rewrite`         | (dropped)                 | (do not rewrite) |
-| `keepmodules`     | (dropped)                 | 0                |
+| v0.x              | built-in, v1.x                            | default value    |
+| ----------------- | ----------------------------------------- | ---------------- |
+| `all`             | (dropped)                                 |                  |
+| `infix`           | (dropped)                                 |                  |
+| `foundreq`        | `Vtype-diffs`                             |                  |
+| `implicits`       | `Vimplicits`                              |                  |
+| `bounds`          | (dropped)                                 | false            |
+| `color`           | (dropped)                                 |                  |
+| `breakinfix`      | (dropped)                                 | 0                |
+| `tree`            | `Vimplicits-verbose-tree`                 |                  |
+| `compact`         | (dropped)                                 | false            |
+| `boundsimplicits` | (dropped)                                 |                  |
+| `truncrefined`    | `Vimplicits-max-refined`                  | 0                |
+| `rewrite`         | (dropped)                                 | (do not rewrite) |
+| `keepmodules`     | (dropped)                                 | 0                |
+| (N/A)             | `P:splain:Vimplicits-diverging`           | false            |
+| (N/A)             | `P:splain:Vimplicits-diverging-max-depth` | false            |
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -243,6 +245,32 @@ So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` 
 `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
 
+# diverging implicit errors (experimental)
+
+This error may be thrown by the Scala compiler if it cannot decide if an implicit search can terminate in polynomial time (e.g. if the search algorithm encounter a loop or infinite expansion). In most cases, such error will cause the entire search to fail immediately, but there are few exceptions to this rule, for which the search can backtrack and try an alternative path to fulfil the implicit argument. Either way, the Scala compiler error is only capable of showing the entry point of such loop or infinite expansion:
+
+```
+diverging implicit expansion for type splain.DivergingImplicits.C
+starting with method f in object Circular
+```
+
+If the parameter `-P:splain:Vimplicits-diverging` is enabled, it will instruct the compiler to continue its implicit search process until an implicit resolution chain can be correlated with such error(s):
+
+```
+error: implicit error;
+!I e: C
+g invalid because
+!I d: D
+Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+――f invalid because
+  !I c: C
+――――g invalid because
+    !I d: D
+    Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+```
+
+**WARNING!** This feature is marked "experimental" as sometimes it may cause failed implicit resolution to succeed, due to the delay in throwing the diverging implicit error. It may also increase compilation time slightly. If your build has been broken by this feature, please consider simplifying your code base to create a minimal reproducible test case, and submit it with a pull request.
+
 # Development
 
 ## Bugs
@@ -301,5 +329,5 @@ The team strive for a strong discipline in software engineering. All commits (in
 
 - @tek - reviewer for built-in/v0.x bugfix, new features
 - @tribbloid - reviewer for v1.x bugfix
-- @dwijnand - reviewer for scala compiler integration
+- @dwijnand - reviewer for scala compiler integration_
 

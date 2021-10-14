@@ -24,4 +24,8 @@ class ShapelessSpec extends SpecBase.File {
   check("witness value types", "witness-value") {
     checkError()
   }
+
+  check("lazyImplicit") {
+    checkError()
+  }
 }

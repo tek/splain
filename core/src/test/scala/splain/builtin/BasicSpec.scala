@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class BasicSpec extends SpecBase.Direct {
 
-  override protected lazy val specCompilerOptions: String = "-usejavacp -Vimplicits -Vtype-diffs"
+  override protected lazy val specCompilerOptions: String = "-Vimplicits -Vtype-diffs"
 
   // from scalac tests START HERE
   def chain: String = """

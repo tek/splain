@@ -6,7 +6,7 @@ object DivergingImplicits {
   object Endo {
     implicit def f(
         implicit
-        d: D
+        c: C
     ): C = ???
 
     implicitly[C]
