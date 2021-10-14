@@ -15,8 +15,71 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
     lazy val asChain: List[ImplicitError] = List(error) ++ children.flatMap(_.asChain)
 
     override def toString: String = {
-      formatImplicitChain(asChain).mkString("\n")
+      val formattedChain = formatImplicitChain(asChain)
+
+      formattedChain.mkString("\n")
     }
+
+  }
+
+  override def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
+
+    val base = super.formatNestedImplicit(err)
+
+    lazy val ii = ReportedErrors.ErrorIndex(
+      err.candidate.pos
+//      err.candidate.symbol
+    )
+
+    object AnnotatedErrors {
+
+      lazy val all: Seq[AbsTypeError] = {
+        val vsOpt = ReportedErrors.cache.get(ii)
+        vsOpt.toSeq.flatten
+      }
+
+      lazy val divergentImplicits: Seq[DivergentImplicitTypeError] = {
+        all.collect {
+          case ee: DivergentImplicitTypeError => ee
+        }
+      }
+    }
+
+    val reason = err.specifics match {
+      case _err: ImplicitErrorSpecifics.NotFound =>
+        val annotation = NoImplicitFoundAnnotation(err.candidate, _err.param)._2
+        val base = implicitMessage(_err.param, annotation)
+
+        val regardingSameMissingType = AnnotatedErrors.divergentImplicits.find { ee =>
+          ee.pt0 =:= _err.param.tpe
+        }
+
+        regardingSameMissingType match {
+          case Some(ee) =>
+            base ++
+              Seq(
+                "[Diverging implicit] trying to match an equal or similar (but more complex) type in the same search tree"
+              ).filter(_.trim.nonEmpty)
+
+          case _ =>
+            base
+        }
+
+      case e: ImplicitErrorSpecifics.NonconformantBounds => formatNonConfBounds(e)
+    }
+    (base._1, reason, base._3)
+  }
+
+  /** The implicit not found message from the annotation, and whether it's a supplement message or not. */
+  def DivergentImplicitAnnotation(tree: Tree, param: Symbol): (Boolean, String) = {
+    val base = NoImplicitFoundAnnotation(tree, param)
+    val withAddendum = Seq(
+      base._2.trim,
+      "Divergent implicit expansion: an equal or similar (but less complex) type has been attempted before"
+    ).filter(_.nonEmpty)
+      .mkString("\n")
+
+    base._1 -> withAddendum
   }
 
   object ImplicitErrorTree {

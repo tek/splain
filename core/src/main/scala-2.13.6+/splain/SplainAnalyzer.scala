@@ -3,7 +3,10 @@ package splain
 import scala.tools.nsc._
 import scala.tools.nsc.typechecker.splain._
 
-class SplainAnalyzer(val global: Global) extends typechecker.Analyzer with SplainFormattingExtension {
+class SplainAnalyzer(val global: Global)
+    extends typechecker.Analyzer
+    with SplainFormattingExtension
+    with ImplicitsExtension {
 
   import global._
 
