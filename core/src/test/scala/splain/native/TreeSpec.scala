@@ -3,7 +3,6 @@ package splain.native
 import splain.SpecBase
 
 class TreeSpec extends SpecBase.Direct {
-  override protected def extraSettings: String = "-usejavacp -Vimplicits -Vimplicits-verbose-tree"
 
   def verboseTree: String = """
 object tpes

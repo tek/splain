@@ -1,6 +1,5 @@
 newSource1.scala:13: error: implicit error;
 !I e: II
-
 ImplicitChain.g invalid because
 !I impPar3: I1
 ⋮
@@ -14,7 +13,6 @@ newSource1.scala:6: error: type mismatch;
     ^
 newSource1.scala:7: error: implicit error;
 !I e: F[Arg]
-
 Bounds.g invalid because
 nonconformant bounds;
 [Arg, Nothing]
@@ -73,7 +71,6 @@ newSource1.scala:11: error: implicit error;
             ^
 newSource1.scala:9: error: implicit error;
 !I e: F.Aux[C, D]
-
 Aux.f invalid because
 !I impPar10: C
   implicitly[F.Aux[C, D]]

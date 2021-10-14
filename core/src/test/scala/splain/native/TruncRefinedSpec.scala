@@ -3,7 +3,8 @@ package splain.native
 import splain.SpecBase
 
 class TruncRefinedSpec extends SpecBase.Direct {
-  override protected def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs -Vimplicits-max-refined 5"
+
+  override protected lazy val defaultExtra: String = "-Vimplicits-max-refined 5"
 
   def truncrefined: String = """
 object TruncRefined

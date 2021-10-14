@@ -1,2 +1,4 @@
-implicit error;
+newSource1.scala:16: error: implicit error;
 !I ev: Int(3) *** Int(4)
+  fn(Witness(3).value, Witness(4).value)
+    ^

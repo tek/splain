@@ -4,7 +4,7 @@ import org.scalatest.funspec.AnyFunSpec
 
 import scala.util.Try
 
-trait SpecBase extends AnyFunSpec with SpecFeatures {
+trait SpecBase extends AnyFunSpec with TestHelpers {
 
   protected def _it: ItWord = it
 }
@@ -61,7 +61,7 @@ object SpecBase {
     def check(
         name: String,
         file: String = "",
-        extra: String = extraSettings
+        extra: String = defaultExtra
     )(
         check: CheckFile
     ): Unit = {
@@ -70,10 +70,25 @@ object SpecBase {
         if (file.isEmpty) name
         else file
 
-      _it(name) {
+      val testName = Seq(name, file).filter(_.nonEmpty).mkString(" - ")
+
+      _it(testName) {
 
         check(FileCase(_file, extra))
       }
+    }
+
+    def skip(
+        name: String,
+        file: String = "",
+        extra: String = defaultExtra
+    )(
+        check: CheckFile
+    ): Unit = {
+
+      val testName = Seq(name, file).filter(_.nonEmpty).mkString(" - ")
+
+      ignore(testName) {}
     }
   }
 }

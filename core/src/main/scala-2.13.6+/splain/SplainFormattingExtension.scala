@@ -29,7 +29,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
 
       val children = fromChildren(
         offsprings,
-        topNesting + 1
+        topNesting
       )
 
       ImplicitErrorTree(Node, children)
@@ -37,22 +37,31 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
 
     def fromChildren(
         offsprings: List[ImplicitError],
-        minNesting: Int
+        topNesting: Int
     ): List[ImplicitErrorTree] = {
 
       if (offsprings.isEmpty)
         return Nil
+
+      val minNesting = offsprings.map(v => v.nesting).min
+
+      if (minNesting < topNesting + 1)
+        throw new SplainInternalError(
+          "Detail: nesting level of offsprings of an implicit search tree node should be higher"
+        )
 
       val wII = offsprings.zipWithIndex
 
       val childrenII = wII
         .filter {
           case (sub, _) =>
-            require(
-              sub.nesting >= minNesting,
-              s"Sub-node in implicit tree can only have nesting level larger than top node," +
-                s" but (${sub.nesting} < $minNesting)"
-            )
+            if (sub.nesting < minNesting) {
+              throw new SplainInternalError(
+                s"Detail: Sub-node in implicit tree can only have nesting level larger than top node," +
+                  s" but (${sub.nesting} < $minNesting)"
+              )
+            }
+
             sub.nesting == minNesting
         }
         .map(_._2)
@@ -67,10 +76,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
           case Seq(from, until) =>
             from -> until
           case _ =>
-            throw new SplainInternalError(
-              "You've found a bug in splain formatting extension," +
-                " please post this error with stack trace on https://github.com/tek/splain/issues"
-            )
+            throw new SplainInternalError("Detail: index should not be empty")
         }
       }
 
@@ -101,12 +107,12 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
       annotationMsg: String
   ): String = {
 
-    val treeNodes = ImplicitErrorTree.fromChildren(errors, 0)
+    val treeNodes = ImplicitErrorTree.fromChildren(errors, -1)
 
     val result =
       s"""
          |implicit error;
-         |${(implicitMessage(param, annotationMsg) ++ treeNodes).mkString("\n\n")}
+         |${(implicitMessage(param, annotationMsg) ++ treeNodes).mkString("\n")}
          |""".stripMargin.trim
 
     result

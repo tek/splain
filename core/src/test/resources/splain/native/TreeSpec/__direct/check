@@ -1,6 +1,5 @@
 newSource1.scala:28: error: implicit error;
 !I e: I1
-
 i1a invalid because
 !I p: I2
 ――i2 invalid because
@@ -37,7 +36,6 @@ i1a invalid because
           !I p: I8
 ――――――――――――i8 invalid because
             !I p: I9
-
 i1b invalid because
 !I p: I6
 ――i6a invalid because

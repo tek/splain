@@ -1,2 +1,4 @@
-type mismatch;
+newSource1.scala:33: error: type mismatch;
   C.X.Y.T|B.X.Y.T
+  f(x: C.X.Y.T)
+     ^

@@ -1,2 +1,4 @@
-type mismatch;
+newSource1.scala:14: error: type mismatch;
   Int|(=> A) => B
+  f(1: Int)
+     ^

@@ -1,7 +1,7 @@
 package splain
 
 import org.scalatest.{Assertion, Suite}
-import splain.SpecHelpers.{cm, opts}
+import splain.TestHelpers.{baseOptions, cm}
 
 import java.nio.file.{FileSystems, Files, Path}
 import java.util.concurrent.atomic.AtomicInteger
@@ -10,13 +10,15 @@ import scala.reflect.runtime.universe
 import scala.tools.reflect.{FrontEnd, ToolBox, ToolBoxError}
 import scala.util.{Failure, Success, Try}
 
-trait SpecFeatures extends Suite {
+trait TestHelpers extends Suite {
 
-  protected def extraSettings: String = "-usejavacp -Vimplicits -Vtype-diffs"
+  protected lazy val specCompilerOptions = "-Vimplicits -Vimplicits-verbose-tree -Vtype-diffs"
+
+  protected lazy val defaultExtra: String = ""
 
   protected def sourceName: String = "newSource1.scala"
 
-  protected lazy val dir: String = SpecHelpers.base + "/" + this.getClass.getCanonicalName.split('.').mkString("/")
+  protected lazy val dir: String = TestHelpers.base + "/" + this.getClass.getCanonicalName.split('.').mkString("/")
 
   def filePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
 
@@ -28,6 +30,8 @@ trait SpecFeatures extends Suite {
     }.recover { ee: Throwable =>
       fileContentString(name, fname.getOrElse("check")).stripLineEnd
     }.get
+
+  lazy val predefCode = ""
 
   class TestCase(code: String, extra: String) {
 
@@ -50,23 +54,9 @@ trait SpecFeatures extends Suite {
 
     lazy val toolbox: ToolBox[universe.type] = {
 
-      ToolBox(cm).mkToolBox(frontEnd = InMemoryFrontEnd, options = s"$opts $extra")
-      //    ToolBox(cm).mkToolBox(options = s"$opts $extra")
+      val opt = s"$baseOptions $specCompilerOptions $extra"
+      ToolBox(cm).mkToolBox(frontEnd = InMemoryFrontEnd, options = opt)
     }
-
-//    lazy val predefCode: String =
-//      """
-//        |object types
-//        |{
-//        |  class ***[A, B]
-//        |  class >:<[A, B]
-//        |  class C
-//        |  trait D
-//        |}
-//        |import types._
-//        |""".trim.stripMargin
-// in all error messages from toolbox, line number has to -8 to get the real line number
-    lazy val predefCode = ""
 
     val codeWithPredef: String = (predefCode.trim + "\n" + code).trim
 
@@ -98,16 +88,12 @@ trait SpecFeatures extends Suite {
     }
   }
 
-  case class FileCase(name: String, extra: String = extraSettings)
+  case class FileCase(name: String, extra: String = defaultExtra)
       extends TestCase(fileContentString(name, "code.scala"), extra) {
 
     def checkError(errorFile: Option[String] = None): Unit = {
 
       compileError() must_== groundTruth(name, errorFile)
-    }
-
-    def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): Unit = {
-      this.copy(extra = s"-P:splain:breakinfix:$length").checkError(errorFile)
     }
 
     def compileSuccess(): Option[String] =
@@ -129,48 +115,15 @@ trait SpecFeatures extends Suite {
   }
 
   def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): CheckFile = { cc =>
-    cc.copy(extra = s"-P:splain:breakinfix:$length").checkError(errorFile)
+    val withBreak = cc.copy(extra = s"-Vimplicits-breakinfix $length")
+    withBreak.checkError(errorFile)
   }
 
   def checkSuccess(): CheckFile = { cc =>
     assert(cc.compileSuccess().isEmpty)
   }
 
-  //    def compileSuccess(): Option[String] =
-  //      Try(compile()) match {
-  //        case Success(_) =>
-  //          None
-  //        case Failure(t) =>
-  //          Some(t.getMessage)
-  //      }
-
-//  case class FileRunner() {
-//
-//    def checkSuccess(
-//        file: String,
-//        extra: String = extraSettings
-//    ) = FileCase(file, extra).checkSuccess()
-//
-//    def checkError(
-//        file: String,
-//        extra: String = extraSettings,
-//        errorFile: Option[String] = None
-//    ) = {
-//
-//      FileCase(file, extra).checkError(errorFile)
-//    }
-//
-//    def checkErrorWithBreak(
-//        file: String,
-//        extra: String = extraSettings,
-//        errorFile: Option[String] = None,
-//        length: Int = 20
-//    ) = {
-//      FileCase(file, extra).checkErrorWithBreak(errorFile, length)
-//    }
-//  }
-
-  case class DirectCase(code: String, extra: String = extraSettings) extends TestCase(code, extra)
+  case class DirectCase(code: String, extra: String = defaultExtra) extends TestCase(code, extra)
 
   case class DirectRunner() {
 
@@ -196,5 +149,48 @@ trait SpecFeatures extends Suite {
     lazy val groundTruths: Seq[String] = aggregatedGroundTruth(None)
 
     val pointer = new AtomicInteger(0)
+  }
+}
+
+object TestHelpers {
+  lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")
+
+  lazy val base: String = {
+    Option(System.getProperty("splain.tests"))
+      .getOrElse(s"$userDir/src/test/resources")
+  }
+
+  val cm: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
+
+  val plugin: String = Option(System.getProperty("splain.jar")).getOrElse {
+    val dir = FileSystems.getDefault.getPath(userDir + "/build/libs")
+    val file =
+      Files
+        .list(dir)
+        .toArray
+        .map(v => v.asInstanceOf[Path])
+        .filter(v => v.toString.endsWith(".jar"))
+        .filterNot { v =>
+          v.toString.endsWith("-javadoc.jar") ||
+          v.toString.endsWith("-sources.jar")
+        }
+        .head
+
+    file.toAbsolutePath.toString
+  }
+
+  lazy val baseOptions: String = {
+//    val rows = s"""
+//                  |-Xplugin:$plugin
+//                  |-P:splain:color:false
+//                  |-P:splain:bounds
+//                  |-P:splain:tree:false
+//                  |""".trim.stripMargin
+
+    val rows = s"""
+                  |-Xplugin:$plugin
+                  |""".trim.stripMargin
+
+    rows.split('\n').mkString(" ")
   }
 }
