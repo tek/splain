@@ -30,6 +30,6 @@ jobs:
         if: always()
         with:
           files: |
-            **/test-reports/*.xml
+            **/test-results/test/*.xml
           check_name: |
             Test Report (${{matrix.version}})
