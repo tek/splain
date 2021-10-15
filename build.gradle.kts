@@ -184,7 +184,7 @@ allprojects {
 
     publishing {
         val moduleID = if (project.name.startsWith(rootID)) project.name
-        else rootID + "-" + project.name
+        else rootID + "-" + project.name + "_" + vs.scalaV
 
         publications {
             create<MavenPublication>("maven") {

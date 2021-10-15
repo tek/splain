@@ -12,4 +12,3 @@ mkdir -p ${FWDIR}/logs/dependencyTree
 ${FWDIR}/gradlew -q dependencyTree "${@}" > ${FWDIR}/logs/dependencyTree/"$DATE".log
 
 ${FWDIR}/gradlew clean testClasses publishToMavenLocal "${@}"
-t
