@@ -15,19 +15,6 @@ class PluginSpec extends SpecBase.File {
       |}
       |import types._
       |""".trim.stripMargin
-  // in all error messages from toolbox, line number has to -8 to get the real line number
-
-  lazy val types: String =
-    """
-      |object types
-      |{
-      |  class ***[A, B]
-      |  class >:<[A, B]
-      |  class C
-      |  trait D
-      |}
-      |import types._
-      |""".stripMargin
 
   check("implicit resolution chains", "chain") {
     checkError()
@@ -52,10 +39,6 @@ class PluginSpec extends SpecBase.File {
   // TODO: cleanup, breakinfix is gone
   skip("linebreak long infix types", "break") {
     checkErrorWithBreak()
-  }
-
-  check("shapeless Record", "record") {
-    checkError()
   }
 
   check("deephole") {
@@ -113,12 +96,4 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("witness value types", "witness-value") {
-    checkError()
-  }
-
-  check("zlayer") {
-    // TODO: is it still incorrect?
-    checkError()
-  }
 }

@@ -3,7 +3,33 @@
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
 
+# Releases
+
+### built-in - Scala 2.13.6+
+
+Most features in splain 0.5.8 has been integrated into Scala 2.13.6 compiler through [this patch]().
+
+- Recommended if using Scala 2.13 and only splain 0.5.8 features. However, ... 
+- **This integration is not 100%!** Configuration parameters have to be given new names to be compliant with the compiler standard. Some features are also discarded.
+
+### v1.x (current) - Scala 2.13.6+
+
+The above integration introduces a new compiler extension type (AnalyzerPlugin) that rendered most of old source code for splain v0.x incompatible or redundant. Thus, the team have decided to move on to the next major version, designed from scratch to have a cleaner architecture and better test coverage. Unfortunately, it will **not be available for Scala 2.13.5-**
+
+- Recommended if using Scala 2.13 and the latest splain features/bugfixes.
+- PRs and issues submitted for it will be given priority.
+
+### v0.x (maintenance) - Scala 2.12, 2.13.5-
+
+The latest devel
+
+This version will be in continuous development and maintenance until end-of-support of the underlying Scala compiler. However, if you are already using Scala 2.13, it will be strongly recommended to submit bug report and test cases directly to the latest v1.x.
+
+- Recommended if using Scala 2.12
+
 # Usage
+
+### v1.x, v0.x
 
 Include this line in your `build.sbt` (_not_ `project/plugins.sbt`!!):
 
@@ -34,7 +60,18 @@ or build.gradle.kts:
 scalaCompilerPlugins("io.tryp:splain_${scalaVersion}:0.5.8")
 ```
 
+### built-in
+
+Do nothing! It is already built-in.
+
 # Configuration
+
+### v1.x, built-in
+
+## TODO
+
+### v0.x
+
 The plugin can be configured via compiler plugin parameters with the format:
 ```
 -P:splain:<param>[:<value>]
@@ -71,12 +108,8 @@ scalacOptions += "-P:splain:implicits:false"
 
 ```kotlin
 withType<ScalaCompile> {
-
     scalaCompileOptions.apply {
-
-        additionalParameters = listOf(
-            "-P:splain:implicits:false"
-        )
+        additionalParameters = listOf("-P:splain:implicits:false")
     }
 }
 ```
@@ -214,3 +247,9 @@ same trick may not work or cause _splain_ to be inactive.
 
 Another victim of _splain_ is scaladoc – doc comments might disappear when running the task with _splain_ active, so
 make sure it is disabled before doing so.
+
+# Development
+
+## How to compile
+
+## Communication

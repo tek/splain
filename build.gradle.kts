@@ -78,7 +78,7 @@ allprojects {
         testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 
         // TODO: alpha project, switch to mature solution once https://github.com/scalatest/scalatest/issues/1454 is solved
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.9")
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
     }
 
     sourceSets {
