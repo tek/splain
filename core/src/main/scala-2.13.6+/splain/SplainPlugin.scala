@@ -100,49 +100,6 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
 
       result
     }
-
-//    case class ImplicitSearchSession(search: ImplicitSearch) {
-//
-//      case class Completed(result: SearchResult) {
-//
-//        lazy val computation = new search.ImplicitComputation(search.context.implicitss, true)
-//
-//        lazy val allResults = {
-//
-//          computation.findAll()
-//        }
-//      }
-//    }
-
-//    @volatile var currentSession: ImplicitSearchSession = _
-//
-//    override def pluginsNotifyImplicitSearch(search: ImplicitSearch): Unit = {
-//
-//      currentSession = ImplicitSearchSession(search)
-//    }
-//
-//    // TODO: cleanup
-//    override def pluginsNotifyImplicitSearchResult(result: SearchResult): Unit = {
-//
-//      if (result.isFailure) {
-//        // start recovering all the lost diverging implicit messages
-//        val completed = currentSession.Completed(result)
-//
-//      }
-
-//      val a = 1
-//    }
-
-//    override def pluginsNotifyImplicitSearch(search: ImplicitSearch): Unit = {}
-//
-//    override def pluginsNotifyImplicitSearchResult(result: SearchResult): Unit = {
-//
-//      setAddendum(
-//        ,
-//        () =>
-//          s"\n Note: implicit ${invalidImplicits.head} is not applicable here because it comes after the application point and it lacks an explicit result type"
-//      )
-//    }
   }
 
   addAnalyzerPlugin(SplainAnalyzerPlugin)

@@ -2,7 +2,7 @@ package splain
 
 import scala.tools.nsc.typechecker
 
-trait SplainFormattingExtension extends typechecker.splain.SplainFormatting {
+trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
   self: SplainAnalyzer =>
 
   import global._

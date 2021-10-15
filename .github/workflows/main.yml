@@ -21,8 +21,10 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Compile & Test
+      - name: Compile
         run: ./dev/make-all.sh
+      - name: Test
+        run: ./dev/test.sh
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()

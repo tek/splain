@@ -83,8 +83,17 @@ trait TestHelpers extends Suite {
 
   implicit class SpecStringOps(self: String) {
 
+    def stripSpaceAtEnd(v: String): String = {
+
+      v.reverse.dropWhile(v => v == ' ').reverse
+    }
+
+    def canonize(v: String): String = {
+      v.split('\n').map(stripSpaceAtEnd).mkString("\n")
+    }
+
     def must_==(groundTruth: String): Unit = {
-      assert(self == groundTruth)
+      assert(canonize(self) == canonize(groundTruth))
     }
   }
 

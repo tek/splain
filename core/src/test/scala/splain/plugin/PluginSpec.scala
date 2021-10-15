@@ -41,7 +41,7 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("aux type", "aux") {
+  check("auxPattern") {
     checkError()
   }
 
@@ -118,7 +118,7 @@ class PluginSpec extends SpecBase.File {
   }
 
   check("zlayer") {
+    // TODO: is it still incorrect?
     checkError()
   }
-
 }
