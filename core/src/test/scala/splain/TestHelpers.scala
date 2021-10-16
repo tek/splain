@@ -71,7 +71,7 @@ trait TestHelpers extends Suite {
         case Failure(ee) =>
           ee match {
             case te: ToolBoxError =>
-              InMemoryFrontEnd.msg
+              Option(InMemoryFrontEnd.msg).getOrElse(te.toString)
 //              te.message.linesIterator.toList.drop(2).mkString("\n")
             case t =>
               throw t

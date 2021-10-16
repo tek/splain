@@ -9,8 +9,8 @@ class SplainAnalyzer(val global: Global) extends typechecker.Analyzer with Splai
       FunctionFormatter,
       TupleFormatter,
       SLRecordItemFormatter,
-      ZIORefinedFormatter,
-      RefinedFormatter,
+      RefinedFormatterImproved,
+//      RefinedFormatter,
       ByNameFormatter
     )
 

@@ -56,16 +56,15 @@ allprojects {
     dependencies {
 
         // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
+        fun both(constraintNotation: Any) {
             implementation(constraintNotation)
             testFixturesImplementation(constraintNotation)
         }
 
         constraints {
 
-            bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-            bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
-//            bothImpl("${vs.scalaGroup}:scala-reflect:${vs.scalaV}")
+            both("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
+            both("${vs.scalaGroup}:scala-library:${vs.scalaV}")
         }
 
 //        val specs2V = "4.12.12"
@@ -77,7 +76,6 @@ allprojects {
         testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
         testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 
-        // TODO: alpha project, switch to mature solution once https://github.com/scalatest/scalatest/issues/1454 is solved
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
     }
 
@@ -183,8 +181,12 @@ allprojects {
     }
 
     publishing {
-        val moduleID = if (project.name.startsWith(rootID)) project.name
-        else rootID + "-" + project.name + "_" + vs.scalaV
+        val suffix = "_" + vs.scalaV
+
+        val moduleID =
+            if (project.name.equals(rootID)) rootID + "-" + "parent" + suffix
+            else if (project.name.equals("core")) rootID + suffix
+            else rootID + "-" + project.name + suffix
 
         publications {
             create<MavenPublication>("maven") {

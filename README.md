@@ -7,10 +7,10 @@ additional info for implicit resolution errors.
 
 ### built-in - Scala 2.13.6+
 
-Most features in splain 0.5.8 has been integrated into Scala 2.13.6 compiler through [this patch]().
+Most features in splain 0.5.8 has been integrated into Scala 2.13.6 compiler through [this patch](https://github.com/scala/scala/pull/7785).
 
 - Recommended if using Scala 2.13 and only splain 0.5.8 features. However, ... 
-- **This integration is not 100%!** Configuration parameters have to be given new names to be compliant with the compiler standard. Some features are also discarded.
+- **This integration is not 100%!** Configuration parameters have to be given new names to be compliant with the compiler standard. Many features are also discarded.
 
 ### v1.x (current) - Scala 2.13.6+
 
@@ -21,11 +21,11 @@ The above integration introduces a new compiler extension type (AnalyzerPlugin) 
 
 ### v0.x (maintenance) - Scala 2.12, 2.13.5-
 
-The latest devel
+The latest v0.x will continue to be maintained and published regularly to stay compatible with the latest Scala 2.12.x release (until it's end-of-life), but no newer version will be published for Scala 2.13, **splain 0.5.8 will be the last release for Scala 2.13**.
 
-This version will be in continuous development and maintenance until end-of-support of the underlying Scala compiler. However, if you are already using Scala 2.13, it will be strongly recommended to submit bug report and test cases directly to the latest v1.x.
+If you are already using Scala 2.13, the team strongly recommend you to upgrade, and submit bug report and test cases directly to the latest v1.x.
 
-- Recommended if using Scala 2.12
+- Recommended if using Scala 2.12.
 
 # Usage
 
@@ -62,34 +62,37 @@ scalaCompilerPlugins("io.tryp:splain_${scalaVersion}:0.5.8")
 
 ### built-in
 
-Do nothing! It is already built-in.
+Do nothing! It is already built-in. Its 2 minimal features however has to be enabled manually, by the following 2 compiler arguments (see Configuration for details):
+
+```
+-Vimplicits -Vtype-diffs
+```
 
 # Configuration
 
-### v1.x, built-in
+The plugin can be configured via compiler arguments with the format:
 
-## TODO
+| v0.x                          | built-in, v1.x       |
+| :---------------------------- | -------------------- |
+| `-P:splain:<param>[:<value>]` | `-<param>[ <value>]` |
 
-### v0.x
-
-The plugin can be configured via compiler plugin parameters with the format:
-```
--P:splain:<param>[:<value>]
-```
 `param` can be one of the following:
-* `all`
-* `infix`
-* `foundreq`
-* `implicits`
-* `bounds` (default off)
-* `color`
-* `breakinfix` (default 0)
-* `tree`
-* `compact` (default off)
-* `boundsimplicits`
-* `truncrefined` (default 0)
-* `rewrite` (string)
-* `keepmodules` (default 0)
+
+| v0.x              | built-in, v1.x            | default value    |
+| ----------------- | ------------------------- | ---------------- |
+| `all`             | (dropped)                 |                  |
+| `infix`           | (dropped)                 |                  |
+| `foundreq`        | `Vtype-diffs`             |                  |
+| `implicits`       | `Vimplicits`              |                  |
+| `bounds`          | (dropped)                 | false            |
+| `color`           | (dropped)                 |                  |
+| `breakinfix`      | (dropped)                 | 0                |
+| `tree`            | `Vimplicits-verbose-tree` |                  |
+| `compact`         | (dropped)                 | false            |
+| `boundsimplicits` | (dropped)                 |                  |
+| `truncrefined`    | `Vimplicits-max-refined`  | 0                |
+| `rewrite`         | (dropped)                 | (do not rewrite) |
+| `keepmodules`     | (dropped)                 | 0                |
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -240,7 +243,9 @@ So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` 
 `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
 
-# bugs
+# Development
+
+## Bugs
 
 Due to the nature of the hack that allows _splain_ to hook into the implicit search algorithm, other plugins using the
 same trick may not work or cause _splain_ to be inactive.
@@ -248,8 +253,53 @@ same trick may not work or cause _splain_ to be inactive.
 Another victim of _splain_ is scaladoc – doc comments might disappear when running the task with _splain_ active, so
 make sure it is disabled before doing so.
 
-# Development
+Users are encouraged to submit issues and test cases directly through pull requests, by forking the project and adding new test cases under:
+
+| v0.x                                   | v1.x                                               |
+| :------------------------------------- | -------------------------------------------------- |
+| `<project root>/src/test/scala/splain` | `<project root>/core/src/test/scala/splain/plugin` |
+
+The bug can thus be identified by the team quickly on our [continuous integration environment](https://github.com/tek/splain/actions). Submission on our GitHub issue tracker is also welcomed, but it generally takes much longer for the team to respond.
 
 ## How to compile
 
+### v0.x
+
+Built with the latest stable (SBT)[https://www.scala-sbt.org/]. to compile and publish locally:
+
+```
+sbt clean publishM2
+```
+
+to run all tests:
+
+```
+sbt test
+```
+
+### v1.x
+
+Built with the latest Gradle (https://gradle.org/), to compile and publish locally:
+
+```
+./gradlew clean testClasses publishToMavenLocal
+```
+
+to run all tests:
+
+```
+./gradlew test
+```
+
+## How to edit
+
+Most project contributors uses neovim, IntelliJ IDEA or visual studio code.
+
+The team strive for a strong discipline in software engineering. All commits (including SNAPSHOTs and PRs) will be compliant with (scalalfmt)[https://scalameta.org/scalafmt/] standard.
+
 ## Communication
+
+- @tek - reviewer for built-in/v0.x bugfix, new features
+- @tribbloid - reviewer for v1.x bugfix
+- @dwijnand - reviewer for scala compiler integration
+
