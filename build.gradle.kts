@@ -109,31 +109,18 @@ allprojects {
                 val compilerOptions =
 
                     mutableListOf(
-
                         "-encoding", "UTF-8",
-                        "-unchecked",
+
                         "-deprecation",
+                        "-unchecked",
                         "-feature",
-
                         "-language:higherKinds",
-//                            "-Xfatal-warnings",
-
-                        "-Xlint:poly-implicit-overload",
-                        "-Xlint:option-implicit",
-                        "-Wunused:imports",
-
-//                        "-Ydebug",
-                        "-Yissue-debug"
-//                    ,
-//                    "-Ytyper-debug",
-//                    "-Vtyper"
-
-//                    ,
-//                    "-Xlog-implicits",
-//                    "-Xlog-implicit-conversions",
-//                    "-Xlint:implicit-not-found",
-//                    "-Xlint:implicit-recursion"
-
+                        "-language:existentials",
+                        "-Ywarn-value-discard",
+                        "-Ywarn-unused:imports",
+                        "-Ywarn-unused:implicits",
+                        "-Ywarn-unused:params",
+                        "-Ywarn-unused:patvars",
                     )
 
                 additionalParameters = compilerOptions
@@ -188,48 +175,107 @@ allprojects {
             else if (project.name.equals("core")) rootID + suffix
             else rootID + "-" + project.name + suffix
 
+        val github = "https://github.com/tek"
+        val repo = github + "/splain"
+
         publications {
+
             create<MavenPublication>("maven") {
                 groupId = groupId
                 artifactId = moduleID
                 version = version
 
-                from(components["java"])
+//        homepage := Some(url(repo))
+//        scmInfo := Some(ScmInfo(url(repo), "scm:git@github.com:tek/splain"))
+//        developers := List(
+//        Developer(id = "tryp", name = "Torsten Schmits", email = "torstenschmits@gmail.com", url = url(github)),
+//        )
+                pom {
+                    licenses {
+                        license {
+                            name.set("MIT")
+                            url.set("http://opensource.org/licenses/MIT\"")
+                        }
+                    }
+
+                    url.set(repo)
+
+                    developers {
+                        developer {
+                            id.set("tryp")
+                            name.set("Torsten Schmits")
+                            email.set("torstenschmits@gmail.com")
+                            url.set(github)
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git@github.com:tek/splain")
+                        url.set(repo)
+                    }
+                }
+
+//                from(components["java"])
 
                 suppressPomMetadataWarningsFor("testFixturesApiElements")
                 suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
             }
         }
-    }
 
-
-    idea {
-
-        targetVersion = "2020"
-
-        module {
-
-            excludeDirs = excludeDirs + listOf(
-                file(".gradle"),
-                file(".github"),
-
-                file ("target"),
-//                        file ("out"),
-
-                file(".idea"),
-                file(".vscode"),
-                file(".bloop"),
-                file(".bsp"),
-                file(".metals"),
-                file(".ammonite"),
-
-                file("logs"),
-
-                file("spike"),
-            )
-
-            isDownloadJavadoc = true
-            isDownloadSources = true
+        repositories {
+            maven {
+                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+                credentials {
+//                    username = sonatypeUsername
+//                    password = sonatypePassword
+                }
+            }
         }
     }
 }
+
+
+idea {
+
+    targetVersion = "2020"
+
+    module {
+
+        excludeDirs = excludeDirs + listOf(
+            file(".gradle"),
+            file(".github"),
+
+            file ("target"),
+//                        file ("out"),
+
+            file(".idea"),
+            file(".vscode"),
+            file(".bloop"),
+            file(".bsp"),
+            file(".metals"),
+            file(".ammonite"),
+
+            file("logs"),
+
+            file("spike"),
+        )
+
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
+// TODO: migrate this sbt process
+//import ReleaseTransformations._
+//        releaseCrossBuild := true
+//releaseProcess := Seq[ReleaseStep](
+//    checkSnapshotDependencies,
+//    inquireVersions,
+//    runClean,
+//    setReleaseVersion,
+//    releaseStepCommandAndRemaining("+publish"),
+//    releaseStepCommand("sonatypeReleaseAll"),
+//    commitReleaseVersion,
+//    tagRelease,
+//    setNextVersion,
+//    commitNextVersion,
+//)
