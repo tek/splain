@@ -32,7 +32,8 @@ trait ImplicitsExtension extends typechecker.Implicits {
     val result = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
     val divergings = context.reporter.errors.collect {
-      case ee: DivergentImplicitTypeError => ee
+      case ee: DivergentImplicitTypeError =>
+        ee
     }
 
     divergings.foreach { ee =>

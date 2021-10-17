@@ -19,7 +19,9 @@ trait TestHelpers extends Suite {
 
   protected def sourceName: String = "newSource1.scala"
 
-  protected lazy val dir: String = TestHelpers.base + "/" + this.getClass.getCanonicalName.split('.').mkString("/")
+  lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
+
+  protected lazy val dir: String = TestHelpers.base + "/" + suiteCanonicalName.split('.').mkString("/")
 
   def filePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
 
@@ -192,12 +194,6 @@ object TestHelpers {
   }
 
   lazy val baseOptions: String = {
-//    val rows = s"""
-//                  |-Xplugin:$plugin
-//                  |-P:splain:color:false
-//                  |-P:splain:bounds
-//                  |-P:splain:tree:false
-//                  |""".trim.stripMargin
 
     val rows = s"""
                   |-Xplugin:$plugin

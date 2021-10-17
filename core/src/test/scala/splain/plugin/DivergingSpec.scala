@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class DivergingSpec extends SpecBase.File {
 
-  override lazy val specCompilerOptions: String = "-usejavacp -Vimplicits -Vimplicits-verbose-tree"
+  override lazy val specCompilerOptions: String = "-Vimplicits -Vimplicits-verbose-tree"
 
   check("self") {
     checkError()
@@ -14,7 +14,15 @@ class DivergingSpec extends SpecBase.File {
     checkError()
   }
 
+  check("circular-recoverable") {
+    checkError()
+  }
+
   check("diverging") {
+    checkError()
+  }
+
+  check("diverging-recoverable") {
     checkError()
   }
 

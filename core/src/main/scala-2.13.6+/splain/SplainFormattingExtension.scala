@@ -58,7 +58,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           case Some(ee) =>
             base ++
               Seq(
-                "[Diverging implicit] trying to match an equal or similar (but more complex) type in the same search tree"
+                s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
               ).filter(_.trim.nonEmpty)
 
           case _ =>
@@ -68,18 +68,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       case e: ImplicitErrorSpecifics.NonconformantBounds => formatNonConfBounds(e)
     }
     (base._1, reason, base._3)
-  }
-
-  /** The implicit not found message from the annotation, and whether it's a supplement message or not. */
-  def DivergentImplicitAnnotation(tree: Tree, param: Symbol): (Boolean, String) = {
-    val base = NoImplicitFoundAnnotation(tree, param)
-    val withAddendum = Seq(
-      base._2.trim,
-      "Divergent implicit expansion: an equal or similar (but less complex) type has been attempted before"
-    ).filter(_.nonEmpty)
-      .mkString("\n")
-
-    base._1 -> withAddendum
   }
 
   object ImplicitErrorTree {

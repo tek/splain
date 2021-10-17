@@ -1,0 +1,7 @@
+newSource1.scala:25: error: implicit error;
+!I e: C :: D
+Diverging.f invalid because
+!I ii: Lazy[Int]
+  could not find Lazy implicit value of type Int
+    implicitly[C :: D]
+              ^
