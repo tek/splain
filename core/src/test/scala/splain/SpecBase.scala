@@ -27,7 +27,7 @@ object SpecBase {
           val code = method.invoke(this).asInstanceOf[String]
           code -> method.getName
         }.toOption
-      }
+      }.toSeq
       Map(seq: _*)
     }
 
@@ -86,9 +86,16 @@ object SpecBase {
         check: CheckFile
     ): Unit = {
 
+      val _file =
+        if (file.isEmpty) name
+        else file
+
       val testName = Seq(name, file).filter(_.nonEmpty).mkString(" - ")
 
-      ignore(testName) {}
+      ignore(testName) {
+
+        check(FileCase(_file, extra))
+      }
     }
   }
 }

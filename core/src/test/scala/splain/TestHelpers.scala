@@ -5,6 +5,7 @@ import splain.TestHelpers.{baseOptions, cm}
 
 import java.nio.file.{FileSystems, Files, Path}
 import java.util.concurrent.atomic.AtomicInteger
+import scala.collection.immutable.ArraySeq
 import scala.reflect.internal.util.{BatchSourceFile, Position}
 import scala.reflect.runtime.universe
 import scala.tools.reflect.{FrontEnd, ToolBox, ToolBoxError}
@@ -42,7 +43,7 @@ trait TestHelpers extends Suite {
       override def display(info: Info): Unit = {
 
         val posWithFileName = info.pos.withSource(
-          new BatchSourceFile(sourceName, info.pos.source.content)
+          new BatchSourceFile(sourceName, ArraySeq.unsafeWrapArray(info.pos.source.content))
         )
 
         val infoStr = s"${info.severity.toString().toLowerCase}: ${info.msg}"
@@ -94,6 +95,7 @@ trait TestHelpers extends Suite {
 
     def must_==(groundTruth: String): Unit = {
       assert(canonize(self) == canonize(groundTruth))
+      ()
     }
   }
 
@@ -130,6 +132,7 @@ trait TestHelpers extends Suite {
 
   def checkSuccess(): CheckFile = { cc =>
     assert(cc.compileSuccess().isEmpty)
+    ()
   }
 
   case class DirectCase(code: String, extra: String = defaultExtra) extends TestCase(code, extra)
