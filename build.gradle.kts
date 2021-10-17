@@ -175,21 +175,16 @@ allprojects {
             else if (project.name.equals("core")) rootID + suffix
             else rootID + "-" + project.name + suffix
 
-        val github = "https://github.com/tek"
-        val repo = github + "/splain"
-
         publications {
 
             create<MavenPublication>("maven") {
+
+                from(components["java"])
+
                 groupId = groupId
                 artifactId = moduleID
                 version = version
 
-//        homepage := Some(url(repo))
-//        scmInfo := Some(ScmInfo(url(repo), "scm:git@github.com:tek/splain"))
-//        developers := List(
-//        Developer(id = "tryp", name = "Torsten Schmits", email = "torstenschmits@gmail.com", url = url(github)),
-//        )
                 pom {
                     licenses {
                         license {
@@ -197,6 +192,9 @@ allprojects {
                             url.set("http://opensource.org/licenses/MIT\"")
                         }
                     }
+
+                    val github = "https://github.com/tek"
+                    val repo = github + "/splain"
 
                     url.set(repo)
 
@@ -214,22 +212,20 @@ allprojects {
                     }
                 }
 
-//                from(components["java"])
-
                 suppressPomMetadataWarningsFor("testFixturesApiElements")
                 suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
             }
         }
 
-        repositories {
-            maven {
-                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-                credentials {
-//                    username = sonatypeUsername
-//                    password = sonatypePassword
-                }
-            }
-        }
+//        repositories {
+//            maven {
+//                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+//                credentials {
+////                    username = sonatypeUsername
+////                    password = sonatypePassword
+//                }
+//            }
+//        }
     }
 }
 
