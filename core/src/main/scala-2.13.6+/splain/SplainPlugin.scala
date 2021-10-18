@@ -76,7 +76,7 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
         splainAnalyzer.ImplicitErrorSpecifics.NotFound(param.asInstanceOf[splainAnalyzer.global.Symbol])
     }
 
-    protected lazy val convertError: ImplicitError => splainAnalyzer.ImplicitError = { ee =>
+    protected lazy val convertError: ImplicitError => splainAnalyzer.ImplicitError = { ee: ImplicitError =>
       import ee._
 
       val result = splainAnalyzer.ImplicitError(
@@ -89,16 +89,30 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
       result
     }
 
+    // TODO: disabled, there is no way to get annotation from any of the following argument
     override def noImplicitFoundError(param: Symbol, errors: List[ImplicitError], previous: String): String = {
 
       val convertedErrors = errors.map(convertError)
-      val result = splainAnalyzer.formatImplicitError(
-        param.asInstanceOf[splainAnalyzer.global.Symbol],
-        convertedErrors,
-        ""
-      )
 
-      result
+      if (convertedErrors == errors) {
+        previous
+      } else {
+
+        val original = splainAnalyzer.formatImplicitError(
+          param.asInstanceOf[splainAnalyzer.global.Symbol],
+          convertedErrors,
+          ""
+        )
+
+        val converted = splainAnalyzer.formatImplicitError(
+          param.asInstanceOf[splainAnalyzer.global.Symbol],
+          convertedErrors,
+          ""
+        )
+
+        val result = previous.replace(original, converted)
+        result
+      }
     }
   }
 

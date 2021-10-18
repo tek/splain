@@ -45,24 +45,13 @@ object Bounds
 }
   """
 
-  def longAnnotationMessage: String = {
-//    """
-//object Long
-//{
-//  def long(implicit ec: concurrent.ExecutionContext): Unit = ???
-//  long
-//}
-//  """
-    // TODO: this should be corrected also in scalac
-
-    """
-    object Long
-    {
-      def long(implicit ec: concurrent.ExecutionContext): Unit = ???
-      long
-    }
-      """
-  }
+  def longAnnotationMessage: String = """
+object Long
+{
+  def long(implicit ec: scala.concurrent.ExecutionContext): Unit = ???
+  long
+}
+  """
 
   def longInfix: String = """
 object InfixBreak
@@ -203,16 +192,14 @@ object SingleImp
   """
 
   def parameterAnnotation: String = """
-  import collection.{mutable => m, immutable => i}
+  import scala.collection.mutable
   object Test {
     val o = new Object
-    val ms = m.SortedSet(1,2,3)
+    val ms = scala.collection.mutable.SortedSet(1,2,3)
     ms.map(_ => o)
   }
   """
   // from scalac tests END HERE
-  // TODO 3 tests are ignored due to https://github.com/scala/bug/issues/6393
-  //  they will be enabled once we found a better compiler frontend
 
   check(chain)
 
@@ -220,7 +207,7 @@ object SingleImp
 
   check(bounds)
 
-  skip(longAnnotationMessage)
+  check(longAnnotationMessage)
 
   skip(longInfix)
 
@@ -242,5 +229,5 @@ object SingleImp
 
   check(singleTypeWithFreeSymbol)
 
-  skip(parameterAnnotation)
+  check(parameterAnnotation)
 }
