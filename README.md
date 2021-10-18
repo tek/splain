@@ -265,7 +265,7 @@ The bug can thus be identified by the team quickly on our [continuous integratio
 
 ### v0.x
 
-Built with the latest stable (SBT)[https://www.scala-sbt.org/]. to compile and publish locally:
+Built with the latest stable [SBT](https://www.scala-sbt.org/). to compile and publish locally:
 
 ```
 sbt clean publishM2
@@ -279,7 +279,7 @@ sbt test
 
 ### v1.x
 
-Built with the latest Gradle (https://gradle.org/), to compile and publish locally:
+Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
 
 ```
 ./gradlew clean testClasses publishToMavenLocal
@@ -295,7 +295,7 @@ to run all tests:
 
 Most project contributors uses neovim, IntelliJ IDEA or visual studio code.
 
-The team strive for a strong discipline in software engineering. All commits (including SNAPSHOTs and PRs) will be compliant with (scalalfmt)[https://scalameta.org/scalafmt/] standard.
+The team strive for a strong discipline in software engineering. All commits (including SNAPSHOTs and PRs) will be compliant with [scalalfmt](https://scalameta.org/scalafmt/) standard.
 
 ## Communication
 
