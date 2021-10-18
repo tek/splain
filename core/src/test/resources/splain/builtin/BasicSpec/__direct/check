@@ -33,7 +33,6 @@ newSource1.scala:4: error: implicit error;
   the following:
 
   implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-
   long
   ^
 newSource1.scala:10: error: implicit error;
@@ -111,7 +110,6 @@ Ordering.ordered invalid because
 !I asComparable: Object => Comparable[_$2]
   No implicit view available from Object => Comparable[_ >: Object].
 
-⋮
 Ordering.comparatorToOrdering invalid because
 !I cmp: Comparator[Object]
     ms.map(_ => o)
