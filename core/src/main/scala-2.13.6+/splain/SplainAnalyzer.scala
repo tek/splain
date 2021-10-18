@@ -7,8 +7,6 @@ class SplainAnalyzer(val global: Global)
     with SplainFormattingExtension
     with ImplicitsExtension {
 
-  import global._
-
   override val specialFormatters: List[SpecialFormatter] =
     List(
       FunctionFormatter,
