@@ -109,11 +109,14 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     val treeNodes = ImplicitErrorTree.fromChildren(errors, -1)
 
-    val result =
-      s"""
-         |implicit error;
-         |${(implicitMessage(param, annotationMsg) ++ treeNodes).mkString("\n")}
-         |""".stripMargin.trim
+    val msg = implicitMessage(param, annotationMsg)
+
+    val components =
+      Seq("implicit error;") ++
+        implicitMessage(param, annotationMsg) ++
+        treeNodes
+
+    val result = components.mkString("\n")
 
     result
   }
