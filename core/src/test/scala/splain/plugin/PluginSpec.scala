@@ -45,13 +45,15 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("tree", extra = "-P:splain:tree") {
-    checkError()
-  }
+  describe("tree printing") {
+    check("tree", extra = "-P:splain:tree") {
+      checkError()
+    }
 
-  // TODO: what's the new args?
-  skip("compact tree printing", "tree", extra = "-P:splain:tree -P:splain:compact") {
-    checkError(Some("errorCompact"))
+    // TODO: what's the new args?
+    skip("compact", "tree", extra = "-P:splain:tree -P:splain:compact") {
+      checkError(Some("errorCompact"))
+    }
   }
 
   //  TODO: what's the new args?
@@ -84,15 +86,22 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("single types", "single") {
-    checkError()
+  describe("single types ") {
+
+    check("single") {
+      checkError()
+    }
+
+    check("in function", "single-fn") {
+      checkError()
+    }
+
+    check("with free symbol", "single-free") {
+      checkError()
+    }
   }
 
-  check("single types in function", "single-fn") {
-    checkError()
-  }
-
-  check("single types with free symbol", "single-free") {
+  check("implicit annotation with control character(s)", "implicit-ctrl-char") {
     checkError()
   }
 
