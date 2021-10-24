@@ -8,15 +8,31 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
   import global._
 
-  object ReportedErrors {
+  case class ImplicitSession() {
+    import ImplicitSession._
 
-    case class ErrorIndex(
+    object Diverging {
+
+      val byPosition = mutable.HashMap.empty[PositionIndex, mutable.ArrayBuffer[DivergentImplicitTypeError]]
+    }
+
+  }
+
+  object ImplicitSession {
+
+    case class PositionIndex(
         pos: Position
-//        missingTpeSym: Symbol,
-//        fnSym: Symbol
     ) {}
 
-    val cache = mutable.HashMap.empty[ErrorIndex, mutable.ArrayBuffer[AbsTypeError]]
+    @volatile protected var _current: ImplicitSession = _
+
+    def current: ImplicitSession = Option(_current).getOrElse {
+      ImplicitSession.synchronized {
+        val result = new ImplicitSession()
+        _current = result
+        result
+      }
+    }
   }
 
   override def inferImplicit(
@@ -31,23 +47,22 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
     val result = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
-    val divergings = context.reporter.errors.collect {
-      case ee: DivergentImplicitTypeError =>
-        ee
-    }
+    if (settings.Vimplicits) {
+      val divergingErrors = context.reporter.errors.collect {
+        case ee: DivergentImplicitTypeError =>
+          ee
+      }
 
-    divergings.foreach { ee =>
-//      require(tree == ee.underlyingTree) // TODO: remove this
+      divergingErrors.foreach { ee =>
+        val ii = ImplicitSession.PositionIndex(
+          tree.pos
+        )
 
-      val ii = ReportedErrors.ErrorIndex(
-        tree.pos
-//        ee.sym
-      )
+        val vs = ImplicitSession.current.Diverging.byPosition.getOrElseUpdate(ii, mutable.ArrayBuffer.empty)
+        vs.addOne(ee)
 
-      val vs = ReportedErrors.cache.getOrElseUpdate(ii, mutable.ArrayBuffer.empty)
-      vs.addOne(ee)
-
-      context.reporter.retainDivergentErrorsExcept(ee)
+        context.reporter.retainDivergentErrorsExcept(ee)
+      }
     }
 
     result

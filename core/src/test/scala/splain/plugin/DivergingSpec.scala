@@ -15,18 +15,10 @@ class DivergingSpec extends SpecBase.File {
   }
 
   check("circular-recoverable") {
-    checkError()
+    checkSuccess()
   }
 
   check("diverging") {
     checkError()
   }
-
-  check("diverging-recoverable") {
-    checkError()
-  }
-
-//  check("divergingRef") {
-//    checkError()
-//  }
 }

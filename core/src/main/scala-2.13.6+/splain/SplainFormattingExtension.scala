@@ -26,22 +26,16 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     val base = super.formatNestedImplicit(err)
 
-    lazy val ii = ReportedErrors.ErrorIndex(
+    lazy val ii = ImplicitSession.PositionIndex(
       err.candidate.pos
 //      err.candidate.symbol
     )
 
     object AnnotatedErrors {
 
-      lazy val all: Seq[AbsTypeError] = {
-        val vsOpt = ReportedErrors.cache.get(ii)
+      lazy val diverging: Seq[DivergentImplicitTypeError] = {
+        val vsOpt = ImplicitSession.current.Diverging.byPosition.get(ii)
         vsOpt.toSeq.flatten
-      }
-
-      lazy val divergentImplicits: Seq[DivergentImplicitTypeError] = {
-        all.collect {
-          case ee: DivergentImplicitTypeError => ee
-        }
       }
     }
 
@@ -50,7 +44,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         val annotation = NoImplicitFoundAnnotation(err.candidate, _err.param)._2
         val base = implicitMessage(_err.param, annotation)
 
-        val regardingSameMissingType = AnnotatedErrors.divergentImplicits.find { ee =>
+        val regardingSameMissingType = AnnotatedErrors.diverging.find { ee =>
           ee.pt0 =:= _err.param.tpe
         }
 
