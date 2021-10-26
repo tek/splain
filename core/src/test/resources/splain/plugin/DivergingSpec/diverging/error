@@ -4,6 +4,11 @@ Diverging.f invalid because
 !I ii: Int :: C :: D
 ――Diverging.f invalid because
   !I ii: Int :: Int :: C :: D
-  Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+  diverging implicit expansion for type (Int :: Int :: C :: D)
+  starting with method f in object Diverging
+――――Diverging.f invalid because
+    !I ii: Int :: Int :: Int :: C :: D
+    diverging implicit expansion for type (Int :: Int :: Int :: C :: D)
+    starting with method g in object Diverging
     implicitly[C :: D]
               ^

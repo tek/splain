@@ -7,6 +7,38 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   import global._
 
+  case class ImplicitErrorLink(
+      fromTree: ImplicitError,
+      fromHistory: DivergentImplicitTypeError
+  ) {
+
+    val sameCandidateTree = fromTree.candidate equalsStructure fromHistory.underlyingTree
+
+    val samePendingType = fromTree.specifics match {
+      case ss: ImplicitErrorSpecifics.NotFound =>
+        fromHistory.pt0 =:= ss.param.tpe
+      case _ =>
+        false
+    }
+
+    val moreSpecificPendingType = fromTree.specifics match {
+      case ss: ImplicitErrorSpecifics.NotFound =>
+        fromHistory.pt0 <:< ss.param.tpe
+      case _ =>
+        false
+    }
+
+    val sameStartingWith = {
+      fromHistory.sym.fullLocationString == fromTree.candidate.symbol.fullLocationString
+    }
+
+    lazy val divergingSearchStartingWithHere = sameStartingWith
+
+    lazy val divergingSearchDiscoveredHere = sameCandidateTree && moreSpecificPendingType
+  }
+
+  object ImplicitErrorLink {}
+
   case class ImplicitErrorTree(
       error: ImplicitError,
       children: Seq[ImplicitErrorTree] = Nil
@@ -26,42 +58,51 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     val base = super.formatNestedImplicit(err)
 
-    lazy val ii = ImplicitSession.PositionIndex(
-      err.candidate.pos
-//      err.candidate.symbol
-    )
+    object ErrorsInLocalHistory {
 
-    object AnnotatedErrors {
+      lazy val posI = ImplicitHistory.PositionIndex(
+        err.candidate.pos
+      )
+
+      lazy val localHistoryOpt: Option[ImplicitHistory.Local] =
+        ImplicitHistory.currentGlobal.byPosition.get(posI)
 
       lazy val diverging: Seq[DivergentImplicitTypeError] = {
-        val vsOpt = ImplicitSession.current.Diverging.byPosition.get(ii)
-        vsOpt.toSeq.flatten
+
+        localHistoryOpt.toSeq.flatMap { history =>
+          history.DivergingImplicitErrors.errors
+        }
       }
     }
 
-    val reason = err.specifics match {
-      case _err: ImplicitErrorSpecifics.NotFound =>
-        val annotation = NoImplicitFoundAnnotation(err.candidate, _err.param)._2
-        val base = implicitMessage(_err.param, annotation)
+    val reasons = {
+      val baseReasons = base._2
 
-        val regardingSameMissingType = AnnotatedErrors.diverging.find { ee =>
-          ee.pt0 =:= _err.param.tpe
-        }
+      val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
+        val link = ImplicitErrorLink(err, inHistory)
 
-        regardingSameMissingType match {
-          case Some(ee) =>
-            base ++
-              Seq(
-                s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
-              ).filter(_.trim.nonEmpty)
+        link.divergingSearchDiscoveredHere
+      }
 
-          case _ =>
-            base
-        }
+      discoveredHere match {
+        case Some(ee) =>
+          ErrorsInLocalHistory.localHistoryOpt.foreach { history =>
+            history.DivergingImplicitErrors.linkedErrors += ee
+          }
 
-      case e: ImplicitErrorSpecifics.NonconformantBounds => formatNonConfBounds(e)
+//            val text =
+//              s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
+
+          val text = DivergingImplicitErrorView(ee).errMsg
+
+          baseReasons ++ text.split('\n').filter(_.trim.nonEmpty)
+
+        case _ =>
+          baseReasons
+      }
+
     }
-    (base._1, reason, base._3)
+    (base._1, reasons, base._3)
   }
 
   object ImplicitErrorTree {
@@ -136,13 +177,24 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         )
       }
 
-      val distinctChildren = {
-        children.distinctBy { child =>
-          child.error
-        }
+      mergeDuplicate(children)
+    }
+
+    def mergeDuplicate(children: List[ImplicitErrorTree]): List[ImplicitErrorTree] = {
+      val errors = children.map(_.error).distinct
+
+      val grouped = errors.map { ee =>
+        val group = children.filter(c => c.error == ee)
+
+        val mostSpecificError = group.map(_.error).maxBy(v => v.toString.length)
+
+        val allChildren = group.flatMap(v => v.children)
+        val mergedChildren = mergeDuplicate(allChildren)
+
+        ImplicitErrorTree(mostSpecificError, mergedChildren)
       }
 
-      distinctChildren
+      grouped
     }
   }
 
@@ -152,14 +204,46 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       annotationMsg: String
   ): String = {
 
-    val treeNodes = ImplicitErrorTree.fromChildren(errors, -1)
-
     val msg = implicitMessage(param, annotationMsg)
+    val errorTrees = ImplicitErrorTree
+      .fromChildren(errors, -1)
 
-    val components =
+    val errorTreesStr = errorTrees
+      .map(_.toString)
+
+    val addendum = errorTrees.headOption.toSeq.flatMap { head =>
+      import ImplicitHistory._
+
+      val pos = head.error.candidate.pos
+      val localHistoryOpt = currentGlobal.byPosition.get(PositionIndex(pos))
+      val addendum: Seq[String] = localHistoryOpt.toSeq.flatMap { history =>
+        val unlinkedMsgs = history.DivergingImplicitErrors.getUnlinkedMsgs
+
+        val unlinkedText = if (unlinkedMsgs.nonEmpty) {
+          Seq(
+            "The following reported errors cannot be associated with any part of the implicit search tree:"
+          ) ++
+            unlinkedMsgs.map(v => "> " + v)
+        } else {
+          Nil
+        }
+
+        val text = unlinkedText ++ history.DivergingImplicitErrors.logs.distinct
+
+        if (text.isEmpty) Nil
+        else {
+          Seq("    [ADDENDUM]") ++ text
+        }
+      }
+
+      addendum
+    }
+
+    val components: Seq[String] =
       Seq("implicit error;") ++
-        implicitMessage(param, annotationMsg) ++
-        treeNodes
+        msg ++
+        errorTreesStr ++
+        addendum
 
     val result = components.mkString("\n")
 

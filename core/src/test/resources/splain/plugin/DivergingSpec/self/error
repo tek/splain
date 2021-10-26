@@ -2,9 +2,11 @@ newSource1.scala:12: error: implicit error;
 !I e: C
 f invalid because
 !I c: C
-Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+diverging implicit expansion for type C
+starting with method f in object Endo
 ――f invalid because
   !I c: C
-  Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+  diverging implicit expansion for type C
+  starting with method f in object Endo
     implicitly[C]
               ^
