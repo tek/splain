@@ -177,24 +177,27 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         )
       }
 
-      mergeDuplicate(children)
+      mergeDuplicates(children)
+//      children
     }
 
-    def mergeDuplicate(children: List[ImplicitErrorTree]): List[ImplicitErrorTree] = {
+    def mergeDuplicates(children: List[ImplicitErrorTree]): List[ImplicitErrorTree] = {
       val errors = children.map(_.error).distinct
 
       val grouped = errors.map { ee =>
         val group = children.filter(c => c.error == ee)
 
-        val mostSpecificError = group.map(_.error).maxBy(v => v.toString.length)
+        val mostSpecificError = group.head.error
+        // TODO: this old design is based on a huge hypothesis, should it be improved
+//        val mostSpecificError = group.map(_.error).maxBy(v => v.candidate.toString.length)
 
         val allChildren = group.flatMap(v => v.children)
-        val mergedChildren = mergeDuplicate(allChildren)
+        val mergedChildren = mergeDuplicates(allChildren)
 
         ImplicitErrorTree(mostSpecificError, mergedChildren)
       }
 
-      grouped
+      grouped.distinctBy(v => v.toString) // TODO: this may lose information
     }
   }
 
@@ -220,20 +223,37 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         val unlinkedMsgs = history.DivergingImplicitErrors.getUnlinkedMsgs
 
         val unlinkedText = if (unlinkedMsgs.nonEmpty) {
+          val indented = unlinkedMsgs.flatMap { str =>
+            indentTree(List((str, Nil, 0)), 1)
+          }
+
           Seq(
-            "The following reported errors cannot be associated with any part of the implicit search tree:"
+            Messages.WARNING + "The following reported error(s) cannot be linked to any part of the implicit search tree:"
           ) ++
-            unlinkedMsgs.map(v => "> " + v)
+            indented
+
         } else {
           Nil
         }
 
-        val text = unlinkedText ++ history.DivergingImplicitErrors.logs.distinct
+        val logs = history.DivergingImplicitErrors.logs
 
-        if (text.isEmpty) Nil
-        else {
-          Seq("    [ADDENDUM]") ++ text
+        val logsText = if (logs.nonEmpty) {
+
+          val indented = logs.flatMap { str =>
+            indentTree(List((str, Nil, 0)), 1)
+          }
+
+          Seq(Messages.WARNING + "Implicit search may be broken:") ++
+            indented
+
+        } else {
+          Nil
         }
+
+        val text = unlinkedText ++ logsText
+
+        text
       }
 
       addendum
