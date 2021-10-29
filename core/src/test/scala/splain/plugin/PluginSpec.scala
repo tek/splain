@@ -46,12 +46,12 @@ class PluginSpec extends SpecBase.File {
   }
 
   describe("tree printing") {
-    check("tree", extra = "-P:splain:tree") {
+    check("tree", extra = "-Vimplicits-verbose-tree") {
       checkError()
     }
 
     // TODO: what's the new args?
-    skip("compact", "tree", extra = "-P:splain:tree -P:splain:compact") {
+    skip("compact", "tree", extra = "-Vimplicits-verbose-tree -P:splain:compact") {
       checkError(Some("errorCompact"))
     }
   }
