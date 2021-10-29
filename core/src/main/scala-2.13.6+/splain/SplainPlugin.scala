@@ -7,11 +7,13 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
 
   //  lazy val splainAnalyzer: SplainAnalyzer = new SplainAnalyzer(global)
 
+  lazy val pluginSettings: PluginSettings = PluginSettings(this.opts)
+
   lazy val splainAnalyzer: SplainAnalyzer =
     if (global.settings.YmacroAnnotations)
-      new SplainAnalyzer(global) with MacroAnnotationNamers
+      new SplainAnalyzer(global, pluginSettings) with MacroAnnotationNamers
     else
-      new SplainAnalyzer(global)
+      new SplainAnalyzer(global, pluginSettings)
 
   val analyzerField = classOf[Global].getDeclaredField("analyzer")
   analyzerField.setAccessible(true)
@@ -60,7 +62,7 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
           invalid(opt)
       }
     }
-    enabled
+    pluginSettings.enabled
   }
 
   object SplainAnalyzerPlugin extends AnalyzerPlugin {

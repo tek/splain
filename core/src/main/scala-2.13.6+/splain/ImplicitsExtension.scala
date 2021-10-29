@@ -8,10 +8,6 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
   import global._
 
-  // TODO: add these into settings
-  def settingVImplicitDiverging = true
-  def settingVImplicitDivergingThreshold = 100
-
   case class DivergingImplicitErrorView(self: DivergentImplicitTypeError) {
 
     lazy val errMsg: String = {
@@ -90,7 +86,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
     def getResult = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
-    if (settings.Vimplicits && settingVImplicitDiverging) {
+    if (settings.Vimplicits && pluginSettings.implicitDiverging) {
 
       val posII = ImplicitHistory.PositionIndex(
         tree.pos
@@ -102,18 +98,18 @@ trait ImplicitsExtension extends typechecker.Implicits {
       }
 
       val previousSimilarErrorsN = previousSimilarErrors.size
-      if (previousSimilarErrorsN >= settingVImplicitDivergingThreshold) {
+      if (previousSimilarErrorsN >= pluginSettings.implicitDivergingMaxDepth) {
 
         local.DivergingImplicitErrors.logs +=
           s"""
              |Implicit search for ${tree}
-             |has reported ${previousSimilarErrorsN} diverging errors.
-             |Terminated!
+             |has reported ${previousSimilarErrorsN} diverging errors
+             |Terminated
              |    at ${pos.showDebug}
              |""".trim.stripMargin
 
-        s"Terminating implicit search for $tree at ${pos.showDebug} " +
-          s"after reporting $settingVImplicitDivergingThreshold Diverging implicit errors"
+//        s"Terminating implicit search for $tree at ${pos.showDebug} " +
+//          s"after reporting ${settingVImplicitDivergingThreshold} Diverging implicit errors"
         return SearchFailure
       }
 
