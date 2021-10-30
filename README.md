@@ -1,4 +1,4 @@
-_# A scala compiler plugin for more concise errors
+# A scala compiler plugin for more concise errors
 
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
@@ -74,7 +74,7 @@ The plugin can be configured via compiler arguments with the format:
 
 | v0.x                          | built-in, v1.x       |
 | :---------------------------- | -------------------- |
-| `-P:splain:<param>[:<value>]` | `-<param>[ <value>]` |
+| `-P:splain:<param>[:<value>]` | `-<param>[:<value>]` |
 
 `param` can be one of the following:
 
@@ -94,7 +94,7 @@ The plugin can be configured via compiler arguments with the format:
 | `rewrite`         | (dropped)                                 | (do not rewrite) |
 | `keepmodules`     | (dropped)                                 | 0                |
 | (N/A)             | `P:splain:Vimplicits-diverging`           | false            |
-| (N/A)             | `P:splain:Vimplicits-diverging-max-depth` | false            |
+| (N/A)             | `P:splain:Vimplicits-diverging-max-depth` | 100              |
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -329,5 +329,5 @@ The team strive for a strong discipline in software engineering. All commits (in
 
 - @tek - reviewer for built-in/v0.x bugfix, new features
 - @tribbloid - reviewer for v1.x bugfix
-- @dwijnand - reviewer for scala compiler integration_
+- @dwijnand - reviewer for scala compiler integration
 
