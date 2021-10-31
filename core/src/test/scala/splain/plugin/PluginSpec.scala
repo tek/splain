@@ -16,8 +16,19 @@ class PluginSpec extends SpecBase.File {
       |import types._
       |""".trim.stripMargin
 
-  check("implicit resolution chains", "chain") {
-    checkError()
+  describe("implicit resolution chains") {
+
+    check("chain") {
+      checkError()
+    }
+
+    check("function annotated with control character(s)", "implicit-ctrl-char") {
+      checkError()
+    }
+
+    check("function that returns with dependent type", "implicit-dependent-type") {
+      checkError()
+    }
   }
 
   check("found/required type", "foundreq") {
@@ -100,9 +111,4 @@ class PluginSpec extends SpecBase.File {
       checkError()
     }
   }
-
-  check("implicit annotation with control character(s)", "implicit-ctrl-char") {
-    checkError()
-  }
-
 }
