@@ -17,7 +17,7 @@ class DivergingSpec extends SpecBase.File {
     checkError()
   }
 
-  check("... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth 5") {
+  check("... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth:5") {
     checkError()
   }
 
@@ -25,7 +25,7 @@ class DivergingSpec extends SpecBase.File {
     checkSuccess()
   }
 
-  check(".... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth 5") {
+  check(".... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth:5") {
     checkError()
   }
 
