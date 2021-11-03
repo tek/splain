@@ -2,18 +2,18 @@ import scala.annotation.implicitNotFound
 
 object Annotation {
 
-  trait Arg
+  trait F[I, O]
 
-  trait F[A] {
-    type K <: Arg
-  }
+  trait G1[A, B]
+  trait G2[A, B]
 
-  trait G[A]
-
-  implicit def f[A](
+  implicit def f[I, M, O](
       implicit
-      ev: F[A]
-  ): G[ev.K] = ???
+      g1: G1[I, M],
+      g2: G2[M, O]
+  ): F[I, O] = ???
 
-  implicitly[G[Arg]]
+  implicit def g1: G1[Int, String] = ???
+
+  implicitly[F[Int, Char]]
 }

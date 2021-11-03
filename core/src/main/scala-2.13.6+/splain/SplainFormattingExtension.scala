@@ -102,7 +102,13 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       }
 
     }
-    (base._1, reasons, base._3)
+//    (base._1, reasons, base._3)
+
+    val candidate = err.candidate.toString match {
+      case a => s"$a invalid because ...... ${err.candidate.symbol.pos}"
+    }
+
+    (candidate, reasons, base._3)
   }
 
   object ImplicitErrorTree {
