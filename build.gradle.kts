@@ -9,7 +9,7 @@ buildscript {
 //    val vs = versions()
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.4.9") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.4.11") // suffix is always 2.12, weird
     }
 }
 
@@ -66,11 +66,6 @@ allprojects {
             both("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
             both("${vs.scalaGroup}:scala-library:${vs.scalaV}")
         }
-
-//        val specs2V = "4.12.12"
-//        testImplementation("org.specs2:specs2-core_${vs.scalaBinaryV}:$specs2V")// https://mvnrepository.com/artifact/org.specs2/specs2-junit
-//        testImplementation("org.specs2:specs2-junit_${vs.scalaBinaryV}:$specs2V")
-//        testImplementation("junit:junit:4.13.2")
 
         val scalaTestV = "3.2.3"
         testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")

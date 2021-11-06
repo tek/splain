@@ -1,5 +1,6 @@
 package splain
 
+import scala.annotation.tailrec
 import scala.tools.nsc.typechecker
 
 trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
@@ -52,57 +53,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       formattedChain.mkString("\n")
     }
 
-  }
-
-  override def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
-
-    val base = super.formatNestedImplicit(err)
-
-    object ErrorsInLocalHistory {
-
-      lazy val posI = ImplicitHistory.PositionIndex(
-        err.candidate.pos
-      )
-
-      lazy val localHistoryOpt: Option[ImplicitHistory.Local] =
-        ImplicitHistory.currentGlobal.byPosition.get(posI)
-
-      lazy val diverging: Seq[DivergentImplicitTypeError] = {
-
-        localHistoryOpt.toSeq.flatMap { history =>
-          history.DivergingImplicitErrors.errors
-        }
-      }
-    }
-
-    val reasons = {
-      val baseReasons = base._2
-
-      val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
-        val link = ImplicitErrorLink(err, inHistory)
-
-        link.divergingSearchDiscoveredHere
-      }
-
-      discoveredHere match {
-        case Some(ee) =>
-          ErrorsInLocalHistory.localHistoryOpt.foreach { history =>
-            history.DivergingImplicitErrors.linkedErrors += ee
-          }
-
-//            val text =
-//              s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
-
-          val text = DivergingImplicitErrorView(ee).errMsg
-
-          baseReasons ++ text.split('\n').filter(_.trim.nonEmpty)
-
-        case _ =>
-          baseReasons
-      }
-
-    }
-    (base._1, reasons, base._3)
   }
 
   object ImplicitErrorTree {
@@ -178,7 +128,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       }
 
       mergeDuplicates(children)
-//      children
+      //      children
     }
 
     def mergeDuplicates(children: List[ImplicitErrorTree]): List[ImplicitErrorTree] = {
@@ -189,7 +139,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
         val mostSpecificError = group.head.error
         // TODO: this old design is based on a huge hypothesis, should it be improved
-//        val mostSpecificError = group.map(_.error).maxBy(v => v.candidate.toString.length)
+        //        val mostSpecificError = group.map(_.error).maxBy(v => v.candidate.toString.length)
 
         val allChildren = group.flatMap(v => v.children)
         val mergedChildren = mergeDuplicates(allChildren)
@@ -199,6 +149,80 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       grouped.distinctBy(v => v.toString) // TODO: this may lose information
     }
+  }
+
+  object ImplicitErrorExtension {
+    def unapplyCandidate(e: ImplicitError): Tree = unapplyRecursively(e.candidate)
+
+    @tailrec
+    private def unapplyRecursively(tree: Tree): Tree =
+      tree match {
+        case TypeApply(fun, _) => unapplyRecursively(fun)
+        case Apply(fun, _) => unapplyRecursively(fun)
+        case a => a
+      }
+
+    def cleanCandidate(e: ImplicitError): String =
+      unapplyCandidate(e).toString match {
+        case ImplicitError.candidateRegex(suf) => suf
+        case a => a
+      }
+  }
+
+  override def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
+
+    val base = super.formatNestedImplicit(err)
+
+    import scala.reflect.internal.TypeDebugging.AnsiColor._
+    val candidate = ImplicitErrorExtension.cleanCandidate(err)
+    val problem = s"${candidate.red} invalid because"
+
+    object ErrorsInLocalHistory {
+
+      lazy val posI = ImplicitHistory.PositionIndex(
+        err.candidate.pos
+      )
+
+      lazy val localHistoryOpt: Option[ImplicitHistory.Local] =
+        ImplicitHistory.currentGlobal.byPosition.get(posI)
+
+      lazy val diverging: Seq[DivergentImplicitTypeError] = {
+
+        localHistoryOpt.toSeq.flatMap { history =>
+          history.DivergingImplicitErrors.errors
+        }
+      }
+    }
+
+    val reasons = {
+      val baseReasons = base._2
+
+      val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
+        val link = ImplicitErrorLink(err, inHistory)
+
+        link.divergingSearchDiscoveredHere
+      }
+
+      discoveredHere match {
+        case Some(ee) =>
+          ErrorsInLocalHistory.localHistoryOpt.foreach { history =>
+            history.DivergingImplicitErrors.linkedErrors += ee
+          }
+
+//            val text =
+//              s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
+
+          val text = DivergingImplicitErrorView(ee).errMsg
+
+          baseReasons ++ text.split('\n').filter(_.trim.nonEmpty)
+
+        case _ =>
+          baseReasons
+      }
+
+    }
+
+    (problem, reasons, base._3)
   }
 
   override def formatImplicitError(
