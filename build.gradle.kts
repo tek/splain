@@ -6,8 +6,6 @@ buildscript {
         mavenCentral()
     }
 
-//    val vs = versions()
-
     dependencies {
         classpath("ch.epfl.scala:gradle-bloop_2.12:1.4.11") // suffix is always 2.12, weird
     }
@@ -22,11 +20,48 @@ plugins {
     idea
 
     `maven-publish`
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
     id("com.github.ben-manes.versions" ) version "0.39.0"
 }
 
 val rootID = vs.projectRootID
+
+val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
+val sonatypeApiKey = providers.gradleProperty("sonatypeApiKey")
+if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
+    nexusPublishing {
+        repositories {
+            sonatype {
+
+//                nexusUrl.set(uri("https://oss.sonatype.org/service/local/"))
+//                snapshotRepositoryUrl.set(uri("https://oss.sonatype.org/content/repositories/snapshots/"))
+
+                username.set(sonatypeApiUser)
+                password.set(sonatypeApiKey)
+                useStaging.set(true)
+            }
+        }
+
+// TODO: migrate this sbt process
+//import ReleaseTransformations._
+//        releaseCrossBuild := true
+//releaseProcess := Seq[ReleaseStep](
+//    checkSnapshotDependencies,
+//    inquireVersions,
+//    runClean,
+//    setReleaseVersion,
+//    releaseStepCommandAndRemaining("+publish"),
+//    releaseStepCommand("sonatypeReleaseAll"),
+//    commitReleaseVersion,
+//    tagRelease,
+//    setNextVersion,
+//    commitNextVersion,
+//)
+    }
+} else {
+    logger.info("Sonatype API key not defined, skipping configuration of Maven Central publishing repository")
+}
 
 allprojects {
 
@@ -161,6 +196,9 @@ allprojects {
         withSourcesJar()
         withJavadocJar()
     }
+}
+
+subprojects {
 
     publishing {
         val suffix = "_" + vs.scalaV
@@ -212,18 +250,8 @@ allprojects {
             }
         }
 
-//        repositories {
-//            maven {
-//                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-//                credentials {
-////                    username = sonatypeUsername
-////                    password = sonatypePassword
-//                }
-//            }
-//        }
     }
 }
-
 
 idea {
 
@@ -254,19 +282,3 @@ idea {
         isDownloadSources = true
     }
 }
-
-// TODO: migrate this sbt process
-//import ReleaseTransformations._
-//        releaseCrossBuild := true
-//releaseProcess := Seq[ReleaseStep](
-//    checkSnapshotDependencies,
-//    inquireVersions,
-//    runClean,
-//    setReleaseVersion,
-//    releaseStepCommandAndRemaining("+publish"),
-//    releaseStepCommand("sonatypeReleaseAll"),
-//    commitReleaseVersion,
-//    tagRelease,
-//    setNextVersion,
-//    commitNextVersion,
-//)

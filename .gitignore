@@ -58,3 +58,6 @@ foo
 
 #aws key
 **/rootkey.csv
+
+#publish
+dev/publish.sh
