@@ -42,22 +42,6 @@ if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
                 useStaging.set(true)
             }
         }
-
-// TODO: migrate this sbt process
-//import ReleaseTransformations._
-//        releaseCrossBuild := true
-//releaseProcess := Seq[ReleaseStep](
-//    checkSnapshotDependencies,
-//    inquireVersions,
-//    runClean,
-//    setReleaseVersion,
-//    releaseStepCommandAndRemaining("+publish"),
-//    releaseStepCommand("sonatypeReleaseAll"),
-//    commitReleaseVersion,
-//    tagRelease,
-//    setNextVersion,
-//    commitNextVersion,
-//)
     }
 } else {
     logger.info("Sonatype API key not defined, skipping configuration of Maven Central publishing repository")
@@ -204,15 +188,20 @@ subprojects {
         val suffix = "_" + vs.scalaV
 
         val moduleID =
-            if (project.name.equals(rootID)) rootID + "-" + "parent" + suffix
+            if (project.name.equals(rootID))// rootID + "-" + "parent" + suffix
+                throw kotlin.UnsupportedOperationException("root project should not be published")
             else if (project.name.equals("core")) rootID + suffix
             else rootID + "-" + project.name + suffix
 
         publications {
 
-            create<MavenPublication>("maven") {
+            create<MavenPublication>("default") {
 
-                from(components["java"])
+                val javaComponent = components["java"] as AdhocComponentWithVariants
+                from(javaComponent)
+
+                javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+                javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
                 groupId = groupId
                 artifactId = moduleID
@@ -225,6 +214,9 @@ subprojects {
                             url.set("http://opensource.org/licenses/MIT\"")
                         }
                     }
+
+                    name.set("splain")
+                    description.set("A scala compiler plugin for more concise errors")
 
                     val github = "https://github.com/tek"
                     val repo = github + "/splain"
@@ -245,8 +237,6 @@ subprojects {
                     }
                 }
 
-                suppressPomMetadataWarningsFor("testFixturesApiElements")
-                suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
             }
         }
 
