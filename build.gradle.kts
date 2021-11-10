@@ -25,7 +25,8 @@ plugins {
     id("com.github.ben-manes.versions" ) version "0.39.0"
 }
 
-val rootID = vs.projectRootID
+group = vs.projectGroup
+version = vs.projectV
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
 val sonatypeApiKey = providers.gradleProperty("sonatypeApiKey")
@@ -187,6 +188,8 @@ subprojects {
     publishing {
         val suffix = "_" + vs.scalaV
 
+        val rootID = vs.projectRootID
+
         val moduleID =
             if (project.name.equals(rootID))// rootID + "-" + "parent" + suffix
                 throw kotlin.UnsupportedOperationException("root project should not be published")
@@ -195,7 +198,7 @@ subprojects {
 
         publications {
 
-            create<MavenPublication>("default") {
+            create<MavenPublication>("maven") {
 
                 val javaComponent = components["java"] as AdhocComponentWithVariants
                 from(javaComponent)
