@@ -19,6 +19,7 @@ plugins {
 
     idea
 
+    signing
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
@@ -60,6 +61,8 @@ allprojects {
 
     apply(plugin = "scala")
     apply(plugin = "idea")
+
+    apply(plugin = "signing")
     apply(plugin = "maven-publish")
 
     group = vs.projectGroup
@@ -184,6 +187,20 @@ allprojects {
 }
 
 subprojects {
+
+    // https://stackoverflow.com/a/66352905/1772342
+
+    val signingKeyId = providers.gradleProperty("signing.gnupg.keyId")
+    val signingKeyPassphrase = providers.gradleProperty("signing.gnupg.passphrase")
+    signing {
+        useGpgCmd()
+        if (signingKeyId.isPresent && signingKeyPassphrase.isPresent) {
+            useInMemoryPgpKeys(signingKeyId.get(), signingKeyPassphrase.get())
+            sign(extensions.getByType<PublishingExtension>().publications)
+        } else {
+            logger.info("PGP signing key not defined, skipping signing configuration")
+        }
+    }
 
     publishing {
         val suffix = "_" + vs.scalaV
