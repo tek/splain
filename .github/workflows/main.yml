@@ -23,6 +23,19 @@ jobs:
           java-version: 1.8
       - name: Compile
         run: ./dev/make-all.sh -PscalaVersion=${{matrix.scalaVersion}}
+
+  test:
+    needs: build
+
+    strategy:
+      max-parallel: 2
+      fail-fast: false
+      matrix:
+        scalaVersion: [
+            "2.13.6", "2.13.7"
+        ]
+
+    steps:
       - name: Test
         run: ./dev/test.sh -PscalaVersion=${{matrix.scalaVersion}}
       - name: Publish Unit Test Results
@@ -32,4 +45,4 @@ jobs:
           files: |
             **/test-results/test/*.xml
           check_name: |
-            Test Report (${{matrix.version}})
+            Test Report (${{matrix.scalaVersion}})
