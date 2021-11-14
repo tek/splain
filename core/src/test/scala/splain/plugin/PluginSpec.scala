@@ -16,8 +16,15 @@ class PluginSpec extends SpecBase.File {
       |import types._
       |""".trim.stripMargin
 
-  check("implicit resolution chains", "chain") {
-    checkError()
+  describe("implicit resolution") {
+
+    check("chain") {
+      checkError()
+    }
+
+    check("chain-parametric") {
+      checkError()
+    }
   }
 
   check("found/required type", "foundreq") {
