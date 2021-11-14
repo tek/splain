@@ -11,7 +11,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        version: [
+        scalaVersion: [
             "2.13.6", "2.13.7"
         ]
 
@@ -22,9 +22,9 @@ jobs:
         with:
           java-version: 1.8
       - name: Compile
-        run: ./dev/make-all.sh
+        run: ./dev/make-all.sh -PscalaVersion=${{matrix.scalaVersion}}
       - name: Test
-        run: ./dev/test.sh
+        run: ./dev/test.sh -PscalaVersion=${{matrix.scalaVersion}}
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: always()
