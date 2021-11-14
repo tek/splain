@@ -23,7 +23,7 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
-    id("com.github.ben-manes.versions" ) version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.39.0"
 }
 
 group = vs.projectGroup
@@ -46,7 +46,7 @@ if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
         }
     }
 } else {
-    logger.info("Sonatype API key not defined, skipping configuration of Maven Central publishing repository")
+    logger.warn("Sonatype API key not defined, skipping configuration of Maven Central publishing repository")
 }
 
 allprojects {
@@ -190,15 +190,17 @@ subprojects {
 
     // https://stackoverflow.com/a/66352905/1772342
 
-    val signingKeyId = providers.gradleProperty("signing.gnupg.keyId")
+//    val signingKeyID = providers.gradleProperty("signing.gnupg.keyID")
+    val signingSecretKey = providers.gradleProperty("signing.gnupg.secretKey")
     val signingKeyPassphrase = providers.gradleProperty("signing.gnupg.passphrase")
     signing {
         useGpgCmd()
-        if (signingKeyId.isPresent && signingKeyPassphrase.isPresent) {
-            useInMemoryPgpKeys(signingKeyId.get(), signingKeyPassphrase.get())
+        if (signingSecretKey.isPresent) {
+            useInMemoryPgpKeys(signingSecretKey.get(), signingKeyPassphrase.get())
+//            useInMemoryPgpKeys(signingKeyID.get(), signingSecretKey.get(), signingKeyPassphrase.get())
             sign(extensions.getByType<PublishingExtension>().publications)
         } else {
-            logger.info("PGP signing key not defined, skipping signing configuration")
+            logger.warn("PGP signing key not defined, skipping signing configuration")
         }
     }
 
@@ -273,7 +275,7 @@ idea {
             file(".gradle"),
             file(".github"),
 
-            file ("target"),
+            file("target"),
 //                        file ("out"),
 
             file(".idea"),
