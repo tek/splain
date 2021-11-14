@@ -60,4 +60,4 @@ foo
 **/rootkey.csv
 
 #publish
-dev/publish.sh
+dev/publish*.sh
