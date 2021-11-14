@@ -1,3 +1,5 @@
+import org.gradle.util.internal.VersionNumber
+
 val vs = versions()
 
 buildscript {
@@ -77,8 +79,18 @@ allprojects {
     sourceSets {
         main {
             scala {
+                val vn = VersionNumber.parse(vs.scalaV)
 
-                setSrcDirs(srcDirs + listOf("src/main/scala-2.13.6+"))
+                val supportedPatchVs = listOf(6, 7)
+
+                for (from in supportedPatchVs) {
+                    if (vn.micro >= from)
+                        setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/latest"))
+                    for (to in supportedPatchVs) {
+                        if (vn.micro <= to)
+                            setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/2.13.${to}"))
+                    }
+                }
             }
         }
     }
