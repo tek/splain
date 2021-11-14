@@ -27,6 +27,13 @@ If you are already using Scala 2.13, the team strongly recommend you to upgrade,
 
 - Recommended if using Scala 2.12.
 
+### Build Matrix
+
+| Version                     | Compatibility                                                |
+| --------------------------- | ------------------------------------------------------------ |
+| v1.x (current) - latest     | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master) |
+| v0.x (maintenance) - latest | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Maintenance%2Fmaster) |
+
 # Usage
 
 ### v1.x, v0.x
@@ -257,16 +264,16 @@ starting with method f in object Circular
 If the parameter `-P:splain:Vimplicits-diverging` is enabled, it will instruct the compiler to continue its implicit search process until an implicit resolution chain can be correlated with such error(s):
 
 ```
-error: implicit error;
+implicit error;
 !I e: C
-g invalid because
-!I d: D
-Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+f invalid because
+!I c: C
+diverging implicit expansion for type C
+starting with method f in object Endo
 ――f invalid because
   !I c: C
-――――g invalid because
-    !I d: D
-    Diverging implicit starting from method f: trying to match an equal or similar (but more complex) type in the same search tree
+  diverging implicit expansion for type C
+  starting with method f in object Endo
 ```
 
 **WARNING!** This feature is marked "experimental" as sometimes it may cause failed implicit resolution to succeed, due to the delay in throwing the diverging implicit error. It may also increase compilation time slightly. If your build has been broken by this feature, please consider simplifying your code base to create a minimal reproducible test case, and submit it with a pull request.
@@ -291,7 +298,7 @@ The bug can thus be identified by the team quickly on our [continuous integratio
 
 ## How to compile
 
-### v0.x
+### v0.x (from git branch Maintenance/master)
 
 Built with the latest stable [SBT](https://www.scala-sbt.org/). to compile and publish locally:
 
@@ -305,7 +312,7 @@ to run all tests:
 sbt test
 ```
 
-### v1.x
+### v1.x (from git branch master)
 
 Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
 

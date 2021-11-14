@@ -1,0 +1,3 @@
+package splain
+
+trait FormattedNameShim {}
