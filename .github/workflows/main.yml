@@ -2,6 +2,9 @@ name: CI
 
 on: [push]
 
+env:
+  fullySupportedScalaVersions: "2.13.6"
+
 jobs:
   build:
 
@@ -24,9 +27,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
-    env:
-      fullySupportedScalaVersions: "2.13.6"
 
 #TODO: don't repeat yourself
     strategy:
