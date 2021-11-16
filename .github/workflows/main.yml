@@ -11,9 +11,12 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        scalaVersion: [
-            "2.13.6", "2.13.7"
-        ]
+        include:
+          scalaVersion: "2.13.6
+          experimental: false
+        include:
+          scalaVersion: "2.13.7
+          experimental: true
 
     steps:
       - uses: actions/checkout@v2
@@ -27,13 +30,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+#TODO: don't repeat yourself
     strategy:
       max-parallel: 2
       fail-fast: false
       matrix:
-        scalaVersion: [
-            "2.13.6", "2.13.7"
-        ]
+        include:
+          scalaVersion: "2.13.6
+          experimental: false
+        include:
+          scalaVersion: "2.13.7
+          experimental: true
+
+    continue-on-error: ${{ matrix.experimental }}
 
     steps:
       - uses: actions/checkout@v2

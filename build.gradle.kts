@@ -245,7 +245,7 @@ idea {
 
         excludeDirs = excludeDirs + listOf(
             file(".gradle"),
-            file(".github"),
+//            file(".github"),
 
             file ("target"),
 //                        file ("out"),
