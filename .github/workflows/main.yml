@@ -11,11 +11,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        include:
-          - scalaVersion: "2.13.6"
-            experimental: false
-          - scalaVersion: "2.13.7"
-            experimental: true
+        scalaVersion: ["2.13.6", "2.13.7"]
 
     steps:
       - uses: actions/checkout@v2
