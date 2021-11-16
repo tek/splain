@@ -12,11 +12,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          scalaVersion: "2.13.6
-          experimental: false
-        include:
-          scalaVersion: "2.13.7
-          experimental: true
+          - scalaVersion: "2.13.6"
+            experimental: false
+          - scalaVersion: "2.13.7"
+            experimental: true
 
     steps:
       - uses: actions/checkout@v2
@@ -36,11 +35,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          scalaVersion: "2.13.6
-          experimental: false
-        include:
-          scalaVersion: "2.13.7
-          experimental: true
+          - scalaVersion: "2.13.6"
+            experimental: false
+          - scalaVersion: "2.13.7"
+            experimental: true
 
     continue-on-error: ${{ matrix.experimental }}
 
