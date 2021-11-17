@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      fullySupportedScalaVersions: ["2.13.6"]
+      fullySupportedScalaVersions: "2.13.6"
 
     steps:
       - name: dummy
