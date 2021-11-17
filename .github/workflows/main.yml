@@ -5,6 +5,8 @@ on: [push]
 jobs:
 
   vars:
+    runs-on: ubuntu-latest
+
     outputs:
       fullySupportedScalaVersions: ["2.13.6"]
 
