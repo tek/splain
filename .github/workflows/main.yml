@@ -2,12 +2,14 @@ name: CI
 
 on: [push]
 
-env:
-  fullySupportedScalaVersions: "2.13.6"
-
 jobs:
-  build:
 
+  vars:
+    outputs:
+      fullySupportedScalaVersions: ["2.13.6"]
+
+  build:
+    needs: vars
     runs-on: ubuntu-latest
 
     strategy:
@@ -26,16 +28,17 @@ jobs:
         run: ./dev/make-all.sh -PscalaVersion=${{matrix.scalaVersion}}
 
   test:
+    needs: vars
     runs-on: ubuntu-latest
 
-#TODO: don't repeat yourself
+    #TODO: don't repeat yourself
     strategy:
       max-parallel: 2
       fail-fast: false
       matrix:
         scalaVersion: ["2.13.6", "2.13.7"]
 
-    continue-on-error: ${{ contains(env.fullySupportedScalaVersions, matrix.scalaVersion) }}
+    continue-on-error: ${{ contains(needs.vars.outputs.fullySupportedScalaVersions, matrix.scalaVersion) }}
 
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +46,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-#         TODO: replica! how to remove?
+      #         TODO: replica! how to remove?
       - name: Test
         run: ./dev/test.sh -PscalaVersion=${{matrix.scalaVersion}}
       - name: Publish Unit Test Results
