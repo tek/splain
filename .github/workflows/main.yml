@@ -8,6 +8,10 @@ jobs:
     outputs:
       fullySupportedScalaVersions: ["2.13.6"]
 
+    steps:
+      - name: dummy
+        run: echo dummy
+
   build:
     needs: vars
     runs-on: ubuntu-latest
