@@ -9,4 +9,6 @@ ${FWDIR}/gradlew publishToSonatype \
   closeSonatypeStagingRepository \
   -PsonatypeApiUser=??? \
   -PsonatypeApiKey=??? \
+  -Psigning.gnupg.secretKey=??? \
+  -Psigning.gnupg.passphrase=??? \
   "${@}"
