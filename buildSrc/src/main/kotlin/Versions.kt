@@ -6,9 +6,8 @@ class Versions(self: Project) {
     val projectGroup = "io.tryp"
     val projectRootID = "splain"
 
-    val projectV = "1.0.0-RC1"
-    val projectVMajor = projectV.removeSuffix("-SNAPSHOT")
-//    val projectVComposition = projectV.split('-')
+    val projectVMajor = "1.0.0"
+    val projectV = projectVMajor + "-SNAPSHOT"
 
     val scalaGroup: String = self.properties.get("scalaGroup").toString()
 
