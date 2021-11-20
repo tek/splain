@@ -8,8 +8,6 @@ buildscript {
         mavenCentral()
     }
 
-//    val vs = versions()
-
     dependencies {
         classpath("ch.epfl.scala:gradle-bloop_2.12:1.4.11") // suffix is always 2.12, weird
     }
@@ -23,12 +21,35 @@ plugins {
 
     idea
 
+    signing
     `maven-publish`
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
-    id("com.github.ben-manes.versions" ) version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.39.0"
 }
 
-val rootID = vs.projectRootID
+group = vs.projectGroup
+version = vs.projectV
+
+val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
+val sonatypeApiKey = providers.gradleProperty("sonatypeApiKey")
+if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
+    nexusPublishing {
+        repositories {
+            sonatype {
+
+//                nexusUrl.set(uri("https://oss.sonatype.org/service/local/"))
+//                snapshotRepositoryUrl.set(uri("https://oss.sonatype.org/content/repositories/snapshots/"))
+
+                username.set(sonatypeApiUser)
+                password.set(sonatypeApiKey)
+                useStaging.set(true)
+            }
+        }
+    }
+} else {
+    logger.warn("Sonatype API key not defined, skipping configuration of Maven Central publishing repository")
+}
 
 allprojects {
 
@@ -42,6 +63,8 @@ allprojects {
 
     apply(plugin = "scala")
     apply(plugin = "idea")
+
+    apply(plugin = "signing")
     apply(plugin = "maven-publish")
 
     group = vs.projectGroup
@@ -173,12 +196,34 @@ allprojects {
         withSourcesJar()
         withJavadocJar()
     }
+}
+
+subprojects {
+
+    // https://stackoverflow.com/a/66352905/1772342
+
+//    val signingKeyID = providers.gradleProperty("signing.gnupg.keyID")
+    val signingSecretKey = providers.gradleProperty("signing.gnupg.secretKey")
+    val signingKeyPassphrase = providers.gradleProperty("signing.gnupg.passphrase")
+    signing {
+        useGpgCmd()
+        if (signingSecretKey.isPresent) {
+            useInMemoryPgpKeys(signingSecretKey.get(), signingKeyPassphrase.get())
+//            useInMemoryPgpKeys(signingKeyID.get(), signingSecretKey.get(), signingKeyPassphrase.get())
+            sign(extensions.getByType<PublishingExtension>().publications)
+        } else {
+            logger.warn("PGP signing key not defined, skipping signing configuration")
+        }
+    }
 
     publishing {
         val suffix = "_" + vs.scalaV
 
+        val rootID = vs.projectRootID
+
         val moduleID =
-            if (project.name.equals(rootID)) rootID + "-" + "parent" + suffix
+            if (project.name.equals(rootID))// rootID + "-" + "parent" + suffix
+                throw kotlin.UnsupportedOperationException("root project should not be published")
             else if (project.name.equals("core")) rootID + suffix
             else rootID + "-" + project.name + suffix
 
@@ -186,7 +231,11 @@ allprojects {
 
             create<MavenPublication>("maven") {
 
-                from(components["java"])
+                val javaComponent = components["java"] as AdhocComponentWithVariants
+                from(javaComponent)
+
+                javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+                javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
                 groupId = groupId
                 artifactId = moduleID
@@ -199,6 +248,9 @@ allprojects {
                             url.set("http://opensource.org/licenses/MIT\"")
                         }
                     }
+
+                    name.set("splain")
+                    description.set("A scala compiler plugin for more concise errors")
 
                     val github = "https://github.com/tek"
                     val repo = github + "/splain"
@@ -219,23 +271,11 @@ allprojects {
                     }
                 }
 
-                suppressPomMetadataWarningsFor("testFixturesApiElements")
-                suppressPomMetadataWarningsFor("testFixturesRuntimeElements")
             }
         }
 
-//        repositories {
-//            maven {
-//                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-//                credentials {
-////                    username = sonatypeUsername
-////                    password = sonatypePassword
-//                }
-//            }
-//        }
     }
 }
-
 
 idea {
 
@@ -247,7 +287,7 @@ idea {
             file(".gradle"),
 //            file(".github"),
 
-            file ("target"),
+            file("target"),
 //                        file ("out"),
 
             file(".idea"),
@@ -266,19 +306,3 @@ idea {
         isDownloadSources = true
     }
 }
-
-// TODO: migrate this sbt process
-//import ReleaseTransformations._
-//        releaseCrossBuild := true
-//releaseProcess := Seq[ReleaseStep](
-//    checkSnapshotDependencies,
-//    inquireVersions,
-//    runClean,
-//    setReleaseVersion,
-//    releaseStepCommandAndRemaining("+publish"),
-//    releaseStepCommand("sonatypeReleaseAll"),
-//    commitReleaseVersion,
-//    tagRelease,
-//    setNextVersion,
-//    commitNextVersion,
-//)

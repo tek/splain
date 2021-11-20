@@ -1,5 +1,6 @@
 package splain
 
+import com.sun.org.slf4j.internal.LoggerFactory
 import org.scalatest.{Assertion, Suite}
 import splain.TestHelpers.{baseOptions, cm}
 
@@ -184,11 +185,21 @@ object TestHelpers {
         .toArray
         .map(v => v.asInstanceOf[Path])
         .filter(v => v.toString.endsWith(".jar"))
+        .sortBy(v => v.toString)
         .filterNot { v =>
-          v.toString.endsWith("-javadoc.jar") ||
-          v.toString.endsWith("-sources.jar")
+          Seq("-javadoc.jar", "-sources.jar", "-test-fixtures.jar")
+            .map { suffix =>
+              v.toString.endsWith(suffix)
+            }
+            .exists(identity)
         }
         .head
+
+    LoggerFactory
+      .getLogger(this.getClass)
+      .warn(
+        s"Using plugin jar: ${file.toString}"
+      )
 
     file.toAbsolutePath.toString
   }
