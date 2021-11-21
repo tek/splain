@@ -35,6 +35,7 @@ jobs:
 
       - name: Pre-release on github
         uses: "marvinpinto/action-automatic-releases@latest"
+        if: contains(github.ref_name, 'Release/')
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest-${{matrix.scalaVersion}}"
