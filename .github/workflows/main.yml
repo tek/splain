@@ -41,7 +41,7 @@ jobs:
           prerelease: true
           files: |
             LICENSE
-            **/*.jar
+            */build/libs/*.jar
 
   test:
     needs: vars
