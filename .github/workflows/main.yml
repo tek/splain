@@ -40,8 +40,8 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           files: |
-            LICENSE.txt
-            *.jar
+            LICENSE
+            **/*.jar
 
   test:
     needs: vars
