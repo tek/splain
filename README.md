@@ -31,8 +31,9 @@ If you are already using Scala 2.13, the team strongly recommend you to upgrade,
 
 | Version                     | Compatibility                                                |
 | --------------------------- | ------------------------------------------------------------ |
-| v1.x (current) - latest     | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master) |
-| v0.x (maintenance) - latest | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Maintenance%2Fmaster) |
+| v1.x<br> (current) - latest     | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master) |
+| v1.0.0-RC1<br> (current)     | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC1) |
+| v0.x<br> (maintenance) - latest | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Maintenance%2Fmaster) |
 
 # Usage
 
