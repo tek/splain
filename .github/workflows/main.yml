@@ -33,6 +33,17 @@ jobs:
       - name: Compile
         run: ./dev/make-all.sh -PscalaVersion=${{matrix.scalaVersion}}
 
+      - name: Pre-release on github
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest-${{matrix.scalaVersion}}"
+          title: "latest-${{matrix.scalaVersion}}"
+          prerelease: true
+          files: |
+            LICENSE
+            core/build/libs/*.jar
+
   test:
     needs: vars
     runs-on: ubuntu-latest
