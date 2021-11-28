@@ -2,7 +2,8 @@
 
 
 include(
-    ":core"
+    ":core",
+    ":acceptance"
 )
 
 
