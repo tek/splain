@@ -38,10 +38,7 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
       )
       val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
 
-      // fix for #81: transfer deferredOpen that are cached before this initializer
-      oldAnalyzer.packageObjects.deferredOpen.foreach { v =>
-        splainAnalyzer.packageObjects.deferredOpen.add(v.asInstanceOf[splainAnalyzer.global.Symbol])
-      }
+      splainAnalyzer.migrateFrom(oldAnalyzer)
 
       phasesSet --= oldScs
       phasesSet ++= newScs
