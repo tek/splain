@@ -18,27 +18,27 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
     analyzerField.setAccessible(true)
     analyzerField.set(global, splainAnalyzer)
 
-    val phasesSetMapGetter = classOf[Global]
-      .getDeclaredMethod("phasesSet")
-
-    val phasesSet = phasesSetMapGetter
-      .invoke(global)
-      .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
-
-    if (phasesSet.exists(_.phaseName == "typer")) {
-      def subcomponentNamed(name: String) =
-        phasesSet
-          .find(_.phaseName == name)
-          .head
-      val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
-        subcomponentNamed("namer"),
-        subcomponentNamed("packageobjects"),
-        subcomponentNamed("typer")
-      )
-      val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
-      phasesSet --= oldScs
-      phasesSet ++= newScs
-    }
+//    val phasesSetMapGetter = classOf[Global]
+//      .getDeclaredMethod("phasesSet")
+//
+//    val phasesSet = phasesSetMapGetter
+//      .invoke(global)
+//      .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
+//
+//    if (phasesSet.exists(_.phaseName == "typer")) {
+//      def subcomponentNamed(name: String) =
+//        phasesSet
+//          .find(_.phaseName == name)
+//          .head
+//      val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
+//        subcomponentNamed("namer"),
+//        subcomponentNamed("packageobjects"),
+//        subcomponentNamed("typer")
+//      )
+//      val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
+//      phasesSet --= oldScs
+//      phasesSet ++= newScs
+//    }
     // TODO: remove them after AnalyzerPlugin interface becomes stable
   }
 
