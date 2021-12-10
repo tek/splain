@@ -1,7 +1,7 @@
 package splain
 
 import scala.tools.nsc._
-import scala.tools.nsc.typechecker.MacroAnnotationNamers
+import scala.tools.nsc.typechecker.{Analyzer, MacroAnnotationNamers}
 
 class SplainPlugin(val global: Global) extends SplainPluginLike {
 
@@ -16,29 +16,36 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
   {
     val analyzerField = classOf[Global].getDeclaredField("analyzer")
     analyzerField.setAccessible(true)
+    val oldAnalyzer = analyzerField.get(global).asInstanceOf[Analyzer]
     analyzerField.set(global, splainAnalyzer)
 
-//    val phasesSetMapGetter = classOf[Global]
-//      .getDeclaredMethod("phasesSet")
-//
-//    val phasesSet = phasesSetMapGetter
-//      .invoke(global)
-//      .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
-//
-//    if (phasesSet.exists(_.phaseName == "typer")) {
-//      def subcomponentNamed(name: String) =
-//        phasesSet
-//          .find(_.phaseName == name)
-//          .head
-//      val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
-//        subcomponentNamed("namer"),
-//        subcomponentNamed("packageobjects"),
-//        subcomponentNamed("typer")
-//      )
-//      val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
-//      phasesSet --= oldScs
-//      phasesSet ++= newScs
-//    }
+    val phasesSetMapGetter = classOf[Global]
+      .getDeclaredMethod("phasesSet")
+
+    val phasesSet = phasesSetMapGetter
+      .invoke(global)
+      .asInstanceOf[scala.collection.mutable.Set[SubComponent]]
+
+    if (phasesSet.exists(_.phaseName == "typer")) {
+      def subcomponentNamed(name: String) =
+        phasesSet
+          .find(_.phaseName == name)
+          .head
+      val oldScs @ List(oldNamer @ _, oldPackageobjects @ _, oldTyper @ _) = List(
+        subcomponentNamed("namer"),
+        subcomponentNamed("packageobjects"),
+        subcomponentNamed("typer")
+      )
+      val newScs = List(splainAnalyzer.namerFactory, splainAnalyzer.packageObjects, splainAnalyzer.typerFactory)
+
+      // fix for #81: transfer deferredOpen that are cached before this initializer
+      oldAnalyzer.packageObjects.deferredOpen.foreach { v =>
+        splainAnalyzer.packageObjects.deferredOpen.add(v.asInstanceOf[splainAnalyzer.global.Symbol])
+      }
+
+      phasesSet --= oldScs
+      phasesSet ++= newScs
+    }
     // TODO: remove them after AnalyzerPlugin interface becomes stable
   }
 
