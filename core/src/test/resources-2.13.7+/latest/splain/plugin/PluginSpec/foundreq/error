@@ -1,0 +1,6 @@
+newSource1.scala:14: error: type mismatch;
+  scala.Int ***
+  (List[types.C|java.lang.String] *** types.C {type A = types.C|F.type}) >:<
+  types.D
+  f(a)
+    ^

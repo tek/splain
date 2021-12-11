@@ -1,0 +1,25 @@
+implicit error;
+!I e: String
+f invalid because
+!I impPar4:
+  List[
+    (
+      VeryLongTypeName ::::
+      VeryLongTypeName ::::
+      VeryLongTypeName ::::
+      VeryLongTypeName
+    )
+    ::::
+    (Short :::: Short) ::::
+    (
+      VeryLongTypeName ::::
+      VeryLongTypeName ::::
+      VeryLongTypeName ::::
+      VeryLongTypeName
+    )
+    ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName ::::
+    VeryLongTypeName
+  ]

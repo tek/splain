@@ -13,12 +13,10 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
   object RefinedFormatterImproved extends SpecialFormatter {
     self: SplainAnalyzer =>
 
-    import global._
-
     object DeclSymbol {
       def unapply(sym: Symbol): Option[(Formatted, Formatted)] =
         if (sym.hasRawInfo)
-          Some((Simple(sym.simpleName.toString), formatType(sym.rawInfo, true)))
+          Some((Simple(sym.simpleName.toString), formatType(sym.rawInfo, top = true)))
         else
           None
     }
@@ -94,7 +92,8 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
     }
 
     def matchTypes(left: List[Type], right: List[Type]): List[Formatted] = {
-      val (common, uniqueLeft, uniqueRight) = separate(left.map(formatType(_, true)), right.map(formatType(_, true)))
+      val (common, uniqueLeft, uniqueRight) =
+        separate(left.map(formatType(_, top = true)), right.map(formatType(_, top = true)))
       val diffs = uniqueLeft.toList
         .zipAll(uniqueRight.toList, none, none)
         .map {
@@ -257,5 +256,4 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
       }
     }
   }
-
 }

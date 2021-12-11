@@ -1,0 +1,7 @@
+newSource1.scala:26: error: type mismatch;
+  ('sym ->> java.lang.String) ::
+  ("str" ->> Value.type) ::
+  (Key.type ->> scala.Long|scala.Int) ::
+  shapeless.HNil
+  show(a)
+       ^

@@ -3,7 +3,7 @@
 
 include(
     ":core",
-    ":acceptance"
+    ":testing:acceptance"
 )
 
 

@@ -78,39 +78,68 @@ allprojects {
         maven("https://scala-ci.typesafe.com/artifactory/scala-integration/") // scala SNAPSHOT
     }
 
-    dependencies {
-
-        // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
-            implementation(constraintNotation)
-            testFixturesImplementation(constraintNotation)
+    fun includeShims(from: String, to: String) {
+        sourceSets {
+            main {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/main/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/main/resources-${from}+/${to}"))
+                }
+            }
+            test {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/test/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/test/resources-${from}+/${to}"))
+                }
+            }
         }
+    }
 
-        constraints {}
+    val vn = VersionNumber.parse(vs.scalaV)
+    val supportedPatchVs = listOf(6, 7)
 
-        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+    for (from in supportedPatchVs) {
+        if (vn.micro >= from) {
 
-        val scalaTestV = "3.2.3"
-        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+            includeShims("2.13.${from}", "latest")
+        }
+        for (to in supportedPatchVs) {
+            if (vn.micro <= to) {
 
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
+                includeShims("2.13.${from}", "2.13.${to}")
+            }
+        }
     }
 
     sourceSets {
         main {
             scala {
-                val vn = VersionNumber.parse(vs.scalaV)
-
-                val supportedPatchVs = listOf(6, 7)
 
                 for (from in supportedPatchVs) {
-                    if (vn.micro >= from)
+                    if (vn.micro >= from) {
                         setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/latest"))
+                    }
                     for (to in supportedPatchVs) {
-                        if (vn.micro <= to)
+                        if (vn.micro <= to) {
                             setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/2.13.${to}"))
+                        }
+                    }
+                }
+            }
+
+            resources {
+                for (from in supportedPatchVs) {
+                    if (vn.micro >= from) {
+                        setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/latest"))
+                    }
+                    for (to in supportedPatchVs) {
+                        if (vn.micro <= to) {
+                            setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/2.13.${to}"))
+                        }
                     }
                 }
             }
@@ -149,7 +178,8 @@ allprojects {
                         "-Ywarn-unused:imports",
                         "-Ywarn-unused:implicits",
                         "-Ywarn-unused:params",
-                        "-Ywarn-unused:patvars",
+                        "-Ywarn-unused:patvars"
+//                        "-Ydebug-error"
                     )
 
                 additionalParameters = compilerOptions
@@ -198,6 +228,27 @@ allprojects {
 }
 
 subprojects {
+
+
+    dependencies {
+
+        // see https://github.com/gradle/gradle/issues/13067
+        fun bothImpl(constraintNotation: Any) {
+            implementation(constraintNotation)
+            testFixturesImplementation(constraintNotation)
+        }
+
+        constraints {}
+
+        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
+        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+
+        val scalaTestV = "3.2.3"
+        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
+    }
 
     // https://stackoverflow.com/a/66352905/1772342
 

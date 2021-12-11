@@ -14,7 +14,7 @@ class ShapelessSpec extends SpecBase.File {
       |  trait D
       |}
       |import types._
-      |""".trim.stripMargin
+      |""".stripMargin.trim
   // in all error messages from toolbox, line number has to -8 to get the real line number
 
   check("shapeless Record", "record") {
