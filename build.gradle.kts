@@ -98,19 +98,68 @@ allprojects {
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
     }
 
+    fun includeShims(from: String, to: String) {
+        sourceSets {
+            main {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/main/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/main/resources-${from}+/${to}"))
+                }
+            }
+            test {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/test/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/test/resources-${from}+/${to}"))
+                }
+            }
+        }
+    }
+
+    val vn = VersionNumber.parse(vs.scalaV)
+    val supportedPatchVs = listOf(6, 7)
+
+    for (from in supportedPatchVs) {
+        if (vn.micro >= from) {
+
+            includeShims("2.13.${from}", "latest")
+        }
+        for (to in supportedPatchVs) {
+            if (vn.micro <= to) {
+
+                includeShims("2.13.${from}", "2.13.${to}")
+            }
+        }
+    }
+
     sourceSets {
         main {
             scala {
-                val vn = VersionNumber.parse(vs.scalaV)
-
-                val supportedPatchVs = listOf(6, 7)
 
                 for (from in supportedPatchVs) {
-                    if (vn.micro >= from)
+                    if (vn.micro >= from) {
                         setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/latest"))
+                    }
                     for (to in supportedPatchVs) {
-                        if (vn.micro <= to)
+                        if (vn.micro <= to) {
                             setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/2.13.${to}"))
+                        }
+                    }
+                }
+            }
+
+            resources {
+                for (from in supportedPatchVs) {
+                    if (vn.micro >= from) {
+                        setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/latest"))
+                    }
+                    for (to in supportedPatchVs) {
+                        if (vn.micro <= to) {
+                            setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/2.13.${to}"))
+                        }
                     }
                 }
             }

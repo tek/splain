@@ -4,7 +4,7 @@ import com.sun.org.slf4j.internal.LoggerFactory
 import org.scalatest.{Assertion, Suite}
 import splain.TestHelpers.{baseOptions, cm}
 
-import java.nio.file.{FileSystems, Files, Path}
+import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.immutable.ArraySeq
 import scala.reflect.internal.util.{BatchSourceFile, Position}
@@ -22,16 +22,22 @@ trait TestHelpers extends Suite {
 
   lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
 
-  protected lazy val dir: String = TestHelpers.base + "/" + suiteCanonicalName.split('.').mkString("/")
+  protected lazy val dir: String = suiteCanonicalName.split('.').mkString("/")
 
-  def filePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
+  def resourcePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
 
-  def fileContentString(name: String, fname: String): String = new String(Files.readAllBytes(filePath(name, fname)))
+  def fileContentString(name: String, fname: String): String = {
+
+    val path = resourcePath(name, fname)
+    val actualPath = Paths.get(ClassLoader.getSystemClassLoader.getResource(path.toString).toURI)
+
+    new String(Files.readAllBytes(actualPath))
+  }
 
   def groundTruth(name: String, fname: Option[String]): String =
     Try {
       fileContentString(name, fname.getOrElse("error")).stripLineEnd
-    }.recover { ee: Throwable =>
+    }.recover { _: Throwable =>
       fileContentString(name, fname.getOrElse("check")).stripLineEnd
     }.get
 
@@ -170,10 +176,11 @@ trait TestHelpers extends Suite {
 object TestHelpers {
   lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")
 
-  lazy val base: String = {
-    Option(System.getProperty("splain.tests"))
-      .getOrElse(s"$userDir/src/test/resources")
-  }
+  // TODO: remove, superseded by classpath resource autodiscovery
+//  lazy val base: String = {
+//    Option(System.getProperty("splain.tests"))
+//      .getOrElse(s"$userDir/src/test/resources")
+//  }
 
   val cm: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
 
@@ -197,7 +204,7 @@ object TestHelpers {
 
     LoggerFactory
       .getLogger(this.getClass)
-      .warn(
+      .debug(
         s"Using plugin jar: ${file.toString}"
       )
 

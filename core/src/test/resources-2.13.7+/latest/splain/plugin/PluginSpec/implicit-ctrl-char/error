@@ -1,0 +1,10 @@
+newSource1.scala:25: error: implicit error;
+!I e: G[Arg]
+Annotation.f invalid because
+!I ev: F[Arg]
+  A
+     | B
+    | C
+
+  implicitly[G[Arg]]
+            ^
