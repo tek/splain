@@ -41,16 +41,16 @@ object SpecBase {
       val groundTruth = runner.groundTruths(runner.pointer.getAndIncrement())
 
       _it(name) {
-        val error = cc.compileError()
+        val error = cc.splainC.compileError()
         error must_== groundTruth
       }
     }
 
-    def skip(code: String): Unit = {
+    def skip(code: String, numberOfBlocks: Int = 1): Unit = {
 
       val name = codeToName(code)
 
-      runner.pointer.getAndIncrement()
+      runner.pointer.getAndAdd(numberOfBlocks)
 
       ignore(name) {}
     }

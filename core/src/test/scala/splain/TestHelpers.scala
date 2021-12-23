@@ -2,23 +2,19 @@ package splain
 
 import com.sun.org.slf4j.internal.LoggerFactory
 import org.scalatest.{Assertion, Suite}
-import splain.TestHelpers.{baseOptions, cm}
+import splain.runtime.{EvalTry, SplainEval}
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
-import scala.collection.immutable.ArraySeq
-import scala.reflect.internal.util.{BatchSourceFile, Position}
-import scala.reflect.runtime.universe
-import scala.tools.reflect.{FrontEnd, ToolBox, ToolBoxError}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 trait TestHelpers extends Suite {
+
+  import TestHelpers._
 
   protected lazy val specCompilerOptions = "-Vimplicits -Vimplicits-verbose-tree -Vtype-diffs"
 
   protected lazy val defaultExtra: String = ""
-
-  protected def sourceName: String = "newSource1.scala"
 
   lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
 
@@ -43,52 +39,41 @@ trait TestHelpers extends Suite {
 
   lazy val predefCode = ""
 
+  def getEval(settings: String): SplainEval = SplainEval.ReflectEngine(settings)
+
   class TestCase(code: String, extra: String) {
-
-    object InMemoryFrontEnd extends FrontEnd {
-
-      @volatile var msg: String = _
-
-      override def display(info: Info): Unit = {
-
-        val posWithFileName = info.pos.withSource(
-          new BatchSourceFile(sourceName, ArraySeq.unsafeWrapArray(info.pos.source.content))
-        )
-
-        val infoStr = s"${info.severity.toString().toLowerCase}: ${info.msg}"
-
-        val msg = Position.formatMessage(posWithFileName, infoStr, shortenFile = true)
-        this.msg = msg
-      }
-    }
-
-    lazy val toolbox: ToolBox[universe.type] = {
-
-      val opt = s"$baseOptions $specCompilerOptions $extra"
-      ToolBox(cm).mkToolBox(frontEnd = InMemoryFrontEnd, options = opt)
-    }
 
     val codeWithPredef: String = (predefCode.trim + "\n" + code).trim
 
-    def compile(): Any = {
+    case class CompileWith(settings: String) {
 
-      val parsed = toolbox.parse(codeWithPredef)
-      toolbox.eval(parsed)
+      lazy val eval: SplainEval = getEval(settings)
+
+      def compile(): EvalTry = eval.eval(codeWithPredef)
+
+      def compileError(): String =
+        compile() match {
+          case EvalTry.TypeError(msg) =>
+            msg
+          case e @ _ =>
+            sys.error(s"Type error not detected: $e")
+        }
     }
 
-    def compileError(): String =
-      Try(compile()) match {
-        case Failure(ee) =>
-          ee match {
-            case te: ToolBoxError =>
-              Option(InMemoryFrontEnd.msg).getOrElse(te.toString)
-//              te.message.linesIterator.toList.drop(2).mkString("\n")
-            case t =>
-              throw t
-          }
-        case Success(_) =>
-          sys.error("compiling succeeded")
+    def compileSuccess(): Option[String] =
+      splainC.compile() match {
+        case _: EvalTry.Success =>
+          None
+        case v: EvalTry.Failure =>
+          Some(v.msg)
       }
+
+    def checkSuccess(): Assertion =
+      assert(compileSuccess().isEmpty)
+
+    lazy val splainC = CompileWith(s"$enableSplainPlugin $specCompilerOptions $extra")
+
+    lazy val scalaC = CompileWith(s"$specCompilerOptions")
   }
 
   implicit class SpecStringOps(self: String) {
@@ -103,7 +88,9 @@ trait TestHelpers extends Suite {
     }
 
     def must_==(groundTruth: String): Unit = {
-      assert(canonize(self) == canonize(groundTruth))
+      val left = canonize(self)
+      val right = canonize(groundTruth)
+      assert(left == right, s"expected: $left, actual: $right")
       ()
     }
   }
@@ -113,25 +100,14 @@ trait TestHelpers extends Suite {
 
     def checkError(errorFile: Option[String] = None): Unit = {
 
-      compileError() must_== groundTruth(name, errorFile)
+      splainC.compileError() must_== groundTruth(name, errorFile)
     }
-
-    def compileSuccess(): Option[String] =
-      Try(compile()) match {
-        case Success(_) =>
-          None
-        case Failure(t) =>
-          Some(t.getMessage)
-      }
-
-    def checkSuccess(): Assertion =
-      assert(compileSuccess().isEmpty)
   }
 
   type CheckFile = FileCase => Unit
 
   def checkError(errorFile: Option[String] = None): CheckFile = { cc =>
-    cc.compileError() must_== groundTruth(cc.name, errorFile)
+    cc.splainC.compileError() must_== groundTruth(cc.name, errorFile)
   }
 
   def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): CheckFile = { cc =>
@@ -176,14 +152,6 @@ trait TestHelpers extends Suite {
 object TestHelpers {
   lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")
 
-  // TODO: remove, superseded by classpath resource autodiscovery
-//  lazy val base: String = {
-//    Option(System.getProperty("splain.tests"))
-//      .getOrElse(s"$userDir/src/test/resources")
-//  }
-
-  val cm: universe.Mirror = universe.runtimeMirror(getClass.getClassLoader)
-
   val plugin: String = Option(System.getProperty("splain.jar")).getOrElse {
     val dir = FileSystems.getDefault.getPath(userDir + "/build/libs")
     val file =
@@ -211,7 +179,7 @@ object TestHelpers {
     file.toAbsolutePath.toString
   }
 
-  lazy val baseOptions: String = {
+  lazy val enableSplainPlugin: String = {
 
     val rows = s"""
                   |-Xplugin:$plugin

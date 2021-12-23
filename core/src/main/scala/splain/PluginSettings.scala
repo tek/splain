@@ -32,19 +32,6 @@ object PluginSettings {
 
   object Key {
 
-    //  val keyImplicits = "implicits"
-    //  val keyFoundReq = "foundreq"
-    //  val keyInfix = "infix"
-    //  val keyBounds = "bounds"
-    //  val keyColor = "color"
-    //  val keyBreakInfix = "breakinfix"
-    //  val keyCompact = "compact"
-    //  val keyTree = "tree"
-    //  val keyBoundsImplicits = "boundsimplicits"
-    //  val keyTruncRefined = "truncrefined"
-    //  val keyRewrite = "rewrite"
-    //  val keyKeepModules = "keepmodules"
-
     val all = "all"
     val implicitDiverging = "Vimplicits-diverging"
 
@@ -55,17 +42,5 @@ object PluginSettings {
     Key.all -> "true",
     Key.implicitDiverging -> "false",
     Key.implicitDivergingMaxDepth -> "100"
-    //    keyImplicits -> "true",
-    //    keyFoundReq -> "true",
-    //    keyInfix -> "true",
-    //    keyBounds -> "false",
-    //    keyColor -> "true",
-    //    keyBreakInfix -> "0",
-    //    keyCompact -> "false",
-    //    keyTree -> "true"
-    //    keyBoundsImplicits -> "true",
-    //    keyTruncRefined -> "0",
-    //    keyRewrite -> "",
-    //    keyKeepModules -> "0"
   )
 }

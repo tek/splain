@@ -209,7 +209,7 @@ object SingleImp
 
   check(longAnnotationMessage)
 
-  skip(longInfix)
+  check(longInfix)
 
   check(deeplyNestedHole)
 

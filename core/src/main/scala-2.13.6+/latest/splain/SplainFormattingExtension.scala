@@ -209,9 +209,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
             history.DivergingImplicitErrors.linkedErrors += ee
           }
 
-//            val text =
-//              s"Diverging implicit starting from ${ee.sym}: trying to match an equal or similar (but more complex) type in the same search tree"
-
           val text = DivergingImplicitErrorView(ee).errMsg
 
           baseReasons ++ text.split('\n').filter(_.trim.nonEmpty)

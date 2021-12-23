@@ -1,0 +1,14 @@
+newSource1.scala:16: error: implicit error;
+!I e: C :: D
+Diverging.f invalid because
+!I ii: Int :: C :: D
+――Diverging.f invalid because
+  !I ii: Int :: Int :: C :: D
+  diverging implicit expansion for type (Int :: Int :: C :: D)
+  starting with method f in object Diverging
+――――Diverging.f invalid because
+    !I ii: Int :: Int :: Int :: C :: D
+    diverging implicit expansion for type (Int :: Int :: Int :: C :: D)
+    starting with method g in object Diverging
+    implicitly[C :: D]
+              ^

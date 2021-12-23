@@ -78,26 +78,6 @@ allprojects {
         maven("https://scala-ci.typesafe.com/artifactory/scala-integration/") // scala SNAPSHOT
     }
 
-    dependencies {
-
-        // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
-            implementation(constraintNotation)
-            testFixturesImplementation(constraintNotation)
-        }
-
-        constraints {}
-
-        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
-
-        val scalaTestV = "3.2.3"
-        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
-
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
-    }
-
     fun includeShims(from: String, to: String) {
         sourceSets {
             main {
@@ -198,7 +178,8 @@ allprojects {
                         "-Ywarn-unused:imports",
                         "-Ywarn-unused:implicits",
                         "-Ywarn-unused:params",
-                        "-Ywarn-unused:patvars",
+                        "-Ywarn-unused:patvars"
+//                        "-Ydebug-error"
                     )
 
                 additionalParameters = compilerOptions
@@ -247,6 +228,27 @@ allprojects {
 }
 
 subprojects {
+
+
+    dependencies {
+
+        // see https://github.com/gradle/gradle/issues/13067
+        fun bothImpl(constraintNotation: Any) {
+            implementation(constraintNotation)
+            testFixturesImplementation(constraintNotation)
+        }
+
+        constraints {}
+
+        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
+        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+
+        val scalaTestV = "3.2.3"
+        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
+    }
 
     // https://stackoverflow.com/a/66352905/1772342
 
