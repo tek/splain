@@ -1,5 +1,6 @@
 package splain
 
+import org.scalactic.Prettifier
 import org.scalatest.funspec.AnyFunSpec
 
 import scala.util.Try

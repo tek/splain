@@ -1,8 +1,9 @@
 package splain
 
 import com.sun.org.slf4j.internal.LoggerFactory
+import org.scalactic.Prettifier
 import org.scalatest.{Assertion, Suite}
-import splain.runtime.{EvalTry, SplainEval}
+import splain.runtime.TryCompile
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
@@ -39,7 +40,7 @@ trait TestHelpers extends Suite {
 
   lazy val predefCode = ""
 
-  def getEval(settings: String): SplainEval = SplainEval.ReflectEngine(settings)
+  def getEngine(settings: String): TryCompile.UseReflect = TryCompile.UseReflect(settings)
 
   class TestCase(code: String, extra: String) {
 
@@ -47,13 +48,13 @@ trait TestHelpers extends Suite {
 
     case class CompileWith(settings: String) {
 
-      lazy val eval: SplainEval = getEval(settings)
+      private lazy val engine = getEngine(settings)
 
-      def compile(): EvalTry = eval.eval(codeWithPredef)
+      def compile(): TryCompile = engine(codeWithPredef)
 
       def compileError(): String =
         compile() match {
-          case EvalTry.TypeError(msg) =>
+          case TryCompile.TypeError(msg) =>
             msg
           case e @ _ =>
             sys.error(s"Type error not detected: $e")
@@ -62,9 +63,9 @@ trait TestHelpers extends Suite {
 
     def compileSuccess(): Option[String] =
       splainC.compile() match {
-        case _: EvalTry.Success =>
+        case _: TryCompile.Success =>
           None
-        case v: EvalTry.Failure =>
+        case v: TryCompile.Failure =>
           Some(v.msg)
       }
 
@@ -90,7 +91,24 @@ trait TestHelpers extends Suite {
     def must_==(groundTruth: String): Unit = {
       val left = canonize(self)
       val right = canonize(groundTruth)
-      assert(left == right, s"expected: $left, actual: $right")
+      val detail =
+        s"""
+          |"
+          |${left}
+          |"
+          |
+          |did not equal
+          |
+          |"
+          |${right}
+          |"
+          |
+          |""".trim.stripMargin
+
+      Predef.assert(
+        left === right,
+        detail
+      )
       ()
     }
   }
