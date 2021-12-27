@@ -1,7 +1,7 @@
 package splain
 
 import com.sun.org.slf4j.internal.LoggerFactory
-import org.scalactic.Prettifier
+import org.scalatest.exceptions.TestFailedException
 import org.scalatest.{Assertion, Suite}
 import splain.runtime.TryCompile
 
@@ -91,24 +91,27 @@ trait TestHelpers extends Suite {
     def must_==(groundTruth: String): Unit = {
       val left = canonize(self)
       val right = canonize(groundTruth)
-      val detail =
-        s"""
-          |"
-          |${left}
-          |"
-          |
-          |did not equal
-          |
-          |"
-          |${right}
-          |"
-          |
-          |""".trim.stripMargin
 
-      Predef.assert(
-        left === right,
-        detail
-      )
+      try {
+        assert(left === right)
+      } catch {
+        case e: TestFailedException =>
+          // augmenting
+          val detail =
+            s"""
+               |"
+               |$left
+               |" did not equal "
+               |$right
+               |"
+               |""".stripMargin.trim
+
+          val ee = e.modifyMessage { _ =>
+            Some(detail)
+          }
+
+          throw ee
+      }
       ()
     }
   }
