@@ -1,7 +1,7 @@
-newSource1.scala:25: error: type mismatch;
+newSource1.scala:26: error: type mismatch;
   ('sym ->> String) ::
   ("str" ->> Value.type) ::
   (Key.type ->> Long|Int) ::
   HNil
-show(a)
-     ^
+  show(a)
+       ^

@@ -1,58 +1,124 @@
 package splain.runtime
 
+import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.runtime.{currentMirror, universe}
+import scala.tools.nsc.reporters.{Reporter, StoreReporter}
+import scala.tools.nsc.{Global, Settings}
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-trait TryCompile {}
+trait TryCompile {
+
+  def issues: Seq[Issue]
+
+  case class Level(level: Int) {
+
+    def filteredIssues: Seq[Issue] = issues.filter { i =>
+      i.level == level
+    }
+
+    def display: String = issues
+      .map { i =>
+        i.display
+      }
+      .mkString("\n")
+  }
+
+  object Error extends Level(2)
+  object Warning extends Level(1)
+  object Info extends Level(0)
+}
 
 object TryCompile {
 
-  case class Success(result: Any, info: Seq[String] = Nil, warning: Seq[String] = Nil) extends TryCompile
+  case class Unresolved(issues: Seq[Issue] = Nil) extends TryCompile {
 
-  trait Failure extends TryCompile {
-    val msg: String
+    lazy val resolve: Resolved = {
+      if (Error.filteredIssues.isEmpty) {
+        Success(issues)
+      } else {
+        TypeError(issues)
+        // TODO: how to identify ParsingError & Others
+      }
+    }
   }
 
-  case class TypeError(msg: String) extends Failure
-  case class ParsingError(msg: String) extends Failure
-  case class OtherFailure(msg: String) extends Failure
+  trait Resolved extends TryCompile
+
+  case class Success(issues: Seq[Issue] = Nil) extends Resolved
+
+  trait Failure extends Resolved {}
+
+  case class TypeError(issues: Seq[Issue] = Nil) extends Failure
+  case class ParsingError(issues: Seq[Issue] = Nil) extends Failure
+  case class OtherFailure(issues: Seq[Issue] = Nil) extends Failure
 
   trait Engine {
 
-    def settings: String
+    def args: String
 
     def apply(code: String): TryCompile
   }
 
   val mirror: universe.Mirror = currentMirror
 
-  case class UseReflect(settings: String, sourceName: String = "newSource1.scala") extends Engine {
+  case class UseReflect(args: String, sourceName: String = "newSource1.scala") extends Engine {
 
     override def apply(code: String): TryCompile = {
 
-      val frontEnd = InMemoryFrontEnd(sourceName)
+      val frontEnd = StoreFrontEnd(sourceName)
 
       val toolBox: ToolBox[universe.type] =
-        ToolBox(mirror).mkToolBox(frontEnd, options = settings)
+        ToolBox(mirror).mkToolBox(frontEnd, options = args)
+
+      val cached = frontEnd.cached.toSeq
 
       val parsed = Try {
         toolBox.parse(code)
       }.recover {
         case _: Throwable =>
-          return TryCompile.ParsingError(frontEnd.msg)
+          return TryCompile.ParsingError(cached)
       }.get
 
-      val evaled = Try {
-        toolBox.eval(parsed)
+      Try {
+        toolBox.compile(parsed)
       }.recover {
         case _: Throwable =>
-          return TryCompile.TypeError(frontEnd.msg)
+          return TryCompile.TypeError(cached)
       }.get
 
-      TryCompile.Success(evaled)
+      TryCompile.Success(cached)
     }
   }
 
-//  case class UseScript(settings: String, sourceName: String = "newSource1.scala") extends SplainEval {}
+  case class UseNSC(args: String, sourceName: String = "newSource1.scala") extends Engine {
+
+    val global: Global = {
+      val _settings = new Settings()
+
+      _settings.reporter.value = classOf[StoreReporter].getCanonicalName
+      _settings.usejavacp.value = true
+      _settings.processArgumentString(args)
+
+      val global = Global(_settings, Reporter(_settings))
+      global
+    }
+
+    val reporter: StoreReporter = global.reporter.asInstanceOf[StoreReporter]
+
+    override def apply(code: String): TryCompile = {
+
+      val run = new global.Run()
+
+      val files = List(new BatchSourceFile(sourceName, code))
+
+      run.compileSources(files)
+
+      val cached = reporter.infos.toSeq.map { info =>
+        Issue(info.severity.id, info.msg, info.pos, sourceName)
+      }
+
+      Unresolved(cached).resolve
+    }
+  }
 }

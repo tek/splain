@@ -40,7 +40,10 @@ trait TestHelpers extends Suite {
 
   lazy val predefCode = ""
 
-  def getEngine(settings: String): TryCompile.UseReflect = TryCompile.UseReflect(settings)
+  def getEngine(settings: String): TryCompile.Engine = {
+//    TryCompile.UseReflect(settings)
+    TryCompile.UseNSC(settings)
+  }
 
   class TestCase(code: String, extra: String) {
 
@@ -54,8 +57,8 @@ trait TestHelpers extends Suite {
 
       def compileError(): String =
         compile() match {
-          case TryCompile.TypeError(msg) =>
-            msg
+          case v: TryCompile.TypeError =>
+            v.Error.display
           case e @ _ =>
             sys.error(s"Type error not detected: $e")
         }
@@ -66,7 +69,7 @@ trait TestHelpers extends Suite {
         case _: TryCompile.Success =>
           None
         case v: TryCompile.Failure =>
-          Some(v.msg)
+          Some(v.Error.display)
       }
 
     def checkSuccess(): Assertion =

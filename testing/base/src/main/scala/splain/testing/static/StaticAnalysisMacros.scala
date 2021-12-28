@@ -43,7 +43,7 @@ class StaticAnalysisMacros(val c: whitebox.Context) {
       c.typecheck(c.parse(s"object $dummy0 { val $dummy1 = { $codeStr } }"))
 
       reify {
-        Staged.Success
+        Staged.SuccessBatchSourceFile
       }.tree
     } catch {
       case e: TypecheckException =>
