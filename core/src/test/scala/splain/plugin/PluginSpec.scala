@@ -14,7 +14,7 @@ class PluginSpec extends SpecBase.File {
       |  trait D
       |}
       |import types._
-      |""".trim.stripMargin
+      |""".stripMargin.trim
 
   check("implicit resolution chains", "chain") {
     checkError()
@@ -45,46 +45,50 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  describe("tree printing") {
-    check("tree", extra = "-Vimplicits-verbose-tree") {
-      checkError()
-    }
+  // TODO: remove, already in TreeSpec
+//  describe("tree printing") {
+//    check("complete", file = "tree", extra = "-Vimplicits-verbose-tree") {
+//      checkError()
+//    }
+//
+//    skip("compact", "tree", extra = "-Vimplicits-verbose-tree -P:splain:compact") {
+//      checkError(Some("errorCompact"))
+//    }
+//  }
 
-    // TODO: what's the new args?
-    skip("compact", "tree", extra = "-Vimplicits-verbose-tree -P:splain:compact") {
-      checkError(Some("errorCompact"))
-    }
-  }
-
-  //  TODO: what's the new args?
+  //  TODO: feature removed
   skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
     checkError()
   }
 
-  //  TODO: what's the new args?
+  //  TODO: feature removed
   skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
     checkError()
   }
 
-  check("refined type diff", "refined") {
-    checkError()
-  }
+  // TODO: remove, already checked in BasicSpec
+//  check("refined type diff", "refined") {
+//    checkError()
+//  }
 
   check("disambiguate types", "disambiguate") {
     checkError()
   }
 
-  check("truncate refined type", "truncrefined", extra = "-Vimplicits-max-refined 10") {
-    checkError()
-  }
+  // TODO: remove, already in TruncRefinedSpec
+//  check("truncate refined type", "truncrefined", extra = "-Vimplicits-max-refined 10") {
+//    checkError()
+//  }
 
-  check("byname higher order", "byname-higher") {
-    checkError()
-  }
+  // TODO: remove, already checked in BasicSpec
+//  check("byname higher order", "byname-higher") {
+//    checkError()
+//  }
 
-  check("tuple1") {
-    checkError()
-  }
+  // TODO: remove, already checked in BasicSpec
+//  check("tuple1") {
+//    checkError()
+//  }
 
   describe("single types ") {
 

@@ -41,7 +41,7 @@ trait TestHelpers extends Suite {
   lazy val predefCode = ""
 
   def getEngine(settings: String): TryCompile.Engine = {
-//    TryCompile.UseReflect(settings)
+    //    TryCompile.UseReflect(settings)
     TryCompile.UseNSC(settings)
   }
 
@@ -100,14 +100,15 @@ trait TestHelpers extends Suite {
       } catch {
         case e: TestFailedException =>
           // augmenting
-          val detail =
+          val detail = {
             s"""
-               |"
-               |$left
-               |" did not equal "
-               |$right
-               |"
-               |""".stripMargin.trim
+"
+$left
+" did not equal "
+$right
+"
+""".trim
+          }
 
           val ee = e.modifyMessage { _ =>
             Some(detail)
@@ -207,7 +208,7 @@ object TestHelpers {
 
     val rows = s"""
                   |-Xplugin:$plugin
-                  |""".trim.stripMargin
+                  |""".stripMargin.trim
 
     rows.split('\n').mkString(" ")
   }

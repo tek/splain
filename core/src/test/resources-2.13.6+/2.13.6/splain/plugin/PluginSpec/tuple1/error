@@ -1,4 +1,0 @@
-newSource1.scala:11: error: type mismatch;
-  String|Tuple1[String]
-  val a: Tuple1[String] = "Tuple1": String
-                                  ^

@@ -1,4 +1,13 @@
 newSource1.scala:19: error: implicit error;
-!I e: C1[T3[T1[List[String], ?], T2[Id, C4, ?], ?]]
+!I e:
+  DeepHole.C1[
+    DeepHole.T3[
+      DeepHole.T1[List[java.lang.String], ?]
+      ,
+      DeepHole.T2[DeepHole.Id, DeepHole.C4, ?]
+      ,
+      ?
+    ]
+  ]
   implicitly[C1[T3]]
             ^

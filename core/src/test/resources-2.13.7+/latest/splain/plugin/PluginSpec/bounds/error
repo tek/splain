@@ -1,8 +1,8 @@
 newSource1.scala:13: error: implicit error;
-!I e: F[D *** C]
+!I e: NonconformantBounds.F[types.D *** types.C]
 NonconformantBounds.f invalid because
 nonconformant bounds;
-[D *** C, Nothing]
+[types.D *** types.C, scala.Nothing]
 [A <: types.C, B]
   implicitly[F[D *** C]]
             ^

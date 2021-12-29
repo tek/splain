@@ -1,6 +1,6 @@
 newSource1.scala:15: error: implicit error;
-!I e: F.Aux[C, D]
+!I e: Aux.F.Aux[types.C, types.D]
 Aux.f invalid because
-!I impPar10: C
+!I impPar10: types.C
   implicitly[F.Aux[C, D]]
             ^

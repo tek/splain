@@ -1,14 +1,14 @@
 newSource1.scala:17: error: implicit error;
-!I e: C
+!I e: DivergingImplicits.C
 g invalid because
-!I d: D
-diverging implicit expansion for type D
+!I d: DivergingImplicits.D
+diverging implicit expansion for type DivergingImplicits.D
 starting with method f in object Circular
 ――f invalid because
-  !I c: C
+  !I c: DivergingImplicits.C
 ――――g invalid because
-    !I d: D
-    diverging implicit expansion for type D
+    !I d: DivergingImplicits.D
+    diverging implicit expansion for type DivergingImplicits.D
     starting with method f in object Circular
     implicitly[C]
               ^

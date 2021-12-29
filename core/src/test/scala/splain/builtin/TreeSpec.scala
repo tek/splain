@@ -4,6 +4,8 @@ import splain.SpecBase
 
 class TreeSpec extends SpecBase.Direct {
 
+  override protected lazy val specCompilerOptions = "-Vimplicits -Vtype-diffs"
+
   def verboseTree: String = """
 object tpes
 {
@@ -36,5 +38,7 @@ object Tree
 }
   """
 
-  check(verboseTree)
+  check(verboseTree, extra = "-Vimplicits-verbose-tree")
+
+  check(verboseTree, extra = "", nameOverride = "compactTree")
 }

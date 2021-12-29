@@ -1,18 +1,23 @@
 newSource1.scala:46: error: implicit error;
-!I e: (C *** D) >:< C with D {type A = D; type B = C}
+!I e:
+  (types.C *** types.D) >:<
+  types.C with types.D {type A = types.D; type B = types.C}
 g invalid because
-!I impPar1: D *** (C >:< C) *** (D => Unit)
+!I impPar1: types.D *** (types.C >:< types.C) *** (types.D => scala.Unit)
 ――f invalid because
-  !I impPar2: (D *** C *** String) >:< (C,D,C) *** D
+  !I impPar2:
+    (types.D *** types.C *** java.lang.String) >:<
+    (types.C,types.D,types.C) ***
+    types.D
 ――――t3a invalid because
-    !I impPar11: (D >:< C) >:< D
+    !I impPar11: (types.D >:< types.C) >:< types.D
 ――――――t7 invalid because
-      !I impPar14: F[Either[Int, ?]]
+      !I impPar14: ImplicitChain.F[Either[scala.Int, ?]]
 ――――t3b invalid because
-    !I impPar10: (C *** D) *** C
+    !I impPar10: (types.C *** types.D) *** types.C
 ――――――t4 invalid because
-      !I impPar12: (D *** C) >:< D
+      !I impPar12: (types.D *** types.C) >:< types.D
 ――――――――t5 invalid because
-        !I impPar13: Case.Aux[Int, String]
+        !I impPar13: pol.Case.Aux[scala.Int, java.lang.String]
   implicitly[T1]
             ^

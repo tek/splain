@@ -115,3 +115,23 @@ Ordering.comparatorToOrdering invalid because
 !I cmp: Comparator[Object]
     ms.map(_ => o)
           ^
+newSource1.scala:9: error: implicit error;
+!I e: List[TypeA]
+   (No implicit view available from Int => a.TypeA.)
+
+        implicitly[List[TypeA]]
+                  ^
+newSource1.scala:10: error: implicit error;
+!I e: Seq[TypeB]
+   (No implicit view available from Int => a.b.TypeB.)
+
+        implicitly[Seq[TypeB]]
+                  ^
+newSource1.scala:11: error: implicit error;
+!I e: Iterable[TypeC]
+        implicitly[Traversable[TypeC]]
+                  ^
+newSource1.scala:12: error: implicit error;
+!I e: Iterator[TypeD]
+        implicitly[Iterator[TypeD]]
+                  ^
