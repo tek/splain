@@ -2,7 +2,6 @@ newSource1.scala:13: error: implicit error;
 !I e: II
 ImplicitChain.g invalid because
 !I impPar3: I1
-⋮
 ――ImplicitChain.i1 invalid because
   !I impPar7: I3
   implicitly[II]
