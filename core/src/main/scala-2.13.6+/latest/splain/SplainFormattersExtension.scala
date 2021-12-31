@@ -1,6 +1,5 @@
 package splain
 
-import scala.annotation.tailrec
 import scala.tools.nsc.typechecker.splain._
 
 object SplainFormattersExtension {}
@@ -94,13 +93,13 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
     def matchTypes(left: List[Type], right: List[Type]): List[Formatted] = {
       val (common, uniqueLeft, uniqueRight) =
         separate(left.map(formatType(_, top = true)), right.map(formatType(_, top = true)))
-      val diffs = uniqueLeft.toList
-        .zipAll(uniqueRight.toList, none, none)
+      val diffs = uniqueLeft
+        .zipAll(uniqueRight, none, none)
         .map {
           case (l, r) =>
             Diff(l, r)
         }
-      common.toList ++ diffs
+      common ++ diffs
     }
 
     def filterDecls(syms: List[Symbol]): List[(Formatted, Formatted)] =
@@ -111,9 +110,9 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
 
     def matchDecls(left: List[Symbol], right: List[Symbol]): List[Formatted] = {
       val (common, uniqueLeft, uniqueRight) = separate(filterDecls(left), filterDecls(right))
-      val diffs = uniqueLeft.toList
+      val diffs = uniqueLeft
         .map(Some(_))
-        .zipAll(uniqueRight.toList.map(Some(_)), None, None)
+        .zipAll(uniqueRight.map(Some(_)), None, None)
         .collect {
           case (Some((sym, l)), Some((_, r))) =>
             DeclDiff(sym, l, r)
@@ -122,7 +121,7 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
           case (Some((sym, l)), None) =>
             DeclDiff(sym, l, none)
         }
-      common.toList.map {
+      common.map {
         case (sym, rhs) =>
           Decl(sym, rhs)
       } ++ diffs
@@ -137,37 +136,6 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
         case _ =>
           None
       }
-
-    object TPattern {
-
-      @tailrec
-      def unapply(tpe: Type): Option[(List[Type], Scope)] = {
-        tpe match {
-          case TypeRef(pre, sym, List(RefinedType(parents, decls)))
-              if decls.isEmpty && pre.typeSymbol.fullName == "zio" && sym.fullName == "zio.Has" =>
-            val sanitized = sanitizeParents(parents)
-            if (sanitized.length == 1)
-              Some((List(TypeRef(pre, sym, sanitized.headOption.toList)), decls))
-            else
-              None
-          case RefinedType(types, scope) =>
-            if (scope.isEmpty) {
-              val subtypes = types.map(_.dealias).flatMap {
-                case Refined(types, _) =>
-                  types
-                case tpe =>
-                  List(tpe)
-              }
-              Some((subtypes, scope))
-            } else
-              Some((types, scope))
-          case t @ SingleType(_, _) =>
-            unapply(t.underlying)
-          case _ =>
-            None
-        }
-      }
-    }
   }
 
   object SLRecordItemFormatter extends SpecialFormatter {

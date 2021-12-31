@@ -7,7 +7,7 @@ object SplainFormattingExtension {
 
   import scala.reflect.internal.TypeDebugging.AnsiColor._
 
-  val ELLIPSE = "⋮".blue
+  val ELLIPSIS: String = "⋮".blue
 }
 
 trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
@@ -56,10 +56,10 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     import ImplicitErrorTree._
 
     def doCollectNodes(alwaysDisplayRoot: Boolean = false): Seq[ErrorNode] =
-      if (children.isEmpty) Seq(ErrorNode(error, alwaysDisplay = true))
+      if (children.isEmpty) Seq(ErrorNode(error, alwaysShow = true))
       else {
 
-        Seq(ErrorNode(error, alwaysDisplay = alwaysDisplayRoot)) ++ {
+        Seq(ErrorNode(error, alwaysShow = alwaysDisplayRoot)) ++ {
 
           if (children.size >= 2) children.flatMap(_.doCollectNodes(true))
           else children.flatMap(_.doCollectNodes())
@@ -74,14 +74,14 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       val displayed = collectNodes.zipWithIndex.filter {
         case (v, _) =>
-          v.alwaysDisplay
+          v.alwaysShow
       }
 
-      val hasEllipseIndices = displayed.map(_._2 - 1).toSet + (collectNodes.size - 1)
+      val ellipsisIndices = displayed.map(_._2 - 1).toSet + (collectNodes.size - 1)
 
       val withEllipsis = displayed.map {
         case (v, i) =>
-          if (!hasEllipseIndices.contains(i)) v.copy(hasEllipse = true)
+          if (!ellipsisIndices.contains(i)) v.copy(showEllipsis = true)
           else v
       }
 
@@ -99,9 +99,9 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         val baseIndent = collectCompact.headOption.map(_.nesting).getOrElse(0)
 
         val formatted = collectCompact.map {
-          case ErrorNode(v, _, hasEllipse) =>
+          case ErrorNode(v, _, showEllipsis) =>
             val formatted = formatNestedImplicit(v)
-            if (hasEllipse) formatted.copy(_2 = formatted._2 :+ ELLIPSE)
+            if (showEllipsis) formatted.copy(_2 = formatted._2 :+ ELLIPSIS)
             else formatted
         }
 
@@ -123,8 +123,8 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     case class ErrorNode(
         error: ImplicitError,
-        alwaysDisplay: Boolean,
-        hasEllipse: Boolean = false
+        alwaysShow: Boolean,
+        showEllipsis: Boolean = false
     ) {
       def nesting: RunId = error.nesting
     }
