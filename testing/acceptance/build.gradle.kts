@@ -23,7 +23,8 @@ tasks {
                     "-Vimplicits",
                     "-Vimplicits-verbose-tree",
                     "-Vtype-diffs",
-                    "-P:splain:Vimplicits-diverging"
+                    "-P:splain:Vimplicits-diverging",
+                    "-Xlog-free-terms"
                 )
             )
         }

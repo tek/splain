@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.tools.reflect.FrontEnd
 
 // mimic of StoreReporter
-case class StoreFrontEnd(sourceName: String) extends FrontEnd {
+case class CachingFrontEnd(sourceName: String) extends FrontEnd {
 
   val cached: ArrayBuffer[Issue] = ArrayBuffer.empty[Issue]
 
@@ -26,7 +26,7 @@ case class StoreFrontEnd(sourceName: String) extends FrontEnd {
   }
 }
 
-object StoreFrontEnd {
+object CachingFrontEnd {
 
-  object NoSource extends StoreFrontEnd("")
+  object NoSource extends CachingFrontEnd("")
 }

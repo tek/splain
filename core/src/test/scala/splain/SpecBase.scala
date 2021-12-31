@@ -19,7 +19,6 @@ object SpecBase {
       val methods = this.getClass.getDeclaredMethods.filter { method =>
         method.getParameterCount == 0 &&
         method.getReturnType == classOf[String]
-//        method.isAccessible
       }
 
       val seq = methods.flatMap { method =>

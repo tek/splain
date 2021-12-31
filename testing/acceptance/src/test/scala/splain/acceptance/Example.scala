@@ -2,7 +2,7 @@ package splain.acceptance
 
 import org.scalatest.funspec.AnyFunSpec
 import shapeless.test.illTyped
-import splain.testing.StaticAnalysis.{SourceBlock, SourceLiteral}
+import splain.static.StaticAnalysis
 
 object Example {}
 
@@ -23,8 +23,9 @@ object FoundReq {
 
   it("e1") {
 
-    val a1 = SourceLiteral.apply(
-      code
+    val a1 = StaticAnalysis.SourceBlock.apply(
+      code,
+      ""
     )
 
     a1

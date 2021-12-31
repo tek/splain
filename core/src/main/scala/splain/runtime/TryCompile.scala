@@ -14,10 +14,10 @@ trait TryCompile {
   case class Level(level: Int) {
 
     def filteredIssues: Seq[Issue] = issues.filter { i =>
-      i.level == level
+      i.severity == level
     }
 
-    def display: String = issues
+    def displayIssues: String = issues
       .map { i =>
         i.display
       }
@@ -47,6 +47,8 @@ object TryCompile {
 
   case class Success(issues: Seq[Issue] = Nil) extends Resolved
 
+  object Empty extends Success()
+
   trait Failure extends Resolved {}
 
   case class TypeError(issues: Seq[Issue] = Nil) extends Failure
@@ -66,7 +68,7 @@ object TryCompile {
 
     override def apply(code: String): TryCompile = {
 
-      val frontEnd = StoreFrontEnd(sourceName)
+      val frontEnd = CachingFrontEnd(sourceName)
 
       val toolBox: ToolBox[universe.type] =
         ToolBox(mirror).mkToolBox(frontEnd, options = args)

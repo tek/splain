@@ -4,7 +4,7 @@ import scala.collection.immutable.ArraySeq
 import scala.reflect.internal.util.{BatchSourceFile, Position}
 
 case class Issue(
-    level: Int,
+    severity: Int,
     msg: String,
     pos: Position,
     sourceName: String = "newSource1.scala",
@@ -18,9 +18,9 @@ case class Issue(
       new BatchSourceFile(sourceName, ArraySeq.unsafeWrapArray(pos.source.content))
     )
 
-    val levelDisplay = new StoreFrontEnd.NoSource.Severity(level).toString.toLowerCase
+    val severityDisplay = new CachingFrontEnd.NoSource.Severity(severity).toString.toLowerCase
 
-    val infoStr = s"$levelDisplay: $msg"
+    val infoStr = s"$severityDisplay: $msg"
 
     val formatted = Position.formatMessage(posWithFileName, infoStr, shortenFile = true)
     formatted
