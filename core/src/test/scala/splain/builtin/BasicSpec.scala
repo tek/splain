@@ -201,6 +201,25 @@ object SingleImp
   """
   // from scalac tests END HERE
 
+  def shorthandTypes: String = """
+object a {
+  type TypeA
+  object b {
+    type TypeB
+    object c {
+      type TypeC
+      object d {
+        type TypeD
+        implicitly[List[TypeA]]
+        implicitly[Seq[TypeB]]
+        implicitly[Traversable[TypeC]]
+        implicitly[Iterator[TypeD]]
+      }
+    }
+  }
+}
+"""
+
   check(chain)
 
   check(foundReq)
@@ -209,7 +228,7 @@ object SingleImp
 
   check(longAnnotationMessage)
 
-  skip(longInfix)
+  check(longInfix)
 
   check(deeplyNestedHole)
 
@@ -230,4 +249,6 @@ object SingleImp
   check(singleTypeWithFreeSymbol)
 
   check(parameterAnnotation)
+
+  check(shorthandTypes, numberOfBlocks = 4)
 }

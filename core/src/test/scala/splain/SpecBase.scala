@@ -19,7 +19,6 @@ object SpecBase {
       val methods = this.getClass.getDeclaredMethods.filter { method =>
         method.getParameterCount == 0 &&
         method.getReturnType == classOf[String]
-//        method.isAccessible
       }
 
       val seq = methods.flatMap { method =>
@@ -31,26 +30,33 @@ object SpecBase {
       Map(seq: _*)
     }
 
+    def getName(code: String, nameOverride: String): String = {
+      if (nameOverride.nonEmpty) nameOverride
+      else codeToName(code)
+    }
+
     lazy val runner: DirectRunner = DirectRunner()
 
-    def check(code: String): Unit = {
+    def check(code: String, extra: String = defaultExtra, nameOverride: String = "", numberOfBlocks: Int = 1): Unit = {
 
-      val name = codeToName(code)
-      val cc = DirectCase(code)
+      val name = getName(code, nameOverride)
+      val cc = DirectCase(code, extra)
 
-      val groundTruth = runner.groundTruths(runner.pointer.getAndIncrement())
+      val from = runner.pointer.getAndAdd(numberOfBlocks)
+      val until = runner.pointer.get()
+      val groundTruth = runner.groundTruths.slice(from, until).mkString("\n")
 
       _it(name) {
-        val error = cc.compileError()
+        val error = cc.splainC.compileError()
         error must_== groundTruth
       }
     }
 
-    def skip(code: String): Unit = {
+    def skip(code: String, extra: String = defaultExtra, nameOverride: String = "", numberOfBlocks: Int = 1): Unit = {
 
-      val name = codeToName(code)
+      val name = getName(code, nameOverride)
 
-      runner.pointer.getAndIncrement()
+      runner.pointer.getAndAdd(numberOfBlocks)
 
       ignore(name) {}
     }

@@ -14,7 +14,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
       val formattedPT = showFormatted(formatType(self.pt0, top = false))
 
-      s"diverging implicit expansion for type ${formattedPT}\nstarting with ${self.sym.fullLocationString}"
+      s"diverging implicit expansion for type $formattedPT\nstarting with ${self.sym.fullLocationString}"
     }
   }
 
@@ -102,11 +102,11 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
         local.DivergingImplicitErrors.logs +=
           s"""
-             |Implicit search for ${tree}
-             |has reported ${previousSimilarErrorsN} diverging errors
+             |Implicit search for $tree
+             |has reported $previousSimilarErrorsN diverging errors
              |Terminated
              |    at ${pos.showDebug}
-             |""".trim.stripMargin
+             |""".stripMargin.trim
 
 //        s"Terminating implicit search for $tree at ${pos.showDebug} " +
 //          s"after reporting ${settingVImplicitDivergingThreshold} Diverging implicit errors"

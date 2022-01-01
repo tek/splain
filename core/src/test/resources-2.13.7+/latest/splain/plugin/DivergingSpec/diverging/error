@@ -1,0 +1,19 @@
+newSource1.scala:16: error: implicit error;
+!I e: DivergingImplicits.C :: DivergingImplicits.D
+Diverging.f invalid because
+!I ii: scala.Int :: DivergingImplicits.C :: DivergingImplicits.D
+――Diverging.f invalid because
+  !I ii: scala.Int :: scala.Int :: DivergingImplicits.C :: DivergingImplicits.D
+  diverging implicit expansion for type (scala.Int :: scala.Int :: DivergingImplicits.C :: DivergingImplicits.D)
+  starting with method f in object Diverging
+――――Diverging.f invalid because
+    !I ii:
+      scala.Int ::
+      scala.Int ::
+      scala.Int ::
+      DivergingImplicits.C ::
+      DivergingImplicits.D
+    diverging implicit expansion for type (scala.Int :: scala.Int :: scala.Int :: DivergingImplicits.C :: DivergingImplicits.D)
+    starting with method g in object Diverging
+    implicitly[C :: D]
+              ^
