@@ -38,8 +38,8 @@ jobs:
         if: contains(github.ref_name, 'Release/')
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest-${{matrix.scalaVersion}}"
-          title: "latest-${{matrix.scalaVersion}}"
+          automatic_release_tag: "${{github.ref_name}}-${{matrix.scalaVersion}}"
+          title: "${{github.ref_name}}-${{matrix.scalaVersion}}"
           prerelease: true
           files: |
             LICENSE
