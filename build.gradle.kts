@@ -229,7 +229,6 @@ allprojects {
 
 subprojects {
 
-
     dependencies {
 
         // see https://github.com/gradle/gradle/issues/13067
@@ -277,53 +276,56 @@ subprojects {
             else if (project.name.equals("core")) rootID + suffix
             else rootID + "-" + project.name + suffix
 
-        publications {
+        val whitelist = setOf("core")
 
-            create<MavenPublication>("maven") {
+        if (whitelist.contains(project.name)) {
 
-                val javaComponent = components["java"] as AdhocComponentWithVariants
-                from(javaComponent)
+            publications {
+                create<MavenPublication>("maven") {
 
-                javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
-                javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
+                    val javaComponent = components["java"] as AdhocComponentWithVariants
+                    from(javaComponent)
 
-                groupId = groupId
-                artifactId = moduleID
-                version = version
+                    javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
+                    javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
-                pom {
-                    licenses {
-                        license {
-                            name.set("MIT")
-                            url.set("http://opensource.org/licenses/MIT\"")
+                    groupId = groupId
+                    artifactId = moduleID
+                    version = version
+
+                    pom {
+                        licenses {
+                            license {
+                                name.set("MIT")
+                                url.set("http://opensource.org/licenses/MIT\"")
+                            }
                         }
-                    }
 
-                    name.set("splain")
-                    description.set("A scala compiler plugin for more concise errors")
+                        name.set("splain")
+                        description.set("A scala compiler plugin for more concise errors")
 
-                    val github = "https://github.com/tek"
-                    val repo = github + "/splain"
+                        val github = "https://github.com/tek"
+                        val repo = github + "/splain"
 
-                    url.set(repo)
-
-                    developers {
-                        developer {
-                            id.set("tryp")
-                            name.set("Torsten Schmits")
-                            email.set("torstenschmits@gmail.com")
-                            url.set(github)
-                        }
-                    }
-                    scm {
-                        connection.set("scm:git@github.com:tek/splain")
                         url.set(repo)
-                    }
-                }
 
+                        developers {
+                            developer {
+                                id.set("tryp")
+                                name.set("Torsten Schmits")
+                                email.set("torstenschmits@gmail.com")
+                                url.set(github)
+                            }
+                        }
+                        scm {
+                            connection.set("scm:git@github.com:tek/splain")
+                            url.set(repo)
+                        }
+                    }
+
+                }
             }
         }
-
     }
 }
 
