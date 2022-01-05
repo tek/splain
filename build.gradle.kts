@@ -115,37 +115,6 @@ allprojects {
         }
     }
 
-    sourceSets {
-        main {
-            scala {
-
-                for (from in supportedPatchVs) {
-                    if (vn.micro >= from) {
-                        setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/latest"))
-                    }
-                    for (to in supportedPatchVs) {
-                        if (vn.micro <= to) {
-                            setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/2.13.${to}"))
-                        }
-                    }
-                }
-            }
-
-            resources {
-                for (from in supportedPatchVs) {
-                    if (vn.micro >= from) {
-                        setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/latest"))
-                    }
-                    for (to in supportedPatchVs) {
-                        if (vn.micro <= to) {
-                            setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/2.13.${to}"))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     task("dependencyTree") {
 
         dependsOn("dependencies")
