@@ -28,9 +28,6 @@ plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
 }
 
-group = vs.projectGroup
-version = vs.projectV
-
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
 val sonatypeApiKey = providers.gradleProperty("sonatypeApiKey")
 if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
@@ -258,15 +255,13 @@ subprojects {
                     javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
                     javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
-                    groupId = groupId
                     artifactId = moduleID
-                    version = version
 
                     pom {
                         licenses {
                             license {
                                 name.set("MIT")
-                                url.set("http://opensource.org/licenses/MIT\"")
+                                url.set("http://opensource.org/licenses/MIT")
                             }
                         }
 
@@ -291,7 +286,6 @@ subprojects {
                             url.set(repo)
                         }
                     }
-
                 }
             }
         }
