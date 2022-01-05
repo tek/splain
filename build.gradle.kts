@@ -28,9 +28,6 @@ plugins {
     id("com.github.ben-manes.versions") version "0.39.0"
 }
 
-group = vs.projectGroup
-version = vs.projectV
-
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
 val sonatypeApiKey = providers.gradleProperty("sonatypeApiKey")
 if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
@@ -111,37 +108,6 @@ allprojects {
             if (vn.micro <= to) {
 
                 includeShims("2.13.${from}", "2.13.${to}")
-            }
-        }
-    }
-
-    sourceSets {
-        main {
-            scala {
-
-                for (from in supportedPatchVs) {
-                    if (vn.micro >= from) {
-                        setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/latest"))
-                    }
-                    for (to in supportedPatchVs) {
-                        if (vn.micro <= to) {
-                            setSrcDirs(srcDirs + listOf("src/main/scala-2.13.${from}+/2.13.${to}"))
-                        }
-                    }
-                }
-            }
-
-            resources {
-                for (from in supportedPatchVs) {
-                    if (vn.micro >= from) {
-                        setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/latest"))
-                    }
-                    for (to in supportedPatchVs) {
-                        if (vn.micro <= to) {
-                            setSrcDirs(srcDirs + listOf("src/main/resources-2.13.${from}+/2.13.${to}"))
-                        }
-                    }
-                }
             }
         }
     }
@@ -289,15 +255,13 @@ subprojects {
                     javaComponent.withVariantsFromConfiguration(configurations["testFixturesApiElements"]) { skip() }
                     javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
-                    groupId = groupId
                     artifactId = moduleID
-                    version = version
 
                     pom {
                         licenses {
                             license {
                                 name.set("MIT")
-                                url.set("http://opensource.org/licenses/MIT\"")
+                                url.set("http://opensource.org/licenses/MIT")
                             }
                         }
 
@@ -322,7 +286,6 @@ subprojects {
                             url.set(repo)
                         }
                     }
-
                 }
             }
         }
