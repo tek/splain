@@ -22,7 +22,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        scalaVersion: ["2.13.6", "2.13.7"]
+        scalaVersion: ["2.13.6", "2.13.7", "2.13.8"]
 
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +54,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        scalaVersion: ["2.13.6", "2.13.7"]
+        scalaVersion: ["2.13.6", "2.13.7", "2.13.8"]
 
     continue-on-error: ${{ contains(needs.vars.outputs.experimentalScalaVersions, matrix.scalaVersion) }}
 
