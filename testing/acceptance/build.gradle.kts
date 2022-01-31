@@ -5,7 +5,7 @@ dependencies {
     scalaCompilerPlugins(project(":core"))
 
     testImplementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
-    testImplementation("com.chuusai:shapeless_${vs.scalaBinaryV}:2.3.3")
+    testImplementation("com.chuusai:shapeless_${vs.scalaBinaryV}:2.3.7")
 //    testImplementation("dev.zio:zio_${vs.scalaBinaryV}:1.0.4")
 }
 
