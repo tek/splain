@@ -1,5 +1,5 @@
 newSource1.scala:13: error: implicit error;
-!I e: ImplicitChain.II
+!I e: splain.acceptance.builtin.StaticBasicSpec.ImplicitChain.II
 ImplicitChain.g invalid because
 !I impPar3: ImplicitChain.I1
 ――ImplicitChain.i1 invalid because
@@ -7,7 +7,7 @@ ImplicitChain.g invalid because
   implicitly[II]
             ^
 newSource1.scala:6: error: type mismatch;
-  FoundReq.L|FoundReq.R
+  splain.acceptance.builtin.StaticBasicSpec.FoundReq.L|splain.acceptance.builtin.StaticBasicSpec.FoundReq.R
   f(new L)
     ^
 newSource1.scala:5: error: type mismatch;
@@ -15,10 +15,13 @@ newSource1.scala:5: error: type mismatch;
   f(3.0, () => println("doesn't work"))
             ^
 newSource1.scala:7: error: implicit error;
-!I e: Bounds.F[Bounds.Arg]
+!I e:
+  splain.acceptance.builtin.StaticBasicSpec.Bounds.F[
+    splain.acceptance.builtin.StaticBasicSpec.Bounds.Arg
+  ]
 Bounds.g invalid because
 nonconformant bounds;
-[Bounds.Arg, scala.Nothing]
+[splain.acceptance.builtin.StaticBasicSpec.Bounds.Arg, scala.Nothing]
 [A <: Bounds.Base, B]
   implicitly[F[Arg]]
             ^
@@ -45,36 +48,50 @@ f invalid because
 !I impPar4:
   List[
     (
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName
     )
     ::::
-    (InfixBreak.Short :::: InfixBreak.Short) ::::
     (
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName ::::
-      InfixBreak.VeryLongTypeName
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.Short ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.Short
     )
     ::::
-    InfixBreak.VeryLongTypeName ::::
-    InfixBreak.VeryLongTypeName ::::
-    InfixBreak.VeryLongTypeName ::::
-    InfixBreak.VeryLongTypeName
+    (
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+      splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName
+    )
+    ::::
+    splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+    splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+    splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName ::::
+    splain.acceptance.builtin.StaticBasicSpec.InfixBreak.VeryLongTypeName
   ]
-   (No implicit view available from Int => InfixBreak.T2.)
+   (No implicit view available from Int => splain.acceptance.builtin.StaticBasicSpec.InfixBreak.T2.)
 
   implicitly[String]
             ^
 newSource1.scala:11: error: implicit error;
 !I e:
-  DeepHole.C1[
-    DeepHole.T3[
-      DeepHole.T1[List[java.lang.String], ?]
+  splain.acceptance.builtin.StaticBasicSpec.DeepHole.C1[
+    splain.acceptance.builtin.StaticBasicSpec.DeepHole.T3[
+      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[
+        List[java.lang.String]
+        ,
+        ?
+      ]
       ,
-      DeepHole.T2[DeepHole.Id, DeepHole.C4, ?]
+      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T2[
+        splain.acceptance.builtin.StaticBasicSpec.DeepHole.Id
+        ,
+        splain.acceptance.builtin.StaticBasicSpec.DeepHole.C4
+        ,
+        ?
+      ]
       ,
       ?
     ]
@@ -82,13 +99,18 @@ newSource1.scala:11: error: implicit error;
   implicitly[C1[T3]]
             ^
 newSource1.scala:9: error: implicit error;
-!I e: Aux.F.Aux[Aux.C, Aux.D]
+!I e:
+  splain.acceptance.builtin.StaticBasicSpec.Aux.F.Aux[
+    splain.acceptance.builtin.StaticBasicSpec.Aux.C
+    ,
+    splain.acceptance.builtin.StaticBasicSpec.Aux.D
+  ]
 Aux.f invalid because
 !I impPar10: Aux.C
   implicitly[F.Aux[C, D]]
             ^
 newSource1.scala:11: error: type mismatch;
-  Refined.A with Refined.B with Refined.E|Refined.C with Refined.F|<none> {type X = scala.Int|java.lang.String; type Y = java.lang.String; type Z = <none>|java.lang.String}
+  splain.acceptance.builtin.StaticBasicSpec.Refined.A with splain.acceptance.builtin.StaticBasicSpec.Refined.B with splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {type X = scala.Int|java.lang.String; type Y = java.lang.String; type Z = <none>|java.lang.String}
   f(x)
     ^
 newSource1.scala:25: error: type mismatch;
@@ -96,7 +118,7 @@ newSource1.scala:25: error: type mismatch;
   f(x: C.X.Y.T)
      ^
 newSource1.scala:6: error: type mismatch;
-  scala.Int|(=> Foo.A) => Foo.B
+  scala.Int|(=> splain.acceptance.builtin.StaticBasicSpec.Foo.A) => splain.acceptance.builtin.StaticBasicSpec.Foo.B
   f(1: Int)
      ^
 newSource1.scala:3: error: type mismatch;
@@ -128,22 +150,8 @@ Ordering.comparatorToOrdering invalid because
     ms.map(_ => o)
           ^
 newSource1.scala:9: error: implicit error;
-!I e: List[a.TypeA]
-   (No implicit view available from Int => a.TypeA.)
+!I e: List[splain.acceptance.builtin.StaticBasicSpec.a.TypeA]
+   (No implicit view available from Int => splain.acceptance.builtin.StaticBasicSpec.a.TypeA.)
 
         implicitly[List[TypeA]]
-                  ^
-newSource1.scala:10: error: implicit error;
-!I e: Seq[a.b.TypeB]
-   (No implicit view available from Int => a.b.TypeB.)
-
-        implicitly[Seq[TypeB]]
-                  ^
-newSource1.scala:11: error: implicit error;
-!I e: Iterable[a.b.c.TypeC]
-        implicitly[Traversable[TypeC]]
-                  ^
-newSource1.scala:12: error: implicit error;
-!I e: Iterator[a.b.c.d.TypeD]
-        implicitly[Iterator[TypeD]]
                   ^

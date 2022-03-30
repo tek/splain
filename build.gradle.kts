@@ -25,7 +25,7 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 
-    id("com.github.ben-manes.versions") version "0.39.0"
+    id("com.github.ben-manes.versions") version "0.42.0"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -83,6 +83,14 @@ allprojects {
                 }
                 resources {
                     setSrcDirs(srcDirs + listOf("src/main/resources-${from}+/${to}"))
+                }
+            }
+            testFixtures {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/testFixtures/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/testFixtures/resources-${from}+/${to}"))
                 }
             }
             test {
@@ -209,7 +217,7 @@ subprojects {
         bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
 
         val scalaTestV = "3.2.3"
-        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
         testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")

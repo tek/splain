@@ -2,10 +2,12 @@ val vs: Versions = versions()
 
 dependencies {
 
+    testImplementation(project(":core"))
+    testFixturesApi(testFixtures(project(":core")))
+
     scalaCompilerPlugins(project(":core"))
 
-    testImplementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
-    testImplementation("com.chuusai:shapeless_${vs.scalaBinaryV}:2.3.7")
+//    testImplementation("com.chuusai:shapeless_${vs.scalaBinaryV}:2.3.7")
 //    testImplementation("dev.zio:zio_${vs.scalaBinaryV}:1.0.4")
 }
 
@@ -18,7 +20,6 @@ tasks {
             additionalParameters!!.addAll(
                 listOf(
                     "-Vimplicits",
-                    "-Vimplicits-verbose-tree",
                     "-Vtype-diffs",
                     "-P:splain:Vimplicits-diverging"
                 )

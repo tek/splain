@@ -1,4 +1,4 @@
-package splain.runtime
+package splain.test
 
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.reflect.FrontEnd
