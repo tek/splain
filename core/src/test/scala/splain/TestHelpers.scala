@@ -57,7 +57,7 @@ trait TestHelpers extends Suite {
 
       def compileError(): String =
         compile() match {
-          case v: TryCompile.TypeError =>
+          case v: TryCompile.TypingError =>
             v.Error.displayIssues
           case e @ _ =>
             sys.error(s"Type error not detected: $e")

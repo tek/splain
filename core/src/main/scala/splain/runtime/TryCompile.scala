@@ -1,6 +1,5 @@
 package splain.runtime
 
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.runtime.{currentMirror, universe}
 import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 import scala.tools.nsc.{Global, Settings}
@@ -31,42 +30,49 @@ trait TryCompile {
 
 object TryCompile {
 
-  case class Unresolved(issues: Seq[Issue] = Nil) extends TryCompile {
-
-    lazy val resolve: Resolved = {
-      if (Error.filteredIssues.isEmpty) {
-        Success(issues)
-      } else {
-        TypeError(issues)
-        // TODO: how to identify ParsingError & Others
-      }
-    }
-  }
-
   trait Resolved extends TryCompile
 
   case class Success(issues: Seq[Issue] = Nil) extends Resolved
 
   object Empty extends Success()
 
-  trait Failure extends Resolved {}
+  trait Failure extends Resolved {
 
-  case class TypeError(issues: Seq[Issue] = Nil) extends Failure
+    lazy val maySucceed: Resolved = {
+      if (Error.filteredIssues.isEmpty) {
+        Success(issues)
+      } else {
+        this
+      }
+    }
+  }
+
+  case class TypingError(issues: Seq[Issue] = Nil) extends Failure
   case class ParsingError(issues: Seq[Issue] = Nil) extends Failure
-  case class OtherFailure(issues: Seq[Issue] = Nil) extends Failure
+  case class OtherFailure(e: Throwable) extends Failure {
+    override def issues: Seq[Issue] = Nil
+  }
 
   trait Engine {
 
     def args: String
 
-    def apply(code: String): TryCompile
+    final def apply(code: String): TryCompile =
+      try {
+        doCompile(code)
+      } catch {
+        case e: Throwable =>
+          OtherFailure(e)
+      }
+
+    def doCompile(code: String): TryCompile
   }
 
   val mirror: universe.Mirror = currentMirror
 
   case class UseReflect(args: String, sourceName: String = "newSource1.scala") extends Engine {
 
-    override def apply(code: String): TryCompile = {
+    override def doCompile(code: String): TryCompile = {
 
       val frontEnd = CachingFrontEnd(sourceName)
 
@@ -86,7 +92,7 @@ object TryCompile {
         toolBox.compile(parsed)
       }.recover {
         case _: Throwable =>
-          return TryCompile.TypeError(cached)
+          return TryCompile.TypingError(cached)
       }.get
 
       TryCompile.Success(cached)
@@ -108,19 +114,29 @@ object TryCompile {
 
     val reporter: StoreReporter = global.reporter.asInstanceOf[StoreReporter]
 
-    override def apply(code: String): TryCompile = {
+    override def doCompile(code: String): TryCompile = {
+
+      val unit = global.newCompilationUnit(code, sourceName)
 
       val run = new global.Run()
 
-      val files = List(new BatchSourceFile(sourceName, code))
+      val parser = global.newUnitParser(unit)
+      parser.parse()
 
-      run.compileSources(files)
-
-      val cached = reporter.infos.toSeq.map { info =>
+      def reports = reporter.infos.toSeq.map { info =>
         Issue(info.severity.id, info.msg, info.pos, sourceName)
       }
 
-      Unresolved(cached).resolve
+      val result = if (reports.exists(v => v.severity == Empty.Error.level)) {
+
+        ParsingError(reports)
+      } else {
+
+        run.compileUnits(List(unit))
+        TypingError(reports)
+      }
+
+      result.maySucceed
     }
   }
 }
