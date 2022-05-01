@@ -34,6 +34,21 @@ object FoundReq
 }
   """
 
+  def foundReqSingleAbstractMethod: String = """
+object FoundReq extends App {
+  def f(x: AnyVal, f: Runnable) = 1
+  def f(x: Double, f: Runnable) = 2
+
+  f(3.0, () => println("doesn't work"))
+}
+  """
+
+  object Dummy {
+
+    def fn(v: Any with Any, k: Int): Unit = {}
+
+  }
+
   def bounds: String = """
 object Bounds
 {
@@ -223,6 +238,8 @@ object a {
   check(chain)
 
   check(foundReq)
+
+  check(foundReqSingleAbstractMethod)
 
   check(bounds)
 

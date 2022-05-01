@@ -12,7 +12,7 @@ class SplainAnalyzer(val global: Global, val pluginSettings: PluginSettings)
     List(
       FunctionFormatter,
       TupleFormatter,
-      SLRecordItemFormatter,
+      ShapelessRecordItemFormatter,
       RefinedFormatterImproved,
 //      RefinedFormatter,
       ByNameFormatter
