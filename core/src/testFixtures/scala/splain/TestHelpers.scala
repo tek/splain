@@ -3,7 +3,7 @@ package splain
 import com.sun.org.slf4j.internal.LoggerFactory
 import org.scalatest.exceptions.TestFailedException
 import org.scalatest.{Assertion, Suite}
-import splain.runtime.TryCompile
+import splain.test.TryCompile
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger

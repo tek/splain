@@ -1,12 +1,13 @@
-package splain.runtime
+package splain.test
 
+import scala.language.experimental.macros
 import scala.reflect.runtime.{currentMirror, universe}
 import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 import scala.tools.nsc.{Global, Settings}
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-trait TryCompile {
+trait TryCompile extends Product with Serializable {
 
   def issues: Seq[Issue]
 
@@ -26,6 +27,14 @@ trait TryCompile {
   object Error extends Level(2)
   object Warning extends Level(1)
   object Info extends Level(0)
+
+  override lazy val toString: String = {
+    s"""
+       |${productPrefix}
+       | ---
+       |${issues.mkString("\n\n")}
+       |""".stripMargin
+  }
 }
 
 object TryCompile {
@@ -70,14 +79,13 @@ object TryCompile {
 
   val mirror: universe.Mirror = currentMirror
 
-  case class UseReflect(args: String, sourceName: String = "newSource1.scala") extends Engine {
+  case class UseReflect(args: String, sourceName: String = Issue.defaultSrcName) extends Engine {
 
     override def doCompile(code: String): TryCompile = {
 
       val frontEnd = CachingFrontEnd(sourceName)
 
-      val toolBox: ToolBox[universe.type] =
-        ToolBox(mirror).mkToolBox(frontEnd, options = args)
+      val toolBox: ToolBox[universe.type] = mirror.mkToolBox(frontEnd, options = args)
 
       val cached = frontEnd.cached.toSeq
 
@@ -89,7 +97,7 @@ object TryCompile {
       }.get
 
       Try {
-        toolBox.compile(parsed)
+        toolBox.typecheck(parsed)
       }.recover {
         case _: Throwable =>
           return TryCompile.TypingError(cached)
@@ -99,7 +107,7 @@ object TryCompile {
     }
   }
 
-  case class UseNSC(args: String, sourceName: String = "newSource1.scala") extends Engine {
+  case class UseNSC(args: String, sourceName: String = Issue.defaultSrcName) extends Engine {
 
     val global: Global = {
       val _settings = new Settings()
@@ -108,7 +116,7 @@ object TryCompile {
       _settings.usejavacp.value = true
       _settings.processArgumentString(args)
 
-      val global = Global(_settings, Reporter(_settings))
+      val global: Global = Global(_settings, Reporter(_settings))
       global
     }
 
@@ -139,4 +147,8 @@ object TryCompile {
       result.maySucceed
     }
   }
+
+  def Static()(code: String): TryCompile = macro TryCompileMacros.runAsMacroDefault
+
+  def Static(sourceName: String)(code: String): TryCompile = macro TryCompileMacros.runAsMacro
 }

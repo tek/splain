@@ -1,4 +1,4 @@
-package splain.runtime
+package splain.test
 
 import scala.collection.immutable.ArraySeq
 import scala.reflect.internal.util.{BatchSourceFile, Position}
@@ -6,13 +6,13 @@ import scala.reflect.internal.util.{BatchSourceFile, Position}
 case class Issue(
     severity: Int,
     msg: String,
-    pos: Position,
-    sourceName: String = "newSource1.scala",
+    @transient pos: Position,
+    sourceName: String = Issue.defaultSrcName,
     isShortName: Boolean = false
-) {
+) extends Serializable {
 
   // mimic of PrintReporter.display
-  def display: String = {
+  val display: String = {
 
     val posWithFileName: Position = pos.withSource(
       new BatchSourceFile(sourceName, ArraySeq.unsafeWrapArray(pos.source.content))
@@ -25,6 +25,12 @@ case class Issue(
     val formatted = Position.formatMessage(posWithFileName, infoStr, shortenFile = true)
     formatted
   }
+
+  override def toString: String = display
 }
 
-object Issue {}
+object Issue {
+
+  lazy val defaultSrcName = "newSource1.scala"
+
+}

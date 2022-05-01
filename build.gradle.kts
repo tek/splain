@@ -209,7 +209,7 @@ subprojects {
         bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
 
         val scalaTestV = "3.2.3"
-        testImplementation("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
         testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
