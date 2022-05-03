@@ -6,9 +6,9 @@ import splain.test.TryCompile
 
 import scala.collection.mutable.ArrayBuffer
 
-object AcceptanceStatic {
+object Acceptance {
 
-  val static = TryCompile.Static()
+  final val static = TryCompile.Static()
 
   trait SpecBase extends AnyFunSpec with TestHelpers with static.FromCodeMixin {
 

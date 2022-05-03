@@ -7,8 +7,6 @@ import scala.reflect.macros.{whitebox, ParseException, TypecheckException}
 import scala.tools.nsc.Global
 import scala.tools.nsc.reporters.FilteringReporter
 
-//object TryCompileMacros {}
-
 class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
   import c.universe._
 
@@ -20,31 +18,23 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
 
   type CodeTree = Tree
 
-//  def summon[
-//      N <: String with Singleton: c.WeakTypeTag,
-//      CODE <: String with Singleton: c.WeakTypeTag
-//  ]: Tree = {
-//
-//    println(s"compiling: ${implicitly[c.WeakTypeTag[CODE]].tpe}")
-//    println(s"name: ${implicitly[c.WeakTypeTag[N]].tpe}")
-//
-//    val ConstantType(codeConst) = implicitly[c.WeakTypeTag[CODE]].tpe
-//    val ConstantType(nameConst) = implicitly[c.WeakTypeTag[N]].tpe
-//
-//    val result: TryCompile = run(codeConst.value.toString, nameConst.value.toString)
-//
-//    val op = new StaticOp[N, CODE](result)
-//
-//    q"$op"
-//  }
+  // TODO: from shapeless.test.IllTypedMacros, no idea what it is for
+  def rectifyCode(codeStr: String): String = {
 
-//  @tailrec
-  final def expr2Str(code: CodeTree): String = {
+    val dummy0 = TermName(c.freshName())
+    val dummy1 = TermName(c.freshName())
+    s"object $dummy0 { val $dummy1 = { $codeStr } }"
+  }
+
+  final def tree2Str(code: CodeTree): String = {
 
     code match {
-      case Literal(v) => v.value.asInstanceOf[String]
+      case Literal(v) =>
+        v.value.asInstanceOf[String]
       case _ =>
-        c.eval(c.Expr[String](c.untypecheck(code)))
+        throw new UnsupportedOperationException(
+          s"`$code` is not a Literal, please only use Literal or final val with refined or no type annotation"
+        )
     }
   }
 
@@ -61,14 +51,7 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
 
   def compileCodeTree[N <: String with Singleton: c.WeakTypeTag](code: CodeTree): Tree = {
 
-    val _code = expr2Str(code)
-
-    println(
-      s"""
-         |[CODE]
-         |${_code}
-         |""".stripMargin
-    )
+    val _code = rectifyCode(tree2Str(code))
 
     val _name = type2Str(implicitly[c.WeakTypeTag[N]].tpe)
 
@@ -99,7 +82,7 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
         }
         .get
 
-    val typed = util
+    val result = util
       .Try {
         c.typecheck(parsed)
       }

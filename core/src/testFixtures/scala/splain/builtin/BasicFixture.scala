@@ -5,7 +5,7 @@ object BasicFixture extends BasicFixture
 trait BasicFixture {
 
   // from scalac tests START HERE
-  def chain: String =
+  final val chain =
     """
 object ImplicitChain
 {
@@ -23,7 +23,7 @@ object ImplicitChain
 }
   """
 
-  def foundReq: String =
+  final val foundReq =
     """
 object FoundReq
 {
@@ -34,7 +34,7 @@ object FoundReq
 }
   """
 
-  def foundReqSingleAbstractMethod: String =
+  final val foundReqSingleAbstractMethod =
     """
 object FoundReq extends App {
   def f(x: AnyVal, f: Runnable) = 1
@@ -44,7 +44,7 @@ object FoundReq extends App {
 }
   """
 
-  def bounds: String =
+  final val bounds =
     """
 object Bounds
 {
@@ -56,7 +56,7 @@ object Bounds
 }
   """
 
-  def longAnnotationMessage: String =
+  final val longAnnotationMessage =
     """
 object Long
 {
@@ -65,7 +65,7 @@ object Long
 }
   """
 
-  def longInfix: String =
+  final val longInfix =
     """
 object InfixBreak
 {
@@ -80,7 +80,7 @@ object InfixBreak
 }
   """
 
-  def deeplyNestedHole: String =
+  final val deeplyNestedHole =
     """
 object DeepHole
 {
@@ -96,7 +96,7 @@ object DeepHole
 }
   """
 
-  def auxType: String =
+  final val auxType =
     """
 object Aux
 {
@@ -110,7 +110,7 @@ object Aux
 }
   """
 
-  def refined: String =
+  final val refined =
     """
 object Refined
 {
@@ -126,7 +126,7 @@ object Refined
 }
   """
 
-  def disambiguateQualified: String =
+  final val disambiguateQualified =
     """
 object A
 {
@@ -156,7 +156,7 @@ object A
 }
   """
 
-  def bynameParam: String =
+  final val bynameParam =
     """
 object Foo
 {
@@ -167,7 +167,7 @@ object Foo
 }
   """
 
-  def tuple1: String =
+  final val tuple1 =
     """
 object Tup1
 {
@@ -175,7 +175,7 @@ object Tup1
 }
   """
 
-  def singleType: String =
+  final val singleType =
     """
 object SingleImp
 {
@@ -187,7 +187,7 @@ object SingleImp
 }
   """
 
-  def singleTypeInFunction: String =
+  final val singleTypeInFunction =
     """
 object SingleImp
 {
@@ -201,7 +201,7 @@ object SingleImp
 }
   """
 
-  def singleTypeWithFreeSymbol: String =
+  final val singleTypeWithFreeSymbol =
     """
 object SingleImp
 {
@@ -213,7 +213,7 @@ object SingleImp
 }
   """
 
-  def parameterAnnotation: String =
+  final val parameterAnnotation =
     """
   import scala.collection.mutable
   object Test {
@@ -224,7 +224,7 @@ object SingleImp
   """
   // from scalac tests END HERE
 
-  def shorthandTypes: String =
+  final val shorthandTypes =
     """
 object a {
   type TypeA

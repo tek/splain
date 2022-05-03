@@ -1,8 +1,10 @@
 package splain.acceptance.builtin
 
-import splain.acceptance.AcceptanceStatic
+import splain.acceptance.Acceptance
 
-class StaticBasicSpec extends AcceptanceStatic.SpecBase {
+object StaticBasicSpec {}
+
+class StaticBasicSpec extends Acceptance.SpecBase {
 
   override lazy val suiteCanonicalName: String = "splain.builtin.BasicSpec"
 
