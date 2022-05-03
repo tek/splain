@@ -19,19 +19,21 @@ trait TestHelpers extends Suite {
 
   lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
 
-  protected lazy val dir: String = suiteCanonicalName.split('.').mkString("/")
+  final protected lazy val resourceDir: String = suiteCanonicalName.split('.').mkString("/")
 
-  def resourcePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(dir, name, fname)
+  def resourcePath(name: String, fname: String): Path = FileSystems.getDefault.getPath(resourceDir, name, fname)
 
   def fileContentString(name: String, fname: String): String = {
 
     val path = resourcePath(name, fname)
-    val actualPath = Paths.get(ClassLoader.getSystemClassLoader.getResource(path.toString).toURI)
+
+    val resource = ClassLoader.getSystemClassLoader.getResource(path.toString)
+    val actualPath = Paths.get(resource.toURI)
 
     new String(Files.readAllBytes(actualPath))
   }
 
-  def groundTruth(name: String, fname: Option[String]): String =
+  def groundTruth(name: String, fname: Option[String] = None): String =
     Try {
       fileContentString(name, fname.getOrElse("error")).stripLineEnd
     }.recover { _: Throwable =>
@@ -102,12 +104,12 @@ trait TestHelpers extends Suite {
           // augmenting
           val detail = {
             s"""
-"
-$left
-" did not equal "
-$right
-"
-""".trim
+               |"
+               |$left
+               |" did not equal "
+               |$right
+               |"
+               |""".trim.stripMargin
           }
 
           val ee = e.modifyMessage { _ =>
@@ -149,32 +151,42 @@ $right
 
   case class DirectRunner() {
 
-    def aggregatedGroundTruth(fname: Option[String]): Seq[String] = {
+    case class ParseGroundTruths(
+        startsWith: String = "newSource1.scala:",
+        fName: Option[String] = None
+    ) {
 
-      val startsWith = "newSource1.scala:"
+      lazy val raw: String = {
 
-      val gt = groundTruth("__direct", fname)
+        val gt = groundTruth("__direct", fName)
+        gt
+      }
 
-      val result = gt
-        .split(
-          startsWith
-        )
-        .toSeq
-        .filter(_.nonEmpty)
-        .map { line =>
-          (startsWith + line).trim
-        }
+      lazy val cases = {
+        val result = raw
+          .split(
+            startsWith
+          )
+          .toSeq
+          .filter(_.nonEmpty)
+          .map { line =>
+            (startsWith + line).trim
+          }
 
-      result
+        result
+      }
     }
 
-    lazy val groundTruths: Seq[String] = aggregatedGroundTruth(None)
+    object DefaultGroundTruths extends ParseGroundTruths()
+
+    lazy val groundTruths: Seq[String] = DefaultGroundTruths.cases
 
     val pointer = new AtomicInteger(0)
   }
 }
 
 object TestHelpers {
+
   lazy val userDir: String = System.getProperty("user.dir").stripSuffix("/")
 
   val plugin: String = Option(System.getProperty("splain.jar")).getOrElse {

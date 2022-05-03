@@ -7,7 +7,7 @@ import scala.reflect.macros.{whitebox, ParseException, TypecheckException}
 import scala.tools.nsc.Global
 import scala.tools.nsc.reporters.FilteringReporter
 
-object TryCompileMacros {}
+//object TryCompileMacros {}
 
 class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
   import c.universe._
@@ -18,21 +18,66 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
 
   lazy val defaultSrcLit: Literal = Literal(Constant(Issue.defaultSrcName))
 
-  def runAsMacroDefault()(code: Tree): c.universe.Tree = {
+  type CodeTree = Tree
 
-    runAsMacro(defaultSrcLit)(code)
+//  def summon[
+//      N <: String with Singleton: c.WeakTypeTag,
+//      CODE <: String with Singleton: c.WeakTypeTag
+//  ]: Tree = {
+//
+//    println(s"compiling: ${implicitly[c.WeakTypeTag[CODE]].tpe}")
+//    println(s"name: ${implicitly[c.WeakTypeTag[N]].tpe}")
+//
+//    val ConstantType(codeConst) = implicitly[c.WeakTypeTag[CODE]].tpe
+//    val ConstantType(nameConst) = implicitly[c.WeakTypeTag[N]].tpe
+//
+//    val result: TryCompile = run(codeConst.value.toString, nameConst.value.toString)
+//
+//    val op = new StaticOp[N, CODE](result)
+//
+//    q"$op"
+//  }
+
+//  @tailrec
+  final def expr2Str(code: CodeTree): String = {
+
+    code match {
+      case Literal(v) => v.value.asInstanceOf[String]
+      case _ =>
+        c.eval(c.Expr[String](c.untypecheck(code)))
+    }
   }
 
-  def runAsMacro(sourceName: Tree)(code: Tree): c.universe.Tree = {
-    val Literal(Constant(codeStr: String)) = code: @unchecked
-    val Literal(Constant(sourceNameStr: String)) = sourceName: @unchecked
+  final def type2Str(tt: Type): String = {
 
-    val result: TryCompile = run(codeStr, sourceNameStr)
+    tt.dealias match {
+      case v: ConstantType => v.value.value.asInstanceOf[String]
+      case _ =>
+        throw new UnsupportedOperationException(
+          s"cannot parse type $tt : ${tt.getClass}"
+        )
+    }
+  }
+
+  def compileCodeTree[N <: String with Singleton: c.WeakTypeTag](code: CodeTree): Tree = {
+
+    val _code = expr2Str(code)
+
+    println(
+      s"""
+         |[CODE]
+         |${_code}
+         |""".stripMargin
+    )
+
+    val _name = type2Str(implicitly[c.WeakTypeTag[N]].tpe)
+
+    val result: TryCompile = run(_code.trim, _name)
 
     q"$result"
   }
 
-  def run(codeStr: String, sourceName: String = "macro.scala"): TryCompile = {
+  def run(codeStr: String, sourceName: String): TryCompile = {
 
     val cached = ArrayBuffer.empty[Issue]
 

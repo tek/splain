@@ -30,7 +30,7 @@ trait TryCompile extends Product with Serializable {
 
   override lazy val toString: String = {
     s"""
-       |${productPrefix}
+       |$productPrefix
        | ---
        |${issues.mkString("\n\n")}
        |""".stripMargin
@@ -148,7 +148,37 @@ object TryCompile {
     }
   }
 
-  def Static()(code: String): TryCompile = macro TryCompileMacros.runAsMacroDefault
+//  class StaticOp[
+//      N <: String with Singleton,
+//      C <: String with Singleton
+//  ](result: TryCompile)
+//      extends Serializable
+//
+//  object StaticOp {
+//
+//    implicit def summon[
+//        N <: String with Singleton,
+//        C <: String with Singleton
+//    ]: StaticOp[N, C] = macro TryCompileMacros.summon[N, C]
+//
+//  }
 
-  def Static(sourceName: String)(code: String): TryCompile = macro TryCompileMacros.runAsMacro
+  case class Static[N <: String with Singleton](sourceName: N) {
+
+    type NN = N
+
+    def apply(code: String): TryCompile = macro TryCompileMacros.compileCodeTree[N]
+
+    trait FromCodeMixin {
+
+      implicit def code2TryCompile(code: String): TryCompile = macro TryCompileMacros.compileCodeTree[N]
+    }
+  }
+
+  object Static {
+
+    val default: Static["newSource1.scala"] = Static(Issue.defaultSrcName)
+
+    def apply(): Static["newSource1.scala"] = default
+  }
 }

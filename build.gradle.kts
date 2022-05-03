@@ -85,6 +85,14 @@ allprojects {
                     setSrcDirs(srcDirs + listOf("src/main/resources-${from}+/${to}"))
                 }
             }
+            testFixtures {
+                scala {
+                    setSrcDirs(srcDirs + listOf("src/testFixtures/scala-${from}+/${to}"))
+                }
+                resources {
+                    setSrcDirs(srcDirs + listOf("src/testFixtures/resources-${from}+/${to}"))
+                }
+            }
             test {
                 scala {
                     setSrcDirs(srcDirs + listOf("src/test/scala-${from}+/${to}"))

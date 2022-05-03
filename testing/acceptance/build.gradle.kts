@@ -20,7 +20,6 @@ tasks {
             additionalParameters!!.addAll(
                 listOf(
                     "-Vimplicits",
-                    "-Vimplicits-verbose-tree",
                     "-Vtype-diffs",
                     "-P:splain:Vimplicits-diverging"
                 )

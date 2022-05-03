@@ -1,10 +1,12 @@
-package splain.builtin
+package splain.acceptance.builtin
 
-import splain.SpecBase
+import splain.acceptance.AcceptanceStatic
 
-class BasicSpec extends SpecBase.Direct with BasicFixture {
+class StaticBasicSpec extends AcceptanceStatic.SpecBase {
 
-  override protected lazy val specCompilerOptions: String = "-Vimplicits -Vtype-diffs"
+  override lazy val suiteCanonicalName: String = "splain.builtin.BasicSpec"
+
+  import splain.builtin.BasicFixture._
 
   check(chain)
 
@@ -38,5 +40,5 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(parameterAnnotation)
 
-  check(shorthandTypes, numberOfBlocks = 4)
+  check(shorthandTypes)
 }

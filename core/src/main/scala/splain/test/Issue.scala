@@ -31,6 +31,5 @@ case class Issue(
 
 object Issue {
 
-  lazy val defaultSrcName = "newSource1.scala"
-
+  lazy val defaultSrcName: "newSource1.scala" = "newSource1.scala"
 }
