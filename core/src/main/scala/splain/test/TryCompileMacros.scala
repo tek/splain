@@ -51,11 +51,11 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
 
   def compileCodeTree[N <: String with Singleton: c.WeakTypeTag](code: CodeTree): Tree = {
 
-    val _code = rectifyCode(tree2Str(code))
+    val _code = tree2Str(code).trim
 
     val _name = type2Str(implicitly[c.WeakTypeTag[N]].tpe)
 
-    val result: TryCompile = run(_code.trim, _name)
+    val result: TryCompile = run(_code, _name)
 
     q"$result"
   }

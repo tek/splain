@@ -6,6 +6,7 @@ import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 import scala.tools.nsc.{Global, Settings}
 import scala.tools.reflect.ToolBox
 import scala.util.Try
+import scala.language.implicitConversions
 
 trait TryCompile extends Product with Serializable {
 
