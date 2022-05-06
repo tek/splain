@@ -10,7 +10,6 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
   import global._
 
   object RefinedFormatterImproved extends SpecialFormatter {
-    self: SplainAnalyzer =>
 
     object DeclSymbol {
       def unapply(sym: Symbol): Option[(Formatted, Formatted)] =
@@ -22,11 +21,12 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
 
     val ignoredTypes: List[Type] = List(typeOf[Object], typeOf[Any], typeOf[AnyRef])
 
-    def sanitizeParents: List[Type] => List[Type] = {
-      case List(tpe) =>
-        List(tpe)
-      case tpes =>
-        tpes.filterNot(t => ignoredTypes.exists(_ =:= t))
+    def sanitizeParents: List[Type] => List[Type] = { ps =>
+      val tpes = ps.distinct
+      val result = tpes.filterNot(t => ignoredTypes.exists(_ =:= t))
+
+      if (result.isEmpty) tpes.headOption.toList
+      else result
     }
 
     object Refined {
@@ -138,7 +138,7 @@ trait SplainFormattersExtension extends SplainFormatters with SplainFormattersSh
       }
   }
 
-  object SLRecordItemFormatter extends SpecialFormatter {
+  object ShapelessRecordItemFormatter extends SpecialFormatter {
     def keyTagName = "shapeless.labelled.KeyTag"
 
     def taggedName = "shapeless.tag.Tagged"

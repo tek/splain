@@ -2,6 +2,7 @@ package splain
 
 import scala.annotation.tailrec
 import scala.tools.nsc.typechecker
+import scala.tools.nsc.typechecker.splain.Formatted
 
 object SplainFormattingExtension {
 
@@ -365,5 +366,15 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   override def formatImplicitChainTreeCompact(chain: List[ImplicitError]): Option[List[String]] = {
 
     throw new SplainInternalError("formatImplicitChainTreeCompact should never be used")
+  }
+
+  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+    val (left, right) = dealias(found) -> dealias(req)
+
+    val normalized = Seq(left, right).map(_.normalize).distinct
+    if (normalized.size == 1) return formatType(normalized.head, top)
+
+    if (left.typeSymbol == right.typeSymbol) formatDiffInfix(left, right, top)
+    else formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
   }
 }
