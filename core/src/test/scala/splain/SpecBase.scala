@@ -16,18 +16,6 @@ object SpecBase {
     // will use reflection to discover all type `() => String` method under this instance
     lazy val codeToName: Map[String, String] = {
 
-//      val allFields = this.getClass.getDeclaredFields
-//      val fields = allFields.filter { field =>
-//        field.getType == classOf[String]
-//      }
-//
-//      val fieldSeq = fields.flatMap { field =>
-//        Try {
-//          val code = field.get(this).asInstanceOf[String]
-//          code -> field.getName
-//        }.toOption
-//      }
-
       val allMethods = this.getClass.getMethods
       val methods = allMethods.filter { method =>
         method.getParameterCount == 0 &&

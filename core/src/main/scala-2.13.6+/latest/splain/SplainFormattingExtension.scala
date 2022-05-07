@@ -56,29 +56,27 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     import ImplicitErrorTree._
 
-    def doCollectNodes(alwaysDisplayRoot: Boolean = false): Seq[ErrorNode] =
+    def doCollectFull(alwaysDisplayRoot: Boolean = false): Seq[ErrorNode] =
       if (children.isEmpty) Seq(ErrorNode(error, alwaysShow = true))
       else {
 
         Seq(ErrorNode(error, alwaysShow = alwaysDisplayRoot)) ++ {
 
-          if (children.size >= 2) children.flatMap(_.doCollectNodes(true))
-          else children.flatMap(_.doCollectNodes())
+          if (children.size >= 2) children.flatMap(_.doCollectFull(true))
+          else children.flatMap(_.doCollectFull())
         }
       }
 
-    lazy val collectNodes: Seq[ErrorNode] = doCollectNodes(true)
-
-    lazy val collect: Seq[ImplicitError] = collectNodes.map(_.error)
+    lazy val collectFull: Seq[ErrorNode] = doCollectFull(true)
 
     lazy val collectCompact: Seq[ErrorNode] = {
 
-      val displayed = collectNodes.zipWithIndex.filter {
+      val displayed = collectFull.zipWithIndex.filter {
         case (v, _) =>
           v.alwaysShow
       }
 
-      val ellipsisIndices = displayed.map(_._2 - 1).toSet + (collectNodes.size - 1)
+      val ellipsisIndices = displayed.map(_._2 - 1).toSet + (collectFull.size - 1)
 
       val withEllipsis = displayed.map {
         case (v, i) =>
@@ -89,35 +87,37 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       withEllipsis
     }
 
-    object FormattedChain {
+    case class FormattedChain(
+        source: Seq[ErrorNode]
+    ) {
 
-      lazy val full: List[String] = {
-        formatImplicitChainTreeFull(collect.toList)
-      }
+      val toList: List[String] = {
+        val collected = source.toList
+        val baseIndent = collected.headOption.map(_.nesting).getOrElse(0)
 
-      lazy val compact: List[String] = {
-
-        val baseIndent = collectCompact.headOption.map(_.nesting).getOrElse(0)
-
-        val formatted = collectCompact.map {
-          case ErrorNode(v, _, showEllipsis) =>
-            val formatted = formatNestedImplicit(v)
-            if (showEllipsis) formatted.copy(_2 = formatted._2 :+ ELLIPSIS)
-            else formatted
+        val formatted = collected.map { v =>
+          val formatted = v.formatted
+          if (v.showEllipsis) formatted.copy(_2 = formatted._2 :+ ELLIPSIS)
+          else formatted
         }
 
-        indentTree(formatted.toList, baseIndent)
+        indentTree(formatted, baseIndent)
       }
 
-      lazy val display: List[String] =
-        if (settings.VimplicitsVerboseTree) full else compact
+      override lazy val toString: String = toList.mkString("\n")
     }
 
-    lazy val fullString: String = FormattedChain.full.mkString("\n")
+    object FormattedChain {
 
-    lazy val displayString: String = FormattedChain.display.mkString("\n")
+      object Full extends FormattedChain(collectFull)
 
-    override def toString: String = fullString
+      object Compact extends FormattedChain(collectCompact)
+
+      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree
+      val display: FormattedChain = if (VimplicitsVerboseTree) Full else Compact
+    }
+
+    override def toString: String = FormattedChain.Full.toString
   }
 
   object ImplicitErrorTree {
@@ -127,7 +127,11 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         alwaysShow: Boolean,
         showEllipsis: Boolean = false
     ) {
+
       def nesting: RunId = error.nesting
+
+      val formatted: (String, List[String], RunId) =
+        formatNestedImplicit(error)
     }
 
     def fromNode(
@@ -220,7 +224,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         ImplicitErrorTree(mostSpecificError, mergedChildren)
       }
 
-      grouped.distinctBy(v => v.fullString) // TODO: this may lose information
+      grouped.distinctBy(v => v.FormattedChain.Full.toString) // TODO: this may lose information
     }
   }
 
@@ -256,7 +260,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         err.candidate.pos
       )
 
-      lazy val localHistoryOpt: Option[ImplicitHistory.Local] =
+      lazy val localHistoryOpt: Option[ImplicitHistory.LocalHistory] =
         ImplicitHistory.currentGlobal.byPosition.get(posI)
 
       lazy val diverging: Seq[DivergentImplicitTypeError] = {
@@ -304,7 +308,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     val msg = implicitMessage(param, annotationMsg)
     val errorTrees = ImplicitErrorTree.fromChildren(errors, -1)
 
-    val errorTreesStr = errorTrees.map(_.displayString)
+    val errorTreesStr = errorTrees.map(_.FormattedChain.display.toString)
 
     val addendum = errorTrees.headOption.toSeq.flatMap { head =>
       import ImplicitHistory._
