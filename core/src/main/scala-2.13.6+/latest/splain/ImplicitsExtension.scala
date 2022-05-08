@@ -20,14 +20,14 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
   object ImplicitHistory {
 
-    @volatile protected var _currentGlobal: Global = _
+    @volatile protected var _currentGlobalHistory: GlobalHistory = _
 
-    case class Global() {
+    case class GlobalHistory() {
 
-      val byPosition = mutable.HashMap.empty[PositionIndex, Local]
+      val byPosition = mutable.HashMap.empty[PositionIndex, LocalHistory]
     }
 
-    case class Local() {
+    case class LocalHistory() {
 
       object DivergingImplicitErrors {
 
@@ -63,10 +63,10 @@ trait ImplicitsExtension extends typechecker.Implicits {
         pos: Position
     ) {}
 
-    def currentGlobal: Global = Option(_currentGlobal).getOrElse {
+    def currentGlobal: GlobalHistory = Option(_currentGlobalHistory).getOrElse {
       ImplicitHistory.synchronized {
-        val result = Global()
-        _currentGlobal = result
+        val result = GlobalHistory()
+        _currentGlobalHistory = result
         result
       }
     }
@@ -92,7 +92,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
         tree.pos
       )
 
-      val local = currentGlobal.byPosition.getOrElseUpdate(posII, Local())
+      val local = currentGlobal.byPosition.getOrElseUpdate(posII, LocalHistory())
       val previousSimilarErrors = local.DivergingImplicitErrors.errors.filter { ee =>
         ee.underlyingTree equalsStructure tree
       }

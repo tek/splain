@@ -4,7 +4,9 @@ import splain.SpecBase
 
 class DivergingSpec extends SpecBase.File {
 
-  override lazy val defaultExtra: String = "-P:splain:Vimplicits-diverging"
+  override protected lazy val specCompilerOptions = "-Vimplicits -Vtype-diffs"
+
+  override lazy val defaultExtra: String = "-Vimplicits-verbose-tree -P:splain:Vimplicits-diverging"
 
   check("self") {
     checkError()
@@ -27,6 +29,10 @@ class DivergingSpec extends SpecBase.File {
   }
 
   check("diverging") {
+    checkError()
+  }
+
+  check("... without verbose-tree", "diverging-compact", extra = "-P:splain:Vimplicits-diverging") {
     checkError()
   }
 }
