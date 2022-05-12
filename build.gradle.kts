@@ -216,11 +216,11 @@ subprojects {
         bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
         bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
 
-        val scalaTestV = "3.2.3"
+        val scalaTestV = "3.2.12"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
         testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.10")
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.11")
     }
 
     // https://stackoverflow.com/a/66352905/1772342
