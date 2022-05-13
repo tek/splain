@@ -6,8 +6,8 @@ class Versions(self: Project) {
     val projectGroup = "io.tryp"
     val projectRootID = "splain"
 
-    val projectVMajor = "1.1.0"
-    val projectV = projectVMajor + "-SNAPSHOT"
+    val projectVMajor = "1.0.2"
+    val projectV = projectVMajor
 
     val scalaGroup: String = self.properties.get("scalaGroup").toString()
 
