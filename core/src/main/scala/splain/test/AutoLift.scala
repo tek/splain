@@ -26,6 +26,8 @@ trait AutoLift {
 
 object AutoLift {
 
+  val MAX_LITERAL_LENGTH = 65536
+
   object SerializingLift extends AutoLift {
 
     type Bound = Serializable
@@ -44,18 +46,30 @@ object AutoLift {
 
       val serialized = encoder.encodeToString(bOStream.toByteArray)
 
+      val chunks = serialized.sliding(MAX_LITERAL_LENGTH, MAX_LITERAL_LENGTH).toList
+
+      val chunkExpr = chunks.map {
+        cc =>
+          s"\"$cc\""
+      }
+        .mkString("(", ", ", ")")
+
       val typeStr = value.getClass.getCanonicalName.stripSuffix("$")
 
       val result = s"""
-         |$fullPath.fromPreviousStage[$typeStr]("$serialized")
+         |$fullPath.fromPreviousStage[$typeStr]$chunkExpr
          |""".stripMargin
 
       result
     }
 
-    def fromPreviousStage[T <: Serializable](str: String): T = {
+    def fromPreviousStage[T <: Serializable](strs: String*): T = {
 
-      val bytes = decoder.decode(str)
+      val bytes = strs.map {
+         str =>
+           decoder.decode(str)
+      }
+        .reduce(_ ++ _)
 
       val bIStream = new ByteArrayInputStream(bytes)
       val oIStream = new ObjectInputStream(bIStream)
