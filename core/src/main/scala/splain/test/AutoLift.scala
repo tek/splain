@@ -26,7 +26,7 @@ trait AutoLift {
 
 object AutoLift {
 
-  val MAX_LITERAL_LENGTH = 65536
+  val MAX_LITERAL_LENGTH = 32768
 
   object SerializingLift extends AutoLift {
 
