@@ -9,12 +9,11 @@ buildscript {
     }
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.4.11") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.5.3") // suffix is always 2.12, weird
     }
 }
 
 plugins {
-    java
     `java-test-fixtures`
 
     scala
@@ -50,7 +49,6 @@ if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
 
 allprojects {
 
-    apply(plugin = "java")
     apply(plugin = "java-library")
     apply(plugin = "java-test-fixtures")
 
@@ -218,7 +216,7 @@ subprojects {
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.11")
     }
