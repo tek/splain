@@ -14,7 +14,6 @@ buildscript {
 }
 
 plugins {
-    java
     `java-test-fixtures`
 
     scala
@@ -50,7 +49,6 @@ if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
 
 allprojects {
 
-    apply(plugin = "java")
     apply(plugin = "java-library")
     apply(plugin = "java-test-fixtures")
 
