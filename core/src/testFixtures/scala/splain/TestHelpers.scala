@@ -42,6 +42,15 @@ trait TestHelpers extends Suite {
 
   lazy val predefCode = ""
 
+  protected lazy val effectivePredef: String = {
+    val trimmed = predefCode.trim
+    if (trimmed.isEmpty) {
+      trimmed
+    } else {
+      trimmed + "\n"
+    }
+  }
+
   def getEngine(settings: String): TryCompile.Engine = {
     //    TryCompile.UseReflect(settings)
     TryCompile.UseNSC(settings)
@@ -49,7 +58,7 @@ trait TestHelpers extends Suite {
 
   class TestCase(code: String, extra: String) {
 
-    val codeWithPredef: String = (predefCode.trim + "\n" + code).trim
+    lazy val codeWithPredef: String = effectivePredef + code
 
     case class CompileWith(settings: String) {
 
@@ -77,9 +86,9 @@ trait TestHelpers extends Suite {
     def checkSuccess(): Assertion =
       assert(compileSuccess().isEmpty)
 
-    lazy val splainC = CompileWith(s"$enableSplainPlugin $specCompilerOptions $extra")
+    lazy val splainC: CompileWith = CompileWith(s"$enableSplainPlugin $specCompilerOptions $extra")
 
-    lazy val scalaC = CompileWith(s"$specCompilerOptions")
+    lazy val scalaC: CompileWith = CompileWith(s"$specCompilerOptions")
   }
 
   implicit class SpecStringOps(self: String) {
@@ -162,7 +171,7 @@ trait TestHelpers extends Suite {
         gt
       }
 
-      lazy val cases = {
+      lazy val cases: Seq[String] = {
         val result = raw
           .split(
             startsWith
