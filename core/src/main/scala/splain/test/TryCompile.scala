@@ -1,12 +1,11 @@
 package splain.test
 
 import scala.language.experimental.macros
+import scala.language.implicitConversions
 import scala.reflect.runtime.{currentMirror, universe}
 import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 import scala.tools.nsc.{Global, Settings}
 import scala.tools.reflect.ToolBox
-import scala.util.Try
-import scala.language.implicitConversions
 
 trait TryCompile extends Product with Serializable {
 
@@ -42,20 +41,19 @@ object TryCompile {
 
   trait Resolved extends TryCompile
 
-  case class Success(issues: Seq[Issue] = Nil) extends Resolved
+  case class Success(
+      issues: Seq[Issue] = Nil
+  ) extends Resolved {
+
+    abstract class Evaluable extends Success(issues) {
+
+      def get: Any
+    }
+  }
 
   object Empty extends Success()
 
-  trait Failure extends Resolved {
-
-    lazy val maySucceed: Resolved = {
-      if (Error.filteredIssues.isEmpty) {
-        Success(issues)
-      } else {
-        this
-      }
-    }
-  }
+  trait Failure extends Resolved
 
   case class TypingError(issues: Seq[Issue] = Nil) extends Failure
   case class ParsingError(issues: Seq[Issue] = Nil) extends Failure
@@ -88,23 +86,30 @@ object TryCompile {
 
       val toolBox: ToolBox[universe.type] = mirror.mkToolBox(frontEnd, options = args)
 
-      val cached = frontEnd.cached.toSeq
+      def cached: Seq[Issue] = frontEnd.cached.toSeq
 
-      val parsed = Try {
-        toolBox.parse(code)
-      }.recover {
-        case _: Throwable =>
-          return TryCompile.ParsingError(cached)
-      }.get
+      val parsed =
+        try {
+          toolBox.parse(code.trim)
+        } catch {
+          case _: Throwable =>
+            return TryCompile.ParsingError(cached)
+        }
 
-      Try {
-        toolBox.typecheck(parsed)
-      }.recover {
-        case _: Throwable =>
-          return TryCompile.TypingError(cached)
-      }.get
+      val compiled =
+        try {
+//        toolBox.typecheck(parsed, withImplicitViewsDisabled = false)
+          toolBox.compile(parsed)
+        } catch {
+          case _: Throwable =>
+            return TryCompile.TypingError(cached)
+        }
 
-      TryCompile.Success(cached)
+      val success = Success(cached)
+      new success.Evaluable {
+        override def get: Any = compiled()
+      }
+
     }
   }
 
@@ -123,13 +128,15 @@ object TryCompile {
 
     val reporter: StoreReporter = global.reporter.asInstanceOf[StoreReporter]
 
-    override def doCompile(code: String): TryCompile = {
+    override def doCompile(code: String): TryCompile = reporter.synchronized { // shared reporter is not thread safe
 
-      val unit = global.newCompilationUnit(code, sourceName)
+      reporter.reset()
+
+      val tree = global.newCompilationUnit(code.trim, sourceName)
 
       val run = new global.Run()
 
-      val parser = global.newUnitParser(unit)
+      val parser = global.newUnitParser(tree)
       parser.parse()
 
       def reports = reporter.infos.toSeq.map { info =>
@@ -141,28 +148,19 @@ object TryCompile {
         ParsingError(reports)
       } else {
 
-        run.compileUnits(List(unit))
-        TypingError(reports)
+        run.compileUnits(List(tree))
+
+        val success = Success(reports)
+        if (success.Error.filteredIssues.nonEmpty) {
+          TypingError(reports)
+        } else {
+          success
+        }
       }
 
-      result.maySucceed
+      result
     }
   }
-
-//  class StaticOp[
-//      N <: String with Singleton,
-//      C <: String with Singleton
-//  ](result: TryCompile)
-//      extends Serializable
-//
-//  object StaticOp {
-//
-//    implicit def summon[
-//        N <: String with Singleton,
-//        C <: String with Singleton
-//    ]: StaticOp[N, C] = macro TryCompileMacros.summon[N, C]
-//
-//  }
 
   case class Static[N <: String with Singleton](sourceName: N) {
 

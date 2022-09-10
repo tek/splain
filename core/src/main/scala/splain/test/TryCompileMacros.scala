@@ -33,7 +33,7 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
         v.value.asInstanceOf[String]
       case _ =>
         throw new UnsupportedOperationException(
-          s"`$code` is not a Literal, please only use Literal or final val with refined or no type annotation"
+          s"`$code` (${code.getClass.getName}) is not a Literal, please only use Literal or final val with refined or no type annotation"
         )
     }
   }
@@ -55,38 +55,36 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
 
     val _name = type2Str(implicitly[c.WeakTypeTag[N]].tpe)
 
-    val result: TryCompile = run(_code, _name)
+    val result = run(_code, _name)
 
-    q"$result"
+    result
   }
 
-  def run(codeStr: String, sourceName: String): TryCompile = {
+  def run(codeStr: String, sourceName: String): Tree = {
 
     val cached = ArrayBuffer.empty[Issue]
 
     val parsed =
-      util
-        .Try {
-          c.parse(codeStr)
-        }
-        .recover {
-          case e: ParseException =>
-            cached += Issue(
-              TryCompile.Empty.Error.level,
-              e.msg,
-              e.pos.asInstanceOf[scala.reflect.internal.util.Position],
-              sourceName
-            )
+      try {
+        c.parse(codeStr)
+      } catch {
+        case e: ParseException =>
+          cached += Issue(
+            TryCompile.Empty.Error.level,
+            e.msg,
+            e.pos.asInstanceOf[scala.reflect.internal.util.Position],
+            sourceName
+          )
 
-            return TryCompile.ParsingError(cached.toSeq)
-        }
-        .get
+          val result = TryCompile.ParsingError(cached.toSeq)
 
-    val result = util
-      .Try {
-        c.typecheck(parsed)
+          return q"$result"
       }
-      .recover {
+
+    val compiled: c.Tree =
+      try {
+        c.typecheck(parsed)
+      } catch {
         case e: TypecheckException =>
           cached += Issue(
             TryCompile.Empty.Error.level,
@@ -95,11 +93,23 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
             sourceName
           )
 
-          return TryCompile.TypingError(cached.toSeq)
+          val result = TryCompile.TypingError(cached.toSeq)
+
+          return q"$result"
       }
-      .get
 
-    TryCompile.Success(cached.toSeq)
+    val success = TryCompile.Success(cached.toSeq)
 
+//    q"$success"
+
+    q"""
+      val ss = $success
+
+      new ss.Evaluable {
+        override def get: Any = {
+          $compiled
+        }
+      }
+     """
   }
 }
