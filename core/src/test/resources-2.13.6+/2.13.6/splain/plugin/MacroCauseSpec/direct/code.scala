@@ -1,0 +1,4 @@
+object MacroCause {
+
+  implicitly[AlwaysError]
+}
