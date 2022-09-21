@@ -2,5 +2,5 @@ import splain.test.AlwaysError
 
 object MacroCause {
 
-  AlwaysError.summonError
+  AlwaysError.summon
 }

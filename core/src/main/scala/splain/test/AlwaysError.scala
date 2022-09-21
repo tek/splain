@@ -8,7 +8,7 @@ class AlwaysError {}
 
 object AlwaysError {
 
-  implicit def summonError: AlwaysError = macro Macros.trigger
+  implicit def summon: AlwaysError = macro Macros.trigger
 
   class Macros(val c: whitebox.Context) {
 
@@ -29,7 +29,12 @@ object AlwaysError {
 
 //      CallSite.reporter.clearAllErrors()
 
-      c.error(c.enclosingPosition, "macro error!")
+//      CallSite.ctx.enclosingContextChain.foreach { cc =>
+//        cc.reporter.error(c.enclosingPosition.asInstanceOf[scala.reflect.internal.util.Position], "macro error!")
+//      }
+
+//      c.error(c.enclosingPosition, "macro error!")
+      c.abort(c.enclosingPosition, "explicit error message!")
       ???
     }
   }

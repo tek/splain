@@ -133,7 +133,9 @@ trait ImplicitsExtension extends typechecker.Implicits {
       result
     } else {
 
-      getResult
+      val result = getResult
+
+      result
     }
   }
 }
