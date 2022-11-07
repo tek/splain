@@ -54,7 +54,12 @@ object AutoLift {
       }
         .mkString("(", ", ", ")")
 
-      val typeStr = value.getClass.getCanonicalName.stripSuffix("$")
+      val typeStr = {
+        val canonicalName = value.getClass.getCanonicalName
+        if (canonicalName.endsWith("$"))
+          canonicalName.stripSuffix("$") + ".type"
+        else canonicalName
+      }
 
       val result = s"""
          |$fullPath.fromPreviousStage[$typeStr]$chunkExpr
