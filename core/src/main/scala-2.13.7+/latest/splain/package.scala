@@ -1,9 +1,7 @@
-package splain
-
 import scala.tools.nsc.typechecker.splain.SimpleName
 import scala.language.implicitConversions
 
-trait SplainFormattersShim {
+package object splain {
 
   implicit def asSimpleName(s: String): SimpleName = SimpleName(s)
 }

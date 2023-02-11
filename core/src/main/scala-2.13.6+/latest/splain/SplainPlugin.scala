@@ -8,7 +8,7 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
   lazy val pluginSettings: PluginSettings = PluginSettings(this.opts)
 
   lazy val splainAnalyzer: SplainAnalyzer =
-    if (global.settings.YmacroAnnotations)
+    if (global.settings.YmacroAnnotations.value)
       new SplainAnalyzer(global, pluginSettings) with MacroAnnotationNamers
     else
       new SplainAnalyzer(global, pluginSettings)
