@@ -1,8 +1,8 @@
 package splain
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import org.scalatest.exceptions.TestFailedException
 import org.scalatest.{Assertion, Suite}
+import org.slf4j.LoggerFactory
 import splain.test.TryCompile
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
