@@ -86,7 +86,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
     def getResult = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
-    if (settings.Vimplicits && pluginSettings.implicitDiverging) {
+    if (settings.Vimplicits.value && pluginSettings.implicitDiverging) {
 
       val posII = ImplicitHistory.PositionIndex(
         tree.pos

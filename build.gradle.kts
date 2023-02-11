@@ -9,7 +9,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.5.3") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.1") // suffix is always 2.12, weird
     }
 }
 
@@ -22,9 +22,9 @@ plugins {
 
     signing
     `maven-publish`
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 
-    id("com.github.ben-manes.versions") version "0.42.0"
+    id("com.github.ben-manes.versions") version "0.44.0"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -216,9 +216,9 @@ subprojects {
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
 
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.1.11")
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
     }
 
     // https://stackoverflow.com/a/66352905/1772342

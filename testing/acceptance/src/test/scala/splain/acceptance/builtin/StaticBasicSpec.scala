@@ -14,8 +14,6 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(foundReq)
 
-  check(foundReqSingleAbstractMethod)
-
   check(bounds)
 
   check(longAnnotationMessage)

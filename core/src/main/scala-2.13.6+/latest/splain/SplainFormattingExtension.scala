@@ -17,7 +17,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   import SplainFormattingExtension._
   import global._
 
-  case class ImplicitErrorLink(
+  case class SplainImplicitErrorLink(
       fromTree: ImplicitError,
       fromHistory: DivergentImplicitTypeError
   ) {
@@ -47,14 +47,12 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     lazy val divergingSearchDiscoveredHere: Boolean = sameCandidateTree && moreSpecificPendingType
   }
 
-  object ImplicitErrorLink {}
-
-  case class ImplicitErrorTree(
+  case class SplainImplicitErrorTree(
       error: ImplicitError,
-      children: Seq[ImplicitErrorTree] = Nil
+      children: Seq[SplainImplicitErrorTree] = Nil
   ) {
 
-    import ImplicitErrorTree._
+    import SplainImplicitErrorTree._
 
     def doCollectFull(alwaysDisplayRoot: Boolean = false): Seq[ErrorNode] =
       if (children.isEmpty) Seq(ErrorNode(error, alwaysShow = true))
@@ -113,14 +111,14 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       object Compact extends FormattedChain(collectCompact)
 
-      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree
+      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree.value
       val display: FormattedChain = if (VimplicitsVerboseTree) Full else Compact
     }
 
     override def toString: String = FormattedChain.Full.toString
   }
 
-  object ImplicitErrorTree {
+  object SplainImplicitErrorTree {
 
     case class ErrorNode(
         error: ImplicitError,
@@ -137,7 +135,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     def fromNode(
         Node: ImplicitError,
         offsprings: List[ImplicitError]
-    ): ImplicitErrorTree = {
+    ): SplainImplicitErrorTree = {
       val topNesting = Node.nesting
 
       val children = fromChildren(
@@ -145,13 +143,13 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         topNesting
       )
 
-      ImplicitErrorTree(Node, children)
+      SplainImplicitErrorTree(Node, children)
     }
 
     def fromChildren(
         offsprings: List[ImplicitError],
         topNesting: Int
-    ): List[ImplicitErrorTree] = {
+    ): List[SplainImplicitErrorTree] = {
 
       if (offsprings.isEmpty)
         return Nil
@@ -208,7 +206,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       //      children
     }
 
-    def mergeDuplicates(children: List[ImplicitErrorTree]): List[ImplicitErrorTree] = {
+    def mergeDuplicates(children: List[SplainImplicitErrorTree]): List[SplainImplicitErrorTree] = {
       val errors = children.map(_.error).distinct
 
       val grouped = errors.map { ee =>
@@ -221,7 +219,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         val allChildren = group.flatMap(v => v.children)
         val mergedChildren = mergeDuplicates(allChildren)
 
-        ImplicitErrorTree(mostSpecificError, mergedChildren)
+        SplainImplicitErrorTree(mostSpecificError, mergedChildren)
       }
 
       grouped.distinctBy(v => v.FormattedChain.Full.toString) // TODO: this may lose information
@@ -275,7 +273,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       val baseReasons = base._2
 
       val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
-        val link = ImplicitErrorLink(err, inHistory)
+        val link = SplainImplicitErrorLink(err, inHistory)
 
         link.divergingSearchDiscoveredHere
       }
@@ -306,7 +304,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   ): String = {
 
     val msg = implicitMessage(param, annotationMsg)
-    val errorTrees = ImplicitErrorTree.fromChildren(errors, -1)
+    val errorTrees = SplainImplicitErrorTree.fromChildren(errors, -1)
 
     val errorTreesStr = errorTrees.map(_.FormattedChain.display.toString)
 
@@ -364,12 +362,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     val result = components.mkString("\n")
 
     result
-  }
-
-  @deprecated
-  override def formatImplicitChainTreeCompact(chain: List[ImplicitError]): Option[List[String]] = {
-
-    throw new SplainInternalError("formatImplicitChainTreeCompact should never be used")
   }
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
