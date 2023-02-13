@@ -113,7 +113,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       object Compact extends FormattedChain(collectCompact)
 
-      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree
+      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree.value
       val display: FormattedChain = if (VimplicitsVerboseTree) Full else Compact
     }
 
