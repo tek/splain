@@ -4,7 +4,7 @@ import scala.tools.nsc.typechecker.splain._
 
 object SplainFormattersExtension {}
 
-trait SplainFormattersExtension extends SplainFormatters with SplainFormattersShim {
+trait SplainFormattersExtension extends SplainFormatters  {
   self: SplainAnalyzer =>
 
   import global._
