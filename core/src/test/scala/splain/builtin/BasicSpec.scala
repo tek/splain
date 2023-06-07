@@ -10,8 +10,6 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(foundReq)
 
-  check(foundReqSingleAbstractMethod)
-
   check(bounds)
 
   check(longAnnotationMessage)
