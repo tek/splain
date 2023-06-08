@@ -273,7 +273,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       val baseReasons = base._2
 
       val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
-        val link = ImplicitErrorLink(err, inHistory)
+        val link = SplainImplicitErrorLink(err, inHistory)
 
         link.divergingSearchDiscoveredHere
       }
