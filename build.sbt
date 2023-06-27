@@ -24,11 +24,11 @@ name := "splain"
 fork := true
 libraryDependencies ++= List(
   scalaOrganization.value % "scala-compiler" % scalaVersion.value % "provided",
-  "com.chuusai" %% "shapeless" % "2.3.3" % "test",
+  "com.chuusai" %% "shapeless" % "2.3.7" % "test",
   "dev.zio" %% "zio" % "1.0.4" % "test",
 )
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.20.0" % Test
 
 addSourceDir {
   case (2, 12, _) =>
