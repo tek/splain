@@ -2,7 +2,7 @@ package splain
 
 import scala.annotation.tailrec
 import scala.tools.nsc.typechecker
-import scala.tools.nsc.typechecker.splain.Formatted
+import scala.tools.nsc.typechecker.splain.{Applied, Formatted, Qualified, SimpleName}
 
 object SplainFormattingExtension {
 
@@ -297,6 +297,72 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     (problem, reasons, base._3)
   }
 
+  override def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean)(rec: (A, Boolean) => Formatted): Formatted = {
+    val (path, simple) = formatSimpleType(tpe)
+    tpe.nameAndArgsString
+    lazy val formattedArgs = args.map(rec(_, true))
+    val special = formatSpecial(tpe, simple, args, formattedArgs, top)(rec)
+    special.getOrElse {
+      args match {
+        case left :: right :: Nil if isSymbolic(tpe) => formatInfix(path, simple, left, right, top)(rec)
+        case _ :: _ => Applied(Qualified(path, SimpleName(simple)), formattedArgs)
+        case _ => Qualified(path, SimpleName(simple))
+      }
+    }
+  }
+
+  override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
+    val dTpe = dealiasIfNecessary(tpe)
+    val args = extractArgs(dTpe)
+    val result = formatWithInfix(dTpe, args, top)(formatType)
+    result
+  }
+
+  // TODO: merge into TypeView
+  override def stripType(tp: Type): (List[String], String) = {
+    tp match {
+      case tt: SingletonType =>
+        val parts = TypeView(tt.termSymbolDirect, tt)
+        parts.path -> parts.shortName
+
+      case tt: RefinedType =>
+        val parts = TypeView(tt.typeSymbolDirect, tt)
+        parts.path -> parts.shortName
+
+      case _ =>
+        val _tp = tp.typeConstructor
+        // TODO: should this also use TypeParts ?
+        val sym = _tp.typeSymbolDirect
+        //      val sym = if (tpe.takesTypeArgs) tpe.typeSymbolDirect else tpe.typeSymbol
+        val parts = TypeView(sym, _tp)
+        //      val symName = sym.name.decodedName.toString
+        (parts.path, parts.shortName)
+    }
+  }
+
+  case class TypeView(sym: Symbol, tp: Type) {
+
+    private lazy val parts = sym.ownerChain.reverse
+      .map(_.name.decodedName.toString)
+      .filterNot(part => part.startsWith("<") && part.endsWith(">"))
+
+    lazy val (path, shortName) = {
+
+      val (ownerPath, _) = parts.splitAt(Math.max(0, parts.size - 1))
+
+      val ownerPathPrefix = ownerPath.mkString(".")
+      val ttString = if (pluginSettings.typeNormalization) {
+        explainAlias(tp)
+      } else tp.safeToString
+
+      if (ttString.startsWith(ownerPathPrefix)) {
+        ownerPath -> ttString.stripPrefix(ownerPathPrefix).stripPrefix(".")
+      } else {
+        Nil -> ttString
+      }
+    }
+  }
+
   override def formatImplicitError(
       param: Symbol,
       errors: List[ImplicitError],
@@ -365,12 +431,31 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   }
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
-    val (left, right) = dealias(found) -> dealias(req)
+    val (left, right) = dealiasIfNecessary(found) -> dealiasIfNecessary(req)
 
     val normalized = Seq(left, right).map(_.normalize).distinct
     if (normalized.size == 1) return formatType(normalized.head, top)
 
-    if (left.typeSymbol == right.typeSymbol) formatDiffInfix(left, right, top)
-    else formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
+    val result =
+      if (left.typeSymbolDirect == right.typeSymbolDirect)
+        formatDiffInfix(left, right, top)
+      else
+        formatDiffSpecial(left, right, top).getOrElse(
+          formatDiffSimple(left, right)
+        )
+
+    result
+  }
+
+  // new implementation is idempotent and won't lose information
+  def dealiasIfNecessary(tpe: Type): Type =
+    if (isAux(tpe)) tpe
+    else tpe.dealias
+
+  override def extractArgs(tpe: Type): List[global.Type] = tpe match {
+    // PolyType handling is removed for being unsound
+    case t: AliasTypeRef if !isAux(tpe) =>
+      t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isTypeParameter) WildcardType else a)
+    case _ => tpe.typeArgs
   }
 }

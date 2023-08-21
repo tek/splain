@@ -1,4 +1,4 @@
-import scala.annotation.implicitNotFound
+import annotation.implicitNotFound
 
 object Annotation {
 

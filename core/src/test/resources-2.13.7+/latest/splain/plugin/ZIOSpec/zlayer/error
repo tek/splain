@@ -1,8 +1,8 @@
 newSource1.scala:19: error: type mismatch;
   zio.ZLayer[
-    scala.Any
+    Any
     ,
-    scala.Nothing
+    Nothing
     ,
     <none>|zio.Has[layers.Service4] with zio.Has[layers.Service1] with zio.Has[layers.Service2] with zio.Has[layers.Service3]
   ]

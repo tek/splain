@@ -21,11 +21,15 @@ case class PluginSettings(pluginOpts: mutable.Map[String, String]) {
   // once read, changing pluginOpts will no longer be useful
   lazy val implicitDiverging: Boolean = boolean(PluginSettings.Key.implicitDiverging)
 
+
   lazy val implicitDivergingMaxDepth: Int = int(Key.implicitDivergingMaxDepth)
     .getOrElse(
       throw new UnsupportedOperationException(s"${Key.implicitDivergingMaxDepth} is not defined")
     )
 
+  lazy val typeNormalization: Boolean = boolean(PluginSettings.Key.typeNormalization)
+
+  lazy val debug: Boolean = boolean(Key.debug)
 }
 
 object PluginSettings {
@@ -36,11 +40,17 @@ object PluginSettings {
     val implicitDiverging = "Vimplicits-diverging"
 
     val implicitDivergingMaxDepth = "Vimplicits-diverging-max-depth"
+
+    val typeNormalization = "Vtype-normalization"
+
+    val debug = "debug"
   }
 
-  val defaults = Map(
+  val defaults: Map[String, String] = Map(
     Key.all -> "true",
     Key.implicitDiverging -> "false",
-    Key.implicitDivergingMaxDepth -> "100"
+    Key.implicitDivergingMaxDepth -> "100",
+    Key.typeNormalization -> "false",
+    Key.debug -> "false"
   )
 }

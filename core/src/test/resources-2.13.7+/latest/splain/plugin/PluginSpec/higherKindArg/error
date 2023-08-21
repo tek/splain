@@ -1,0 +1,4 @@
+newSource1.scala:17: error: implicit error;
+!I e: Functors.F[[X]scala.util.Either[Int,X]]
+  implicitly[F[({ type λ[X] = Either[Int, X] })#λ]]
+            ^

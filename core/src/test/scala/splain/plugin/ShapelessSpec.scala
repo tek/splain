@@ -4,6 +4,8 @@ import splain.SpecBase
 
 class ShapelessSpec extends SpecBase.File {
 
+  override def getCompilerOptions: String = super.getCompilerOptions + " -Vimplicits-verbose-tree"
+
   override lazy val predefCode: String =
     """
       |object types

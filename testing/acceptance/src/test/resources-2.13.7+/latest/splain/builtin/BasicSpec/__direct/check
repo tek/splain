@@ -17,7 +17,7 @@ newSource1.scala:7: error: implicit error;
   ]
 Bounds.g invalid because
 nonconformant bounds;
-[splain.acceptance.builtin.StaticBasicSpec.Bounds.Arg, scala.Nothing]
+[splain.acceptance.builtin.StaticBasicSpec.Bounds.Arg, Nothing]
 [A <: Bounds.Base, B]
   implicitly[F[Arg]]
             ^
@@ -39,7 +39,7 @@ newSource1.scala:4: error: implicit error;
   long
   ^
 newSource1.scala:10: error: implicit error;
-!I e: java.lang.String
+!I e: String
 f invalid because
 !I impPar4:
   List[
@@ -75,11 +75,7 @@ newSource1.scala:11: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.DeepHole.C1[
     splain.acceptance.builtin.StaticBasicSpec.DeepHole.T3[
-      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[
-        List[java.lang.String]
-        ,
-        ?
-      ]
+      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[List[String], ?]
       ,
       splain.acceptance.builtin.StaticBasicSpec.DeepHole.T2[
         splain.acceptance.builtin.StaticBasicSpec.DeepHole.Id
@@ -106,23 +102,29 @@ Aux.f invalid because
   implicitly[F.Aux[C, D]]
             ^
 newSource1.scala:11: error: type mismatch;
-  splain.acceptance.builtin.StaticBasicSpec.Refined.A with splain.acceptance.builtin.StaticBasicSpec.Refined.B with splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {type X = scala.Int|java.lang.String; type Y = java.lang.String; type Z = <none>|java.lang.String}
+  splain.acceptance.builtin.StaticBasicSpec.Refined.A with splain.acceptance.builtin.StaticBasicSpec.Refined.B with splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {type X = Int|String; type Y = String; type Z = <none>|String}
   f(x)
     ^
+newSource1.scala:10: error: implicit error;
+!I e: splain.acceptance.builtin.StaticBasicSpec.Refined.Node{type T = _$1}
+  implicitly[NodeLt[Int]]
+            ^
 newSource1.scala:25: error: type mismatch;
   C.X.Y.T|B.X.Y.T
   f(x: C.X.Y.T)
      ^
 newSource1.scala:6: error: type mismatch;
-  scala.Int|(=> splain.acceptance.builtin.StaticBasicSpec.Foo.A) => splain.acceptance.builtin.StaticBasicSpec.Foo.B
+  Int|(=> splain.acceptance.builtin.StaticBasicSpec.Foo.A) => splain.acceptance.builtin.StaticBasicSpec.Foo.B
   f(1: Int)
      ^
 newSource1.scala:3: error: type mismatch;
-  java.lang.String|Tuple1[java.lang.String]
+  String|Tuple1[String]
   val a: Tuple1[String] = "Tuple1": String
                                   ^
 newSource1.scala:7: error: implicit error;
-!I e: a.type *** b.type
+!I e:
+  splain.acceptance.builtin.StaticBasicSpec.SingleImp.a.type ***
+  splain.acceptance.builtin.StaticBasicSpec.SingleImp.b.type
   implicitly[a.type *** b.type]
             ^
 newSource1.scala:8: error: implicit error;
@@ -134,15 +136,15 @@ newSource1.scala:6: error: implicit error;
     implicitly[a.type *** b.type]
               ^
 newSource1.scala:5: error: implicit error;
-!I ev: scala.math.Ordering[java.lang.Object]
+!I ev: scala.math.Ordering[Object]
   No implicit Ordering[Object] found to build a SortedSet[Object]. You may want to upcast to a Set[Int] first by calling `unsorted`.
 
 Ordering.ordered invalid because
-!I asComparable: java.lang.Object => java.lang.Comparable[_$2]
+!I asComparable: Object => Comparable[Any]
   No implicit view available from Object => Comparable[_ >: Object].
 
 Ordering.comparatorToOrdering invalid because
-!I cmp: java.util.Comparator[java.lang.Object]
+!I cmp: java.util.Comparator[Object]
     ms.map(_ => o)
           ^
 newSource1.scala:9: error: implicit error;

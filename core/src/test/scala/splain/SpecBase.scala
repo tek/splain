@@ -1,6 +1,7 @@
 package splain
 
 import org.scalatest.funspec.AnyFunSpec
+import org.slf4j.LoggerFactory
 
 import scala.util.Try
 
@@ -39,18 +40,31 @@ object SpecBase {
 
     lazy val runner: DirectRunner = DirectRunner()
 
-    def check(code: String, extra: String = defaultExtra, nameOverride: String = "", numberOfBlocks: Int = 1): Unit = {
+    def check(
+        code: String,
+        extra: String = defaultExtra,
+        nameOverride: String = "",
+        numberOfErrorBlocks: Int = 1,
+        verbose: Boolean = false
+    ): Unit = {
 
       val name = getName(code, nameOverride)
       val cc = DirectCase(code, extra)
 
-      val from = runner.pointer.getAndAdd(numberOfBlocks)
+      val from = runner.pointer.getAndAdd(numberOfErrorBlocks)
       val until = runner.pointer.get()
       val groundTruth = runner.groundTruths.slice(from, until).mkString("\n")
 
       _it(name) {
         val error = cc.splainC.compileError()
         error must_== groundTruth
+
+        if (verbose)
+          LoggerFactory
+            .getLogger(this.getClass)
+            .info(
+              "\n" + error
+            )
       }
     }
 

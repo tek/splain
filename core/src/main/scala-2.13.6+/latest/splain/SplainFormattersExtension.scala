@@ -41,7 +41,7 @@ trait SplainFormattersExtension extends SplainFormatters {
               None
           case RefinedType(types, scope) =>
             if (scope.isEmpty) {
-              val subtypes = types.map(_.dealias).flatMap {
+              val subtypes = types.map(v => dealiasIfNecessary(v)).flatMap {
                 case Refined(types, _) =>
                   types
                 case tpe =>
@@ -64,21 +64,6 @@ trait SplainFormattersExtension extends SplainFormatters {
         Simple(sym.toString)
     }
 
-    override def apply[A](
-        tpe: Type,
-        simple: String,
-        args: List[A],
-        formattedArgs: => List[Formatted],
-        top: Boolean
-    )(rec: (A, Boolean) => Formatted): Option[Formatted] = {
-      tpe match {
-        case Refined(parents, decls) =>
-          Some(RefinedForm(sanitizeParents(parents).map(formatType(_, top)), decls.toList.map(formatDecl)))
-        case _ =>
-          None
-      }
-    }
-
     val none: Formatted = Simple("<none>")
 
     def separate[A](left: List[A], right: List[A]): (List[A], List[A], List[A]) = {
@@ -90,7 +75,7 @@ trait SplainFormattersExtension extends SplainFormatters {
       (common.toList, uniqueLeft.toList, uniqueRight.toList)
     }
 
-    def matchTypes(left: List[Type], right: List[Type]): List[Formatted] = {
+    def compareTypes(left: List[Type], right: List[Type]): List[Formatted] = {
       val (common, uniqueLeft, uniqueRight) =
         separate(left.map(formatType(_, top = true)), right.map(formatType(_, top = true)))
       val diffs = uniqueLeft
@@ -108,7 +93,7 @@ trait SplainFormattersExtension extends SplainFormatters {
           (sym, rhs)
       }
 
-    def matchDecls(left: List[Symbol], right: List[Symbol]): List[Formatted] = {
+    def compareDecls(left: List[Symbol], right: List[Symbol]): List[Formatted] = {
       val (common, uniqueLeft, uniqueRight) = separate(filterDecls(left), filterDecls(right))
       val diffs = uniqueLeft
         .map(Some(_))
@@ -127,12 +112,31 @@ trait SplainFormattersExtension extends SplainFormatters {
       } ++ diffs
     }
 
-    def diff(left: Type, right: Type, top: Boolean): Option[Formatted] =
+    override def apply[A](
+        tpe: Type,
+        simple: String,
+        args: List[A],
+        formattedArgs: => List[Formatted],
+        top: Boolean
+    )(rec: (A, Boolean) => Formatted): Option[Formatted] = {
+      tpe match {
+        case Refined(parents, decls) =>
+          def elements = sanitizeParents(parents).map(formatType(_, top))
+
+          val result = Some(RefinedForm(elements, decls.toList.map(formatDecl)))
+          result
+        case _ =>
+          None
+      }
+    }
+
+    override def diff(left: Type, right: Type, top: Boolean): Option[Formatted] =
       (left, right) match {
         case (Refined(leftParents, leftDecls), Refined(rightParents, rightDecls)) =>
-          val parents = matchTypes(sanitizeParents(leftParents), sanitizeParents(rightParents)).sorted
-          val decls = matchDecls(leftDecls.toList, rightDecls.toList).sorted
-          Some(RefinedForm(parents, decls))
+          val parents = compareTypes(sanitizeParents(leftParents), sanitizeParents(rightParents)).sorted
+          val decls = compareDecls(leftDecls.toList, rightDecls.toList).sorted
+          val result = Some(RefinedForm(parents, decls))
+          result
         case _ =>
           None
       }

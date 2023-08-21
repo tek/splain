@@ -2,7 +2,7 @@ newSource1.scala:13: error: implicit error;
 !I e: NonconformantBounds.F[types.D *** types.C]
 NonconformantBounds.f invalid because
 nonconformant bounds;
-[types.D *** types.C, scala.Nothing]
+[types.D *** types.C, Nothing]
 [A <: types.C, B]
   implicitly[F[D *** C]]
             ^

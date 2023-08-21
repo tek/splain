@@ -4,6 +4,8 @@ import splain.SpecBase
 
 class PluginSpec extends SpecBase.File {
 
+  override def getCompilerOptions: String = super.getCompilerOptions + " -Vimplicits-verbose-tree"
+
   override lazy val predefCode: String =
     """
       |object types
@@ -17,6 +19,10 @@ class PluginSpec extends SpecBase.File {
       |""".stripMargin.trim
 
   check("implicit resolution chains", "chain") {
+    checkError()
+  }
+
+  check("higher kind argument", "higherKindArg") {
     checkError()
   }
 
@@ -37,9 +43,9 @@ class PluginSpec extends SpecBase.File {
   }
 
   // TODO: cleanup, breakinfix is gone
-  skip("linebreak long infix types", "break") {
-    checkErrorWithBreak()
-  }
+//  skip("linebreak long infix types", "break") {
+//    checkErrorWithBreak()
+//  }
 
   check("deephole") {
     checkError()
@@ -57,14 +63,14 @@ class PluginSpec extends SpecBase.File {
 //  }
 
   //  TODO: feature removed
-  skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
-    checkError()
-  }
+//  skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
+//    checkError()
+//  }
 
   //  TODO: feature removed
-  skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
-    checkError()
-  }
+//  skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
+//    checkError()
+//  }
 
   // TODO: remove, already checked in BasicSpec
 //  check("refined type diff", "refined") {
@@ -90,20 +96,21 @@ class PluginSpec extends SpecBase.File {
 //    checkError()
 //  }
 
-  describe("single types ") {
-
-    check("single") {
-      checkError()
-    }
-
-    check("in function", "single-fn") {
-      checkError()
-    }
-
-    check("with free symbol", "single-free") {
-      checkError()
-    }
-  }
+  // TODO: remove, already checked in BasicSpec
+//  describe("single types ") {
+//
+//    check("single") {
+//      checkError()
+//    }
+//
+//    check("in function", "single-fn") {
+//      checkError()
+//    }
+//
+//    check("with free symbol", "single-free") {
+//      checkError()
+//    }
+//  }
 
   check("implicit annotation with control character(s)", "implicit-ctrl-char") {
     checkError()

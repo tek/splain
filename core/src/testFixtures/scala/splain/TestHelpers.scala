@@ -13,7 +13,9 @@ trait TestHelpers extends Suite {
 
   import TestHelpers._
 
-  protected lazy val specCompilerOptions = "-Vimplicits -Vimplicits-verbose-tree -Vtype-diffs"
+  def getCompilerOptions: String = "-Vimplicits -Vtype-diffs"
+
+  final protected lazy val specCompilerOptions = getCompilerOptions
 
   protected lazy val defaultExtra: String = ""
 
@@ -70,8 +72,10 @@ trait TestHelpers extends Suite {
         compile() match {
           case v: TryCompile.TypingError =>
             v.Error.displayIssues
-          case e @ _ =>
-            sys.error(s"Type error not detected: $e")
+          case TryCompile.OtherFailure(ee) =>
+            throw new AssertionError(s"Cannot compile: $ee", ee)
+          case ee @ _ =>
+            throw new AssertionError(s"Type error not detected: $ee")
         }
     }
 
@@ -118,7 +122,7 @@ trait TestHelpers extends Suite {
                |" did not equal "
                |$right
                |"
-               |""".trim.stripMargin
+               |""".stripMargin.trim
           }
 
           val ee = e.modifyMessage { _ =>

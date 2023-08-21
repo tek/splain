@@ -4,8 +4,6 @@ import splain.SpecBase
 
 class DivergingSpec extends SpecBase.File {
 
-  override protected lazy val specCompilerOptions = "-Vimplicits -Vtype-diffs"
-
   override lazy val defaultExtra: String = "-Vimplicits-verbose-tree -P:splain:Vimplicits-diverging"
 
   check("self") {
@@ -36,3 +34,4 @@ class DivergingSpec extends SpecBase.File {
     checkError()
   }
 }
+
