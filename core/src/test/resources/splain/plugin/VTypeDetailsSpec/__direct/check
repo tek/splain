@@ -1,0 +1,16 @@
+newSource1.scala:7: error: implicit error;
+!I e: SingleImp.a.type *** SingleImp.b.type
+      implicitly[a.type *** b.type]
+                ^
+newSource1.scala:7: error: implicit error;
+!I e:
+  SingleImp.a.type (with underlying type Int) ***
+  SingleImp.b.type (with underlying type Int)
+      implicitly[a.type *** b.type]
+                ^
+newSource1.scala:7: error: implicit error;
+!I e:
+  SingleImp.a.type (with underlying type Int) ***
+  SingleImp.b.type (with underlying type Int)
+      implicitly[a.type *** b.type]
+                ^

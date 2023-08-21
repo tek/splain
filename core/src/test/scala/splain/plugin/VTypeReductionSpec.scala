@@ -4,8 +4,6 @@ import splain.SpecBase
 
 class VTypeReductionSpec extends SpecBase.Direct {
 
-  override protected lazy val defaultExtra: String = "-Vimplicits-max-refined 5"
-
   final val foundReqVsImplicit =
     """
 object FoundReqVsImplicit

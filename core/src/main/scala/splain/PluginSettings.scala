@@ -32,6 +32,13 @@ case class PluginSettings(pluginOpts: mutable.Map[String, String]) {
     )
 
   def typeReduction: Boolean = boolean(PluginSettings.Key.typeReduction)
+
+  def typeDetails: Option[Int] = int(PluginSettings.Key.typeDetails)
+  // <= 1 : short type name
+  //    2 : long type name
+  // >= 3 : long type name with existential context
+
+  def debug: Boolean = boolean(PluginSettings.Key.debug)
 }
 
 object PluginSettings {
@@ -47,6 +54,10 @@ object PluginSettings {
     val implicitDivergingMaxDepth = "Vimplicits-diverging-max-depth"
 
     val typeReduction = "Vtype-reduction"
+
+    val typeDetails = "Vtype-details"
+
+    val debug = "Vdebug"
   }
 
   val defaults: Map[String, String] = Map(
@@ -54,6 +65,8 @@ object PluginSettings {
     Key.enableAll -> "false",
     Key.implicitDiverging -> "false",
     Key.implicitDivergingMaxDepth -> "100",
-    Key.typeReduction -> "false"
+    Key.typeReduction -> "false",
+    Key.typeDetails -> "1",
+    Key.debug -> "false"
   )
 }

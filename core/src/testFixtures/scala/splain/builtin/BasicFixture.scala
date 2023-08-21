@@ -34,6 +34,44 @@ object FoundReq
 }
   """
 
+  final val foundReqLongTuple =
+    """
+object FoundReqLong {
+  class VeryLong[T]
+
+  val x: (
+      VeryLong[Int],
+      VeryLong[
+        VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[Int]]]]]]]
+      ]
+  ) = ???
+
+  val y: (
+      VeryLong[Int],
+      VeryLong[
+        VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+      ]
+  ) = x
+}
+"""
+
+  final val foundReqSameSymbol =
+    """
+object FoundReqSameSymbol {
+
+  trait T { type TT }
+  trait A { val t: T }
+
+  trait B {
+    val a: A
+    final val t = a.t
+
+    val t1: a.t.TT = ???
+    val t2: t.TT = t1
+  }
+}
+  """
+
   final val bounds =
     """
 object Bounds

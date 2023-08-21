@@ -40,8 +40,7 @@ trait TyperCompatViews {
 
       val ownerPathPrefix = ownerPath.mkString(".")
 
-      val ttString = noArgType.safeToString
-//      val ttString = TypeView(noArgType).safeToLongString
+      val ttString = TypeView(noArgType).typeToString
 
       if (ttString.startsWith(ownerPathPrefix)) {
         ownerPath -> ttString.stripPrefix(ownerPathPrefix).stripPrefix(".")
@@ -56,16 +55,28 @@ trait TyperCompatViews {
 
     lazy val prefixContext: String = { s"in $prefixFullName" }
 
-    lazy val safeToLongString: String = {
-      try {
-        self.toLongString
-      } catch {
-        case _: Exception =>
-          self.safeToString
+    lazy val typeToString: String = {
+
+      val details = pluginSettings.typeDetails.getOrElse(1)
+
+      lazy val short = self.safeToString
+      lazy val long = self.toLongString
+      lazy val ec = existentialContext(self)
+
+      if (details <= 1) {
+        short
+      } else if (details == 2) {
+        scala.util.Try(long).getOrElse(short)
+      } else {
+        scala.util
+          .Try(
+            long + ec
+          )
+          .orElse(scala.util.Try(long))
+          .orElse(scala.util.Try(short + ec))
+          .getOrElse(short)
       }
     }
-
-    lazy val extraRationale: String = existentialContext(self) + explainAlias(self)
   }
 
   case class TypeDiffView(

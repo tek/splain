@@ -380,31 +380,23 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     result
   }
 
-//  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
-//    val (left, right) = dealias(found) -> dealias(req)
-//
-//    val normalized = Seq(left, right).map(_.normalize).distinct
-//
-//    val result = {
-//      if (normalized.size == 1) formatType(normalized.head, top)
-//      else if (left.typeSymbolDirect == right.typeSymbolDirect)
-//        formatDiffInfix(left, right, top)
-//      else
-//        formatDiffSpecial(left, right, top).getOrElse(
-//          formatDiffSimple(left, right)
-//        )
-//    }
-//
-//    result
-//  }
-
   override def splainFoundReqMsg(found: Type, req: Type): String = {
     val body =
-      if (settings.VtypeDiffs.value)
-        ";\n" + showFormattedL(formatDiff(found, req, top = true), break = true).indent.joinLines
-      else ""
+      if (settings.VtypeDiffs.value) {
+        val formatted = formatDiff(found, req, top = true)
+        val show = showFormattedL(formatted, break = true)
+
+        ";\n" + show.indent.joinLines
+      } else ""
 
     val extra = mutable.Buffer.empty[String]
+
+    if (pluginSettings.debug) {
+
+      extra += "===[ ORIGINAL ERROR ]===" +
+        builtinFoundReqMsg(found, req) +
+        "\n"
+    }
 
     val result = (Seq(body) ++ extra.toSeq).mkString("\n")
     result
@@ -507,12 +499,17 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       result
     } else {
-      val result =
-        if (left.typeSymbol == right.typeSymbol) {
+      val result = {
+        val noArgs = Seq(left, right).map { tt =>
+          TypeView(tt).noArgType
+        }
+
+        if (noArgs.distinct.size == 1) {
           formatDiffInfix(left, right, top)
         } else {
           formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
         }
+      }
 
       val basedOn = Seq(
         "left side reduced from" -> Seq(found, left),
@@ -540,9 +537,64 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   }
 
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
-    val raw = super.showFormattedLImpl(ft, break)
 
-    if (!pluginSettings.typeReduction) {
+    /**
+      * If the args of an applied type constructor are multiline, create separate lines for the constructor name and the
+      * closing bracket; else return a single line.
+      */
+    def showTypeApply(
+        cons: String,
+        args: List[TypeRepr],
+        break: Boolean = break,
+        brackets: (String, String) = "[" -> "]"
+    ): TypeRepr = {
+      val flatArgs = args.map(_.flat).mkString(brackets._1, ", ", brackets._2)
+      val flat = FlatType(s"$cons$flatArgs")
+
+      def brokenArgs = args match {
+        case head :: tail => tail.foldLeft(head.lines)((z, a) => z ::: "," :: a.lines)
+        case _ => Nil
+      }
+
+      def broken = BrokenType(s"$cons" + brackets._1 :: indent(brokenArgs) ::: List(brackets._2))
+
+      if (break) decideBreak(flat, broken) else flat
+    }
+
+    def _showFormattedL(v: Formatted) = showFormattedL(v, break)
+
+    val raw = ft match {
+      case Simple(name) => FlatType(name.name)
+      case Qualified(path, name) => showFormattedQualified(path, name)
+      case Applied(cons, args) => showTypeApply(showFormatted(cons), args.map(_showFormattedL))
+      case tpe @ Infix(_, _, _, top) =>
+        wrapParensRepr(
+          if (break) breakInfix(flattenInfix(tpe)) else FlatType(flattenInfix(tpe).map(showFormatted).mkString(" ")),
+          top
+        )
+      case UnitForm => FlatType("Unit")
+      case FunctionForm(args, ret, top) =>
+        FlatType(wrapParens(s"${showFuncParams(args.map(showFormatted))} => ${showFormatted(ret)}", top))
+      case TupleForm(elems) =>
+        val formattedElems = elems.map(_showFormattedL)
+
+        if (elems.size == 1) {
+          FlatType(showTuple(formattedElems.map(_.flat))) // TODO: the name showTuple is obsolete
+        } else {
+          showTypeApply("", formattedElems, brackets = "(" -> ")")
+        }
+
+      case RefinedForm(elems, decls) =>
+        FlatType(
+          showRefined(elems.map(showFormatted), if (truncateDecls(decls)) List("...") else decls.map(showFormatted))
+        )
+      case Diff(left, right) => FlatType(formattedDiff(left, right))
+      case Decl(sym, rhs) => FlatType(s"type ${showFormatted(sym)} = ${showFormatted(rhs)}")
+      case DeclDiff(sym, left, right) => FlatType(s"type ${showFormatted(sym)} = ${formattedDiff(left, right)}")
+      case ByName(tpe) => FlatType(s"(=> ${showFormatted(tpe)})")
+    }
+
+    val result = if (!pluginSettings.typeReduction) {
       raw
     } else {
       val index = FormattedIndex(ft)
@@ -572,5 +624,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           }
       }
     }
+
+    result
   }
 }

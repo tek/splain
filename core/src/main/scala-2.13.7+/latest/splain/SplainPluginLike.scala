@@ -11,5 +11,4 @@ trait SplainPluginLike extends plugins.Plugin {
   val components: List[PluginComponent] = Nil
 
   val opts: mutable.Map[String, String] = PluginSettings.defaults.to(mutable.Map)
-
 }
