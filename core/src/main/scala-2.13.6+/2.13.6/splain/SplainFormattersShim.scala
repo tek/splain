@@ -1,3 +1,0 @@
-package splain
-
-trait SplainFormattersShim {}

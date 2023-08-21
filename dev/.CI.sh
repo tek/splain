@@ -6,6 +6,4 @@ CRDIR="$(
 )"
 
 echo "[COMPILING]" && \
-"${CRDIR}"/make-all.sh "${@}" && \
-echo "[RUNNING TESTS]" && \
 "${CRDIR}"/test.sh "${@}"

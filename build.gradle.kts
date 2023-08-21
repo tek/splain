@@ -103,7 +103,7 @@ allprojects {
     }
 
     val vn = VersionNumber.parse(vs.scalaV)
-    val supportedPatchVs = 6..12
+    val supportedPatchVs = 7..12
 
     for (from in supportedPatchVs) {
         if (vn.micro >= from) {
@@ -224,7 +224,7 @@ subprojects {
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
     }

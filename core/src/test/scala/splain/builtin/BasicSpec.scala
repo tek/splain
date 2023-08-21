@@ -4,8 +4,6 @@ import splain.SpecBase
 
 class BasicSpec extends SpecBase.Direct with BasicFixture {
 
-  override protected lazy val specCompilerOptions: String = "-Vimplicits -Vtype-diffs"
-
   check(chain)
 
   check(foundReq)
@@ -20,7 +18,9 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(auxType)
 
-  check(refined)
+  check(refined1, numberOfErrors = 2)
+
+  check(refined2, numberOfErrors = 2)
 
   check(disambiguateQualified)
 
@@ -36,5 +36,5 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(parameterAnnotation)
 
-  check(shorthandTypes, numberOfBlocks = 4)
+  check(shorthandTypes, numberOfErrors = 4)
 }

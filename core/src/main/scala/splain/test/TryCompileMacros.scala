@@ -92,6 +92,8 @@ class TryCompileMacros(val c: whitebox.Context) extends SerializingLift.Mixin {
             e.pos.asInstanceOf[scala.reflect.internal.util.Position],
             sourceName
           )
+          // TODO: this can only capture the first error, which makes the result different from runtime compilation
+          //   unfortunately there is nothing we can do
 
           val result = TryCompile.TypingError(cached.toSeq)
 

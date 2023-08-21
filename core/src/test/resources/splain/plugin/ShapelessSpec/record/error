@@ -1,0 +1,7 @@
+newSource1.scala:26: error: type mismatch;
+  ('sym ->> String) ::
+  ("str" ->> ShapelessRecord.Value.type) ::
+  (ShapelessRecord.Key.type ->> Long|Int) ::
+  shapeless.HNil
+  show(a)
+       ^
