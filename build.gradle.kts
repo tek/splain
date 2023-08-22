@@ -103,7 +103,7 @@ allprojects {
     }
 
     val vn = VersionNumber.parse(vs.scalaV)
-    val supportedPatchVs = listOf(6, 7)
+    val supportedPatchVs = listOf(7, 8, 9, 10, 11)
 
     for (from in supportedPatchVs) {
         if (vn.micro >= from) {
