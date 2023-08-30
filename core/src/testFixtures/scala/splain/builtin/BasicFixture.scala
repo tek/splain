@@ -34,6 +34,21 @@ object FoundReq
 }
   """
 
+  final val foundReqVsImplicit =
+    """
+object FoundReqVsImplicit
+{
+  trait Vec[+T] {
+    type Head = Option[T]
+  }
+
+  val vecInt = new Vec[Int] {}
+  implicitly[vecInt.Head =:= Option[String]]
+
+  val x: vecInt.Head = ??? : Option[String]
+}
+  """
+
   final val bounds =
     """
 object Bounds
