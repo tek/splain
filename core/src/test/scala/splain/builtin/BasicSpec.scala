@@ -9,6 +9,7 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
   check(foundReq)
 
   check(foundReqVsImplicit, numberOfErrorBlocks = 0)
+  // TODO: should move to plugin test
 
   check(bounds)
 

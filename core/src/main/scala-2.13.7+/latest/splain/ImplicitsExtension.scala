@@ -1,6 +1,7 @@
 package splain
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.typechecker
 
 trait ImplicitsExtension extends typechecker.Implicits {
@@ -22,6 +23,14 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
     @volatile protected var _currentGlobalHistory: GlobalHistory = _
 
+    def currentGlobal: GlobalHistory = Option(_currentGlobalHistory).getOrElse {
+      ImplicitHistory.synchronized {
+        val result = GlobalHistory()
+        _currentGlobalHistory = result
+        result
+      }
+    }
+
     case class GlobalHistory() {
 
       val byPosition = mutable.HashMap.empty[PositionIndex, LocalHistory]
@@ -31,7 +40,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
 
       object DivergingImplicitErrors {
 
-        val errors = mutable.ArrayBuffer.empty[DivergentImplicitTypeError]
+        val errors: ArrayBuffer[DivergentImplicitTypeError] = mutable.ArrayBuffer.empty[DivergentImplicitTypeError]
 
         def push(v: DivergentImplicitTypeError): Unit = {
           errors.addOne(v)
@@ -54,7 +63,7 @@ trait ImplicitsExtension extends typechecker.Implicits {
           result
         }
 
-        val logs = mutable.ArrayBuffer.empty[String]
+        val logs: ArrayBuffer[String] = mutable.ArrayBuffer.empty[String]
         // unused messages & comments will be displayed at the end of the implicit error
       }
     }
@@ -62,14 +71,6 @@ trait ImplicitsExtension extends typechecker.Implicits {
     case class PositionIndex(
         pos: Position
     ) {}
-
-    def currentGlobal: GlobalHistory = Option(_currentGlobalHistory).getOrElse {
-      ImplicitHistory.synchronized {
-        val result = GlobalHistory()
-        _currentGlobalHistory = result
-        result
-      }
-    }
   }
 
   override def inferImplicit(
