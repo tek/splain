@@ -2,7 +2,7 @@ package splain.plugin
 
 import splain.SpecBase
 
-class DivergingSpec extends SpecBase.File {
+class VImplicitDivergingSpec extends SpecBase.File {
 
   override lazy val defaultExtra: String = "-Vimplicits-verbose-tree -P:splain:Vimplicits-diverging"
 
@@ -34,4 +34,3 @@ class DivergingSpec extends SpecBase.File {
     checkError()
   }
 }
-

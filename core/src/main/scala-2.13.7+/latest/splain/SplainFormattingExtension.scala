@@ -1,8 +1,10 @@
 package splain
 
 import scala.annotation.tailrec
+import scala.collection.concurrent.TrieMap
+import scala.collection.mutable
 import scala.tools.nsc.typechecker
-import scala.tools.nsc.typechecker.splain.{Applied, Formatted, Qualified, SimpleName}
+import scala.tools.nsc.typechecker.splain._
 
 object SplainFormattingExtension {
 
@@ -42,7 +44,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       fromHistory.sym.fullLocationString == fromTree.candidate.symbol.fullLocationString
     }
 
-    lazy val divergingSearchStartingWithHere: Boolean = sameStartingWith
+//    lazy val divergingSearchStartingWithHere: Boolean = sameStartingWith
 
     lazy val divergingSearchDiscoveredHere: Boolean = sameCandidateTree && moreSpecificPendingType
   }
@@ -54,20 +56,22 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     import SplainImplicitErrorTree._
 
-    def doCollectFull(alwaysDisplayRoot: Boolean = false): Seq[ErrorNode] =
-      if (children.isEmpty) Seq(ErrorNode(error, alwaysShow = true))
+    def doCollectFull(alwaysDisplayRoot: Boolean = false): Seq[NodeForShow] = {
+
+      if (children.isEmpty) Seq(NodeForShow(error, alwaysShow = true))
       else {
 
-        Seq(ErrorNode(error, alwaysShow = alwaysDisplayRoot)) ++ {
+        Seq(NodeForShow(error, alwaysShow = alwaysDisplayRoot)) ++ {
 
           if (children.size >= 2) children.flatMap(_.doCollectFull(true))
           else children.flatMap(_.doCollectFull())
         }
       }
+    }
 
-    lazy val collectFull: Seq[ErrorNode] = doCollectFull(true)
+    lazy val collectFull: Seq[NodeForShow] = doCollectFull(true)
 
-    lazy val collectCompact: Seq[ErrorNode] = {
+    lazy val collectCompact: Seq[NodeForShow] = {
 
       val displayed = collectFull.zipWithIndex.filter {
         case (v, _) =>
@@ -86,7 +90,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
 
     case class FormattedChain(
-        source: Seq[ErrorNode]
+        source: Seq[NodeForShow]
     ) {
 
       val toList: List[String] = {
@@ -120,7 +124,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   object SplainImplicitErrorTree {
 
-    case class ErrorNode(
+    case class NodeForShow(
         error: ImplicitError,
         alwaysShow: Boolean,
         showEllipsis: Boolean = false
@@ -132,18 +136,18 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         formatNestedImplicit(error)
     }
 
-    def fromNode(
-        Node: ImplicitError,
+    def fromError(
+        error: ImplicitError,
         offsprings: List[ImplicitError]
     ): SplainImplicitErrorTree = {
-      val topNesting = Node.nesting
+      val topNesting = error.nesting
 
       val children = fromChildren(
         offsprings,
         topNesting
       )
 
-      SplainImplicitErrorTree(Node, children)
+      SplainImplicitErrorTree(error, children)
     }
 
     def fromChildren(
@@ -196,7 +200,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
         val _offsprings = offsprings.slice(range._1 + 1, range._2)
 
-        fromNode(
+        fromError(
           _top,
           _offsprings
         )
@@ -227,6 +231,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   }
 
   object ImplicitErrorExtension {
+
     def unapplyCandidate(e: ImplicitError): Tree = unapplyRecursively(e.candidate)
 
     @tailrec
@@ -252,14 +257,14 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     val candidate = ImplicitErrorExtension.cleanCandidate(err)
     val problem = s"${candidate.red} invalid because"
 
-    object ErrorsInLocalHistory {
+    object ImplicitErrorsInHistory {
 
-      lazy val posI: self.ImplicitHistory.PositionIndex = ImplicitHistory.PositionIndex(
+      lazy val posI: self.PositionIndex = PositionIndex(
         err.candidate.pos
       )
 
-      lazy val localHistoryOpt: Option[ImplicitHistory.LocalHistory] =
-        ImplicitHistory.currentGlobal.byPosition.get(posI)
+      lazy val localHistoryOpt: Option[ImplicitsHistory.Local] =
+        ImplicitsHistory.currentGlobal.localByPosition.get(posI)
 
       lazy val diverging: Seq[DivergentImplicitTypeError] = {
 
@@ -269,32 +274,29 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       }
     }
 
-    val reasons = {
-      val baseReasons = base._2
+    val extra = mutable.Buffer.empty[String]
 
-      val discoveredHere = ErrorsInLocalHistory.diverging.find { inHistory =>
-        val link = SplainImplicitErrorLink(err, inHistory)
+    extra ++= base._2
 
-        link.divergingSearchDiscoveredHere
-      }
+    val discoveredHere = ImplicitErrorsInHistory.diverging.find { inHistory =>
+      val link = SplainImplicitErrorLink(err, inHistory)
 
-      discoveredHere match {
-        case Some(ee) =>
-          ErrorsInLocalHistory.localHistoryOpt.foreach { history =>
-            history.DivergingImplicitErrors.linkedErrors += ee
-          }
-
-          val text = DivergingImplicitErrorView(ee).errMsg
-
-          baseReasons ++ text.split('\n').filter(_.trim.nonEmpty)
-
-        case _ =>
-          baseReasons
-      }
-
+      link.divergingSearchDiscoveredHere
     }
 
-    (problem, reasons, base._3)
+    discoveredHere match {
+      case Some(ee) =>
+        ImplicitErrorsInHistory.localHistoryOpt.foreach { history =>
+          history.DivergingImplicitErrors.linkedErrors += ee
+        }
+
+        val text = DivergingImplicitErrorView(ee).errMsg
+
+        extra ++= text.split('\n').filter(_.trim.nonEmpty)
+      case _ =>
+    }
+
+    (problem, extra.toList, base._3)
   }
 
   override def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean)(rec: (A, Boolean) => Formatted): Formatted = {
@@ -311,58 +313,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
   }
 
-  override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
-    val dTpe = dealiasIfNecessary(tpe)
-    val args = extractArgs(dTpe)
-    val result = formatWithInfix(dTpe, args, top)(formatType)
-    result
-  }
-
-  // TODO: merge into TypeView
-  override def stripType(tp: Type): (List[String], String) = {
-    tp match {
-      case tt: SingletonType =>
-        val parts = TypeView(tt.termSymbolDirect, tt)
-        parts.path -> parts.shortName
-
-      case tt: RefinedType =>
-        val parts = TypeView(tt.typeSymbolDirect, tt)
-        parts.path -> parts.shortName
-
-      case _ =>
-        val _tp = tp.typeConstructor
-        // TODO: should this also use TypeParts ?
-        val sym = _tp.typeSymbolDirect
-        //      val sym = if (tpe.takesTypeArgs) tpe.typeSymbolDirect else tpe.typeSymbol
-        val parts = TypeView(sym, _tp)
-        //      val symName = sym.name.decodedName.toString
-        (parts.path, parts.shortName)
-    }
-  }
-
-  case class TypeView(sym: Symbol, tp: Type) {
-
-    private lazy val parts = sym.ownerChain.reverse
-      .map(_.name.decodedName.toString)
-      .filterNot(part => part.startsWith("<") && part.endsWith(">"))
-
-    lazy val (path, shortName) = {
-
-      val (ownerPath, _) = parts.splitAt(Math.max(0, parts.size - 1))
-
-      val ownerPathPrefix = ownerPath.mkString(".")
-      val ttString = if (pluginSettings.typeNormalization) {
-        explainAlias(tp)
-      } else tp.safeToString
-
-      if (ttString.startsWith(ownerPathPrefix)) {
-        ownerPath -> ttString.stripPrefix(ownerPathPrefix).stripPrefix(".")
-      } else {
-        Nil -> ttString
-      }
-    }
-  }
-
   override def formatImplicitError(
       param: Symbol,
       errors: List[ImplicitError],
@@ -375,10 +325,10 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     val errorTreesStr = errorTrees.map(_.FormattedChain.display.toString)
 
     val addendum = errorTrees.headOption.toSeq.flatMap { head =>
-      import ImplicitHistory._
+      import ImplicitsHistory._
 
       val pos = head.error.candidate.pos
-      val localHistoryOpt = currentGlobal.byPosition.get(PositionIndex(pos))
+      val localHistoryOpt = currentGlobal.localByPosition.get(PositionIndex(pos))
       val addendum: Seq[String] = localHistoryOpt.toSeq.flatMap { history =>
         val unlinkedMsgs = history.DivergingImplicitErrors.getUnlinkedMsgs
 
@@ -430,32 +380,191 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     result
   }
 
-  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
-    val (left, right) = dealiasIfNecessary(found) -> dealiasIfNecessary(req)
+//  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+//    val (left, right) = dealias(found) -> dealias(req)
+//
+//    val normalized = Seq(left, right).map(_.normalize).distinct
+//
+//    val result = {
+//      if (normalized.size == 1) formatType(normalized.head, top)
+//      else if (left.typeSymbolDirect == right.typeSymbolDirect)
+//        formatDiffInfix(left, right, top)
+//      else
+//        formatDiffSpecial(left, right, top).getOrElse(
+//          formatDiffSimple(left, right)
+//        )
+//    }
+//
+//    result
+//  }
 
-    val normalized = Seq(left, right).map(_.normalize).distinct
-    if (normalized.size == 1) return formatType(normalized.head, top)
+  override def splainFoundReqMsg(found: Type, req: Type): String = {
+    val body =
+      if (settings.VtypeDiffs.value)
+        ";\n" + showFormattedL(formatDiff(found, req, top = true), break = true).indent.joinLines
+      else ""
 
-    val result =
-      if (left.typeSymbolDirect == right.typeSymbolDirect)
-        formatDiffInfix(left, right, top)
-      else
-        formatDiffSpecial(left, right, top).getOrElse(
-          formatDiffSimple(left, right)
-        )
+    val extra = mutable.Buffer.empty[String]
 
+    val result = (Seq(body) ++ extra.toSeq).mkString("\n")
     result
   }
 
-  // new implementation is idempotent and won't lose information
-  def dealiasIfNecessary(tpe: Type): Type =
-    if (isAux(tpe)) tpe
-    else tpe.dealias
+  override def extractArgs(tpe: Type): List[global.Type] = TypeView(tpe).extractArgs
 
-  override def extractArgs(tpe: Type): List[global.Type] = tpe match {
-    // PolyType handling is removed for being unsound
-    case t: AliasTypeRef if !isAux(tpe) =>
-      t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isTypeParameter) WildcardType else a)
-    case _ => tpe.typeArgs
+  override def stripType(tt: Type): (List[String], String) = {
+
+    val view = TypeView(tt)
+    view.path -> view.noArgShortName
+  }
+
+  // new implementation is idempotent and won't lose information
+  override def dealias(tpe: Type): Type = {
+
+    if (isAux(tpe)) tpe
+    else {
+
+      val result = tpe.dealias
+//      if (pluginSettings.typeReduction) {
+//        TyperHistory.currentGlobal.TypeReductionCache.pushReduction(tpe)
+//      }
+      result
+    }
+  }
+
+  case class FormattedIndex(
+      ft: Formatted,
+      idHash: Int
+  )
+
+  object FormattedIndex {
+
+    def apply(ft: Formatted) = new FormattedIndex(
+      ft,
+      System.identityHashCode(ft)
+    )
+  }
+
+  case class Reduction(
+      reduced: Formatted,
+      basedOn: Seq[(String, Formatted)]
+  ) {
+
+    def index(): Unit = {
+
+      Reduction.lookup += FormattedIndex(reduced) -> this
+    }
+
+  }
+
+  object Reduction {
+
+    lazy val lookup: TrieMap[FormattedIndex, Reduction] = TrieMap.empty
+  }
+
+  def formatTypeRaw(tpe: Type, top: Boolean): Formatted = {
+    formatWithInfix(tpe, extractArgs(tpe), top)(formatType)
+  }
+
+  override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
+    val dtpe = dealias(tpe)
+
+    val result = Seq(tpe, dtpe).distinct.map { t =>
+      formatTypeRaw(t, top)
+    }.distinct
+
+    result match {
+      case Seq(from, reduced) =>
+        Reduction(reduced, Seq("reduced from" -> from)).index()
+      case _ =>
+    }
+
+    result.last
+  }
+
+  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+    val (left, right) = dealias(found) -> dealias(req)
+
+    val normalized = Seq(left, right).map(_.normalize).distinct
+    if (normalized.size == 1) {
+      val only = normalized.head
+      val result = formatType(only, top)
+
+      val based = Seq(found, req).distinct.map { tt =>
+        formatTypeRaw(tt, top)
+      }.distinct
+
+      Reduction(
+        result,
+        based.map(v => "normalized from" -> v)
+      ).index()
+
+      result
+    } else {
+      val result =
+        if (left.typeSymbol == right.typeSymbol) {
+          formatDiffInfix(left, right, top)
+        } else {
+          formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
+        }
+
+      val extra = Seq(
+        "left side reduced from" -> Seq(found, left),
+        "right side reduced from" -> Seq(req, right)
+      )
+        .flatMap {
+          case (clause, fts) =>
+            if (fts.distinct.size == 1) None
+            else {
+              val formatted = fts.map { ft =>
+                formatTypeRaw(ft, top)
+              }.distinct
+              if (formatted.size == 1) None
+              else Some(clause -> formatted.head)
+            }
+        }
+
+      Reduction(
+        result,
+        extra
+      ).index()
+
+      result
+    }
+  }
+
+  override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
+    val raw = super.showFormattedLImpl(ft, break)
+
+    if (!pluginSettings.typeReduction) {
+      raw
+    } else {
+      val index = FormattedIndex(ft)
+
+      val maybeReduction = Reduction.lookup.get(index)
+
+      maybeReduction match {
+        case None =>
+          raw
+        case Some(reduction) =>
+          val extra = reduction.basedOn.flatMap {
+            case (clause, ft) =>
+              Seq(s".. ($clause)") ++
+                showFormattedLImpl(ft, break).lines.map { line =>
+                  s"   $line"
+                }
+          }
+
+          raw match {
+            case t: FlatType =>
+              BrokenType(
+                List(t.flat) ++ extra
+              )
+
+            case t: BrokenType =>
+              t.copy(t.lines ++ extra)
+          }
+      }
+    }
   }
 }

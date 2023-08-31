@@ -92,11 +92,11 @@ newSource1.scala:21: error: type mismatch;
       f(x)
         ^
 newSource1.scala:10: error: implicit error;
-!I e: Refined.Node{type T = _$2}
+!I e: Refined.Node{type T = _$2} forSome { type _$2 <: Int }
   implicitly[NodeLt[Int]]
             ^
 newSource1.scala:12: error: type mismatch;
-  Int(1)|Refined.Node{type T = _$2}
+  Int(1)|Refined.Node{type T = _$2} forSome { type _$2 <: Int }
   val k: NodeLt[Int] = 1
                        ^
 newSource1.scala:25: error: type mismatch;

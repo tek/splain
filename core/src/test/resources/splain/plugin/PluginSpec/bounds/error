@@ -1,4 +1,4 @@
-newSource1.scala:13: error: implicit error;
+newSource1.scala:12: error: implicit error;
 !I e: NonconformantBounds.F[types.D *** types.C]
 NonconformantBounds.f invalid because
 nonconformant bounds;

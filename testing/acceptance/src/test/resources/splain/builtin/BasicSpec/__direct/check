@@ -106,7 +106,7 @@ newSource1.scala:11: error: type mismatch;
   f(x)
     ^
 newSource1.scala:10: error: implicit error;
-!I e: splain.acceptance.builtin.StaticBasicSpec.Refined.Node{type T = _$1}
+!I e: splain.acceptance.builtin.StaticBasicSpec.Refined.Node{type T = _$1} forSome { type _$1 <: Int }
   implicitly[NodeLt[Int]]
             ^
 newSource1.scala:25: error: type mismatch;

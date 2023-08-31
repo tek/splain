@@ -41,7 +41,7 @@ trait SplainFormattersExtension extends SplainFormatters {
               None
           case RefinedType(types, scope) =>
             if (scope.isEmpty) {
-              val subtypes = types.map(v => dealiasIfNecessary(v)).flatMap {
+              val subtypes = types.map(v => dealias(v)).flatMap {
                 case Refined(types, _) =>
                   types
                 case tpe =>

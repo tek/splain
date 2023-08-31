@@ -2,9 +2,7 @@ package splain.builtin
 
 import splain.SpecBase
 
-class TruncRefinedSpec extends SpecBase.Direct {
-
-  override protected lazy val defaultExtra: String = "-Vimplicits-max-refined 5"
+class MaxRefinedSpec extends SpecBase.Direct {
 
   def truncrefined: String = """
 object TruncRefined
@@ -18,5 +16,7 @@ object TruncRefined
 
   """
 
-  check(truncrefined)
+  check(truncrefined, nameOverride = "original")
+
+  check(truncrefined, extra = "-Vimplicits-max-refined 5")
 }

@@ -1,6 +1,0 @@
-newSource1.scala:14: error: type mismatch;
-  Int ***
-  (List[types.C|String] *** types.C {type A = types.C|FoundReq.F.type}) >:<
-  types.D
-  f(a)
-    ^

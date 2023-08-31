@@ -1,37 +1,31 @@
 package splain
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 import scala.tools.nsc.typechecker
 
-trait ImplicitsExtension extends typechecker.Implicits {
+trait ImplicitsExtension extends TyperCompatViews with typechecker.Implicits {
   self: SplainAnalyzer =>
 
   import global._
 
-  case class DivergingImplicitErrorView(self: DivergentImplicitTypeError) {
+  object ImplicitsHistory {
 
-    lazy val errMsg: String = {
-
-      val formattedPT = showFormatted(formatType(self.pt0, top = false))
-
-      s"diverging implicit expansion for type $formattedPT\nstarting with ${self.sym.fullLocationString}"
-    }
-  }
-
-  object ImplicitHistory {
-
-    @volatile protected var _currentGlobalHistory: GlobalHistory = _
-
-    case class GlobalHistory() {
-
-      val byPosition = mutable.HashMap.empty[PositionIndex, LocalHistory]
+    lazy val currentGlobal: Global = {
+      val result = Global()
+      result
     }
 
-    case class LocalHistory() {
+    case class Global() {
+
+      val localByPosition: TrieMap[PositionIndex, Local] = TrieMap.empty
+    }
+
+    case class Local() {
 
       object DivergingImplicitErrors {
 
-        val errors = mutable.ArrayBuffer.empty[DivergentImplicitTypeError]
+        val errors: mutable.ArrayBuffer[DivergentImplicitTypeError] = mutable.ArrayBuffer.empty
 
         def push(v: DivergentImplicitTypeError): Unit = {
           errors.addOne(v)
@@ -54,20 +48,8 @@ trait ImplicitsExtension extends typechecker.Implicits {
           result
         }
 
-        val logs = mutable.ArrayBuffer.empty[String]
+        val logs: mutable.ArrayBuffer[String] = mutable.ArrayBuffer.empty[String]
         // unused messages & comments will be displayed at the end of the implicit error
-      }
-    }
-
-    case class PositionIndex(
-        pos: Position
-    ) {}
-
-    def currentGlobal: GlobalHistory = Option(_currentGlobalHistory).getOrElse {
-      ImplicitHistory.synchronized {
-        val result = GlobalHistory()
-        _currentGlobalHistory = result
-        result
       }
     }
   }
@@ -82,17 +64,17 @@ trait ImplicitsExtension extends typechecker.Implicits {
       pos: Position
   ): SearchResult = {
 
-    import ImplicitHistory._
+    import ImplicitsHistory._
 
     def getResult = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
     if (settings.Vimplicits.value && pluginSettings.implicitDiverging) {
 
-      val posII = ImplicitHistory.PositionIndex(
+      val posII = PositionIndex(
         tree.pos
       )
 
-      val local = currentGlobal.byPosition.getOrElseUpdate(posII, LocalHistory())
+      val local = currentGlobal.localByPosition.getOrElseUpdate(posII, Local())
       val previousSimilarErrors = local.DivergingImplicitErrors.errors.filter { ee =>
         ee.underlyingTree equalsStructure tree
       }

@@ -1,4 +1,4 @@
-newSource1.scala:17: error: implicit error;
+newSource1.scala:25: error: implicit error;
 !I e: types.C
 c invalid because
 !I a: shapeless.Lazy[types.D]

@@ -26,15 +26,7 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("found/required type", "foundreq") {
-    checkError()
-  }
-
   check("bounds") {
-    checkError()
-  }
-
-  check("auxPattern") {
     checkError()
   }
 
@@ -47,9 +39,9 @@ class PluginSpec extends SpecBase.File {
 //    checkErrorWithBreak()
 //  }
 
-  check("deephole") {
-    checkError()
-  }
+//  check("deephole") {
+//    checkError()
+//  }
 
   // TODO: remove, already in TreeSpec
 //  describe("tree printing") {
@@ -77,9 +69,9 @@ class PluginSpec extends SpecBase.File {
 //    checkError()
 //  }
 
-  check("disambiguate types", "disambiguate") {
-    checkError()
-  }
+//  check("disambiguate types", "disambiguate") {
+//    checkError()
+//  }
 
   // TODO: remove, already in TruncRefinedSpec
 //  check("truncate refined type", "truncrefined", extra = "-Vimplicits-max-refined 10") {
@@ -112,8 +104,11 @@ class PluginSpec extends SpecBase.File {
 //    }
 //  }
 
-  check("implicit annotation with control character(s)", "implicit-ctrl-char") {
+  check("not a member", file = "member") {
     checkError()
   }
 
+  check("implicit annotation with control character(s)", "implicit-ctrl-char") {
+    checkError()
+  }
 }

@@ -1,4 +1,4 @@
-newSource1.scala:46: error: implicit error;
+newSource1.scala:77: error: implicit error;
 !I e:
   (types.C *** types.D) >:<
   types.C with types.D {type A = types.D; type B = types.C}

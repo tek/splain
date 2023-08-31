@@ -2,7 +2,7 @@ package splain.builtin
 
 import splain.SpecBase
 
-class TreeSpec extends SpecBase.Direct {
+class VerboseTreeSpec extends SpecBase.Direct {
 
   def verboseTree: String = """
 object tpes
@@ -38,5 +38,5 @@ object Tree
 
   check(verboseTree, extra = "-Vimplicits-verbose-tree")
 
-  check(verboseTree, extra = "", nameOverride = "compactTree")
+  check(verboseTree, extra = "", nameOverride = "original")
 }
