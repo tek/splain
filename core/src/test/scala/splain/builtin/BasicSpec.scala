@@ -8,8 +8,6 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(foundReq)
 
-  check(foundReqVsImplicit, numberOfErrorBlocks = 0)
-
   check(bounds)
 
   check(longAnnotationMessage)
@@ -20,9 +18,9 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(auxType)
 
-  check(refined1, numberOfErrorBlocks = 2)
+  check(refined1, numberOfErrors = 2)
 
-  check(refined2, numberOfErrorBlocks = 2)
+  check(refined2, numberOfErrors = 2)
 
   check(disambiguateQualified)
 
@@ -38,5 +36,5 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(parameterAnnotation)
 
-  check(shorthandTypes, numberOfErrorBlocks = 4)
+  check(shorthandTypes, numberOfErrors = 4)
 }

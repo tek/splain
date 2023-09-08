@@ -44,14 +44,14 @@ object SpecBase {
         code: String,
         extra: String = defaultExtra,
         nameOverride: String = "",
-        numberOfErrorBlocks: Int = 1,
+        numberOfErrors: Int = 1,
         verbose: Boolean = false
     ): Unit = {
 
       val name = getName(code, nameOverride)
       val cc = DirectCase(code, extra)
 
-      val from = runner.pointer.getAndAdd(numberOfErrorBlocks)
+      val from = runner.pointer.getAndAdd(numberOfErrors)
       val until = runner.pointer.get()
       val groundTruth = runner.groundTruths.slice(from, until).mkString("\n")
 
