@@ -12,7 +12,7 @@ object Acceptance {
 
   trait SpecBase extends AnyFunSpec with TestHelpers with static.FromCodeMixin {
 
-    val buffer: ArrayBuffer[TryCompile] = ArrayBuffer.empty
+    lazy val buffer: ArrayBuffer[TryCompile] = ArrayBuffer.empty
 
     def check(v: TryCompile): Unit = {
       buffer += v

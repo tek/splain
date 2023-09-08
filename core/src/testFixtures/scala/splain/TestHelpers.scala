@@ -30,6 +30,8 @@ trait TestHelpers extends Suite {
     val path = resourcePath(name, fname)
 
     val resource = ClassLoader.getSystemClassLoader.getResource(path.toString)
+    require(resource != null, s"Cannot find resource: $path")
+
     val actualPath = Paths.get(resource.toURI)
 
     new String(Files.readAllBytes(actualPath))
