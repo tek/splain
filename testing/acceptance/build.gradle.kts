@@ -13,7 +13,11 @@ dependencies {
 
 tasks {
 
+    var minJavaV = JavaVersion.VERSION_1_8.toString()
+
     withType<ScalaCompile> {
+
+        targetCompatibility = minJavaV
 
         scalaCompileOptions.apply {
 
