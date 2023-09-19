@@ -123,12 +123,20 @@ allprojects {
         dependsOn("dependencies")
     }
 
+    val jvmTarget = JavaVersion.VERSION_1_8
+
+    java {
+
+        sourceCompatibility = jvmTarget
+        targetCompatibility = jvmTarget
+    }
+
     tasks {
-        val jvmTarget = JavaVersion.VERSION_1_8.toString()
 
         withType<ScalaCompile> {
 
-            targetCompatibility = jvmTarget
+            sourceCompatibility = jvmTarget.toString()
+            targetCompatibility = jvmTarget.toString()
 
             scalaCompileOptions.apply {
 
