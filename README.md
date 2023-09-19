@@ -3,39 +3,64 @@
 This plugin removes some of the redundancy of the compiler output and prints
 additional info for implicit resolution errors.
 
-# Releases
+# Versions
 
-### built-in - Scala 2.13.6+
+TL;DR
 
-Most features in splain 0.5.8 has been integrated into Scala 2.13.6 compiler through [this patch](https://github.com/scala/scala/pull/7785).
+```
+                 ┌──────────────────────────┐                  
+                 │What's your Scala version?│                  
+                 └─────────┬───────┬────────┘                  
+                           │       │                           
+                           │       └───────────────────┐       
+                           v                           │       
+    ┌─────────────────────────────────────────────┐    │       
+    │                ( >= 2.13.6 )                │    │       
+    │                ─────────────                │    │       
+    │Do you want experimental features & bugfixes?│    │       
+    └──┬───────────────┬──────────────────────────┘    │       
+       │               │                               │       
+       v               v                               v       
+ ┌──────────┐ ┌─────────────────┐ ┌───────────────────────────┐
+ │ ( yes )  │ │     ( no )      │ │( 2.12 / 2.13.0 .. 2.13.5 )│
+ │ ───────  │ │     ──────      │ ├───────────────────────────┤
+ │Splain 1.x│ │Compiler built-in│ │       Splain 0.5.x        │
+ └──────────┘ └─────────────────┘ └───────────────────────────┘
+```
 
-- Recommended if using Scala 2.13 and only splain 0.5.8 features. However, ... 
-- **This integration is not 100%!** Configuration parameters have to be given new names to be compliant with the compiler standard. Many features are also discarded.
+### Compiler built-in
 
-### v1.x (current) - Scala 2.13.6+
+(main article: https://docs.scala-lang.org/overviews/compiler-options/index.html#Verbose_Settings)
 
-The above integration introduces a new compiler extension type (AnalyzerPlugin) that rendered most of old source code for splain v0.x incompatible or redundant. Thus, the team have decided to move on to the next major version, designed from scratch to have a cleaner architecture and better test coverage. Unfortunately, it will **not be available for Scala 2.13.5-**
+The basic Splain features has been integrated into Scala compiler (since 2.13.6, through contributions like [this](https://github.com/scala/scala/pull/7785) and [this](https://github.com/scala/scala/pull/10029)), they can be enabled immediately by using the right compiler options (see **Option** section for detail).
 
-- Recommended if using Scala 2.13 and the latest splain features/bugfixes.
-- PRs and issues submitted for it will be given priority.
+### v1.x (master branch)
 
-### v0.x (maintenance) - Scala 2.12, 2.13.5-
+(Only available for Scala 2.13.6+)
 
-The latest v0.x will continue to be maintained and published regularly to stay compatible with the latest Scala 2.12.x release (until it's end-of-life), but no newer version will be published for Scala 2.13, **splain 0.5.8 will be the last release for Scala 2.13**.
+Splain 1.x is a simplified rewrite that aims to incrementally introduce enhancement to the already integrated Splain features. Additional features and bugfixes will first be released and refined here, then be periodically contributed back into Scala compiler.
 
-If you are already using Scala 2.13, the team strongly recommend you to upgrade, and submit bug report and test cases directly to the latest v1.x.
+Effectively, **Splain 1.x is now a feature preview patch of Scala compiler**, if a relevant compiler built-in option (see **Option** section for detail) malfunctions, it may work with Splain v1.x enabled.
 
-- Recommended if using Scala 2.12.
+It is also the only branch under active development.
+
+### v0.5.x (maintenance branch)
+
+(Only available for Scala 2.12 and Scala 2.13.0 .. 2.13.5)
+
+The latest v0.x will continue to be maintained and published regularly to stay compatible with the latest Scala 2.12.x release (until it's end-of-life), but no newer version will be published for Scala 2.13, **splain 0.5.x will be the last release for Scala 2.13**.
+
+We strongly recommend you to upgrade to Scala 2.13.6+ to benefit from active support and up-to-date features.
 
 ### Build Matrix
 
-| Version                          | Status                                                       | Compatibility                                                |
-| -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| v1.x <br> (current) - latest     | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master) |
-| v1.0.1 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.1)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.1) |
-| v1.0.0 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0) |
-| v1.0.0-RC2 <br> (current)        | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0-RC2)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC2) |
-| v1.0.0-RC1 <br> (current)        | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0-RC1)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC1) |
+| Version                          | Status                                                                                                                                                            | Compatibility                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| v1.x <br> (current) - latest     | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/tek/splain/actions/workflows/main.yml)               | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master)               |
+| v1.0.1 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.1)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.1)        |
+| v1.0.0 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0)        |
+| v1.0.0-RC2 <br> (current)        | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0-RC2)](https://github.com/tek/splain/actions/workflows/main.yml)    | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC2)    |
+| v1.0.0-RC1 <br> (current)        | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0-RC1)](https://github.com/tek/splain/actions/workflows/main.yml)    | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC1)    |
 | v0.x <br> (maintenance) - latest | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Maintenance%2Fmaster)](https://github.com/tek/splain/actions/workflows/main.yml) | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Maintenance%2Fmaster) |
 
 # Usage
@@ -71,20 +96,20 @@ or build.gradle.kts:
 scalaCompilerPlugins("io.tryp:splain_${scalaVersion}:0.5.8")
 ```
 
-### built-in
+### compiler built-in, no plugin declaration required
 
-Do nothing! It is already built-in. Its 2 minimal features however has to be enabled manually, by the following 2 compiler arguments (see Configuration for details):
+Its effects however still have to be enabled in your compiler options, in minimal case, by the following 2 options (see Options for details):
 
 ```
 -Vimplicits -Vtype-diffs
 ```
 
-# Configuration
+# Options
 
-The plugin can be configured via compiler arguments with the format:
+The plugin can be configured via compiler Options with the format:
 
 | v0.x                          | built-in, v1.x       |
-| :---------------------------- | -------------------- |
+|:----------------------------- | -------------------- |
 | `-P:splain:<param>[:<value>]` | `-<param>[:<value>]` |
 
 `param` can be one of the following:
@@ -131,9 +156,11 @@ withType<ScalaCompile> {
 ```
 
 # infix types
+
 Instead of `shapeless.::[A, HNil]`, prints `A :: HNil`.
 
 # found/required types
+
 Rather than printing up to four types, only the dealiased types are shown as a colored diff:
 
 ![foundreq](img/foundreq.jpg)
@@ -147,6 +174,7 @@ Publisher`, the types will be matched with each other and a missing or surplus
 type will be indicated by a `<none>` label.
 
 # implicit resolution chains
+
 When an implicit is not found, only the outermost error at the invocation point
 is printed. This can be expanded with the compiler flag `-Xlog-implicits`, but
 that also shows all invalid implicits for parameters that have been resolved
@@ -184,7 +212,6 @@ parameter impPar1: D *** ((C >:< C) *** (D => Unit))
 [error] unit/src/basic.scala:35: could not find implicit value for
 parameter e: (C *** D) >:< C with D {type A = D; type B = C}
 [error]   implicitly[T1]
-
 ```
 
 # infix type and type argument line breaking
@@ -295,7 +322,7 @@ make sure it is disabled before doing so.
 Users are encouraged to submit issues and test cases directly through pull requests, by forking the project and adding new test cases under:
 
 | v0.x                                   | v1.x                                               |
-| :------------------------------------- | -------------------------------------------------- |
+|:-------------------------------------- | -------------------------------------------------- |
 | `<project root>/src/test/scala/splain` | `<project root>/core/src/test/scala/splain/plugin` |
 
 The bug can thus be identified by the team quickly on our [continuous integration environment](https://github.com/tek/splain/actions). Submission on our GitHub issue tracker is also welcomed, but it generally takes much longer for the team to respond.
@@ -341,4 +368,3 @@ The team strive for a strong discipline in software engineering. All commits (in
 - @tek - reviewer for built-in/v0.x bugfix, new features
 - @tribbloid - reviewer for v1.x bugfix
 - @dwijnand - reviewer for scala compiler integration
-
