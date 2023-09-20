@@ -1,0 +1,12 @@
+newSource1.scala:25: error: implicit error;
+!I e: types.C
+c invalid because
+!I a: shapeless.Lazy[types.D]
+  could not find Lazy implicit value of type types.D
+
+――d invalid because
+  !I a: types.D *** types.C
+――――dc invalid because
+    !I a: types.C *** types.D
+  implicitly[C]
+            ^

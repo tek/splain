@@ -1,0 +1,576 @@
+package splain
+
+import scala.annotation.tailrec
+import scala.collection.concurrent.TrieMap
+import scala.collection.mutable
+import scala.tools.nsc.typechecker
+import scala.tools.nsc.typechecker.splain._
+
+object SplainFormattingExtension {
+
+  import scala.reflect.internal.TypeDebugging.AnsiColor._
+
+  val ELLIPSIS: String = "⋮".blue
+}
+
+trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
+  self: SplainAnalyzer =>
+
+  import SplainFormattingExtension._
+  import global._
+
+  case class SplainImplicitErrorLink(
+      fromTree: ImplicitError,
+      fromHistory: DivergentImplicitTypeError
+  ) {
+
+    val sameCandidateTree: Boolean = fromTree.candidate equalsStructure fromHistory.underlyingTree
+
+    val samePendingType: Boolean = fromTree.specifics match {
+      case ss: ImplicitErrorSpecifics.NotFound =>
+        fromHistory.pt0 =:= ss.param.tpe
+      case _ =>
+        false
+    }
+
+    val moreSpecificPendingType: Boolean = fromTree.specifics match {
+      case ss: ImplicitErrorSpecifics.NotFound =>
+        fromHistory.pt0 <:< ss.param.tpe
+      case _ =>
+        false
+    }
+
+    val sameStartingWith: Boolean = {
+      fromHistory.sym.fullLocationString == fromTree.candidate.symbol.fullLocationString
+    }
+
+//    lazy val divergingSearchStartingWithHere: Boolean = sameStartingWith
+
+    lazy val divergingSearchDiscoveredHere: Boolean = sameCandidateTree && moreSpecificPendingType
+  }
+
+  case class SplainImplicitErrorTree(
+      error: ImplicitError,
+      children: Seq[SplainImplicitErrorTree] = Nil
+  ) {
+
+    import SplainImplicitErrorTree._
+
+    def doCollectFull(alwaysDisplayRoot: Boolean = false): Seq[NodeForShow] = {
+
+      if (children.isEmpty) Seq(NodeForShow(error, alwaysShow = true))
+      else {
+
+        Seq(NodeForShow(error, alwaysShow = alwaysDisplayRoot)) ++ {
+
+          if (children.size >= 2) children.flatMap(_.doCollectFull(true))
+          else children.flatMap(_.doCollectFull())
+        }
+      }
+    }
+
+    lazy val collectFull: Seq[NodeForShow] = doCollectFull(true)
+
+    lazy val collectCompact: Seq[NodeForShow] = {
+
+      val displayed = collectFull.zipWithIndex.filter {
+        case (v, _) =>
+          v.alwaysShow
+      }
+
+      val ellipsisIndices = displayed.map(_._2 - 1).toSet + (collectFull.size - 1)
+
+      val withEllipsis = displayed.map {
+        case (v, i) =>
+          if (!ellipsisIndices.contains(i)) v.copy(showEllipsis = true)
+          else v
+      }
+
+      withEllipsis
+    }
+
+    case class FormattedChain(
+        source: Seq[NodeForShow]
+    ) {
+
+      val toList: List[String] = {
+        val collected = source.toList
+        val baseIndent = collected.headOption.map(_.nesting).getOrElse(0)
+
+        val formatted = collected.map { v =>
+          val formatted = v.formatted
+          if (v.showEllipsis) formatted.copy(_2 = formatted._2 :+ ELLIPSIS)
+          else formatted
+        }
+
+        indentTree(formatted, baseIndent)
+      }
+
+      override lazy val toString: String = toList.mkString("\n")
+    }
+
+    object FormattedChain {
+
+      object Full extends FormattedChain(collectFull)
+
+      object Compact extends FormattedChain(collectCompact)
+
+      lazy val VimplicitsVerboseTree: Boolean = settings.VimplicitsVerboseTree.value
+      val display: FormattedChain = if (VimplicitsVerboseTree) Full else Compact
+    }
+
+    override def toString: String = FormattedChain.Full.toString
+  }
+
+  object SplainImplicitErrorTree {
+
+    case class NodeForShow(
+        error: ImplicitError,
+        alwaysShow: Boolean,
+        showEllipsis: Boolean = false
+    ) {
+
+      def nesting: RunId = error.nesting
+
+      val formatted: (String, List[String], RunId) =
+        formatNestedImplicit(error)
+    }
+
+    def fromError(
+        error: ImplicitError,
+        offsprings: List[ImplicitError]
+    ): SplainImplicitErrorTree = {
+      val topNesting = error.nesting
+
+      val children = fromChildren(
+        offsprings,
+        topNesting
+      )
+
+      SplainImplicitErrorTree(error, children)
+    }
+
+    def fromChildren(
+        offsprings: List[ImplicitError],
+        topNesting: Int
+    ): List[SplainImplicitErrorTree] = {
+
+      if (offsprings.isEmpty)
+        return Nil
+
+      val minNesting = offsprings.map(v => v.nesting).min
+
+      if (minNesting < topNesting + 1)
+        throw new SplainInternalError(
+          "Detail: nesting level of offsprings of an implicit search tree node should be higher"
+        )
+
+      val wII = offsprings.zipWithIndex
+
+      val childrenII = wII
+        .filter {
+          case (sub, _) =>
+            if (sub.nesting < minNesting) {
+              throw new SplainInternalError(
+                s"Detail: Sub-node in implicit tree can only have nesting level larger than top node," +
+                  s" but (${sub.nesting} < $minNesting)"
+              )
+            }
+
+            sub.nesting == minNesting
+        }
+        .map(_._2)
+
+      val ranges = {
+
+        val seqs = (childrenII ++ Seq(offsprings.size))
+          .sliding(2)
+          .toList
+
+        seqs.map {
+          case Seq(from, until) =>
+            from -> until
+          case _ =>
+            throw new SplainInternalError("Detail: index should not be empty")
+        }
+      }
+
+      val children = ranges.map { range =>
+        val _top = offsprings(range._1)
+
+        val _offsprings = offsprings.slice(range._1 + 1, range._2)
+
+        fromError(
+          _top,
+          _offsprings
+        )
+      }
+
+      mergeDuplicates(children)
+      //      children
+    }
+
+    def mergeDuplicates(children: List[SplainImplicitErrorTree]): List[SplainImplicitErrorTree] = {
+      val errors = children.map(_.error).distinct
+
+      val grouped = errors.map { ee =>
+        val group = children.filter(c => c.error == ee)
+
+        val mostSpecificError = group.head.error
+        // TODO: this old design is based on a huge hypothesis, should it be improved
+        //        val mostSpecificError = group.map(_.error).maxBy(v => v.candidate.toString.length)
+
+        val allChildren = group.flatMap(v => v.children)
+        val mergedChildren = mergeDuplicates(allChildren)
+
+        SplainImplicitErrorTree(mostSpecificError, mergedChildren)
+      }
+
+      grouped.distinctBy(v => v.FormattedChain.Full.toString) // TODO: this may lose information
+    }
+  }
+
+  object ImplicitErrorExtension {
+
+    def unapplyCandidate(e: ImplicitError): Tree = unapplyRecursively(e.candidate)
+
+    @tailrec
+    private def unapplyRecursively(tree: Tree): Tree =
+      tree match {
+        case TypeApply(fun, _) => unapplyRecursively(fun)
+        case Apply(fun, _) => unapplyRecursively(fun)
+        case a => a
+      }
+
+    def cleanCandidate(e: ImplicitError): String =
+      unapplyCandidate(e).toString match {
+        case ImplicitError.candidateRegex(suf) => suf
+        case a => a
+      }
+  }
+
+  override def formatNestedImplicit(err: ImplicitError): (String, List[String], Int) = {
+
+    val base = super.formatNestedImplicit(err)
+
+    import scala.reflect.internal.TypeDebugging.AnsiColor._
+    val candidate = ImplicitErrorExtension.cleanCandidate(err)
+    val problem = s"${candidate.red} invalid because"
+
+    object ImplicitErrorsInHistory {
+
+      lazy val posI: self.PositionIndex = PositionIndex(
+        err.candidate.pos
+      )
+
+      lazy val localHistoryOpt: Option[ImplicitsHistory.Local] =
+        ImplicitsHistory.currentGlobal.localByPosition.get(posI)
+
+      lazy val diverging: Seq[DivergentImplicitTypeError] = {
+
+        localHistoryOpt.toSeq.flatMap { history =>
+          history.DivergingImplicitErrors.errors
+        }
+      }
+    }
+
+    val extra = mutable.Buffer.empty[String]
+
+    extra ++= base._2
+
+    val discoveredHere = ImplicitErrorsInHistory.diverging.find { inHistory =>
+      val link = SplainImplicitErrorLink(err, inHistory)
+
+      link.divergingSearchDiscoveredHere
+    }
+
+    discoveredHere match {
+      case Some(ee) =>
+        ImplicitErrorsInHistory.localHistoryOpt.foreach { history =>
+          history.DivergingImplicitErrors.linkedErrors += ee
+        }
+
+        val text = DivergingImplicitErrorView(ee).errMsg
+
+        extra ++= text.split('\n').filter(_.trim.nonEmpty)
+      case _ =>
+    }
+
+    (problem, extra.toList, base._3)
+  }
+
+  override def formatWithInfix[A](tpe: Type, args: List[A], top: Boolean)(rec: (A, Boolean) => Formatted): Formatted = {
+    val (path, simple) = formatSimpleType(tpe)
+    tpe.nameAndArgsString
+    lazy val formattedArgs = args.map(rec(_, true))
+    val special = formatSpecial(tpe, simple, args, formattedArgs, top)(rec)
+    special.getOrElse {
+      args match {
+        case left :: right :: Nil if isSymbolic(tpe) => formatInfix(path, simple, left, right, top)(rec)
+        case _ :: _ => Applied(Qualified(path, SimpleName(simple)), formattedArgs)
+        case _ => Qualified(path, SimpleName(simple))
+      }
+    }
+  }
+
+  override def formatImplicitError(
+      param: Symbol,
+      errors: List[ImplicitError],
+      annotationMsg: String
+  ): String = {
+
+    val msg = implicitMessage(param, annotationMsg)
+    val errorTrees = SplainImplicitErrorTree.fromChildren(errors, -1)
+
+    val errorTreesStr = errorTrees.map(_.FormattedChain.display.toString)
+
+    val addendum = errorTrees.headOption.toSeq.flatMap { head =>
+      import ImplicitsHistory._
+
+      val pos = head.error.candidate.pos
+      val localHistoryOpt = currentGlobal.localByPosition.get(PositionIndex(pos))
+      val addendum: Seq[String] = localHistoryOpt.toSeq.flatMap { history =>
+        val unlinkedMsgs = history.DivergingImplicitErrors.getUnlinkedMsgs
+
+        val unlinkedText = if (unlinkedMsgs.nonEmpty) {
+          val indented = unlinkedMsgs.flatMap { str =>
+            indentTree(List((str, Nil, 0)), 1)
+          }
+
+          Seq(
+            Messages.WARNING + "The following reported error(s) cannot be linked to any part of the implicit search tree:"
+          ) ++
+            indented
+
+        } else {
+          Nil
+        }
+
+        val logs = history.DivergingImplicitErrors.logs
+
+        val logsText = if (logs.nonEmpty) {
+
+          val indented = logs.flatMap { str =>
+            indentTree(List((str, Nil, 0)), 1)
+          }
+
+          Seq(Messages.WARNING + "Implicit search may be broken:") ++
+            indented
+
+        } else {
+          Nil
+        }
+
+        val text = unlinkedText ++ logsText
+
+        text
+      }
+
+      addendum
+    }
+
+    val components: Seq[String] =
+      Seq("implicit error;") ++
+        msg ++
+        errorTreesStr ++
+        addendum
+
+    val result = components.mkString("\n")
+
+    result
+  }
+
+//  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+//    val (left, right) = dealias(found) -> dealias(req)
+//
+//    val normalized = Seq(left, right).map(_.normalize).distinct
+//
+//    val result = {
+//      if (normalized.size == 1) formatType(normalized.head, top)
+//      else if (left.typeSymbolDirect == right.typeSymbolDirect)
+//        formatDiffInfix(left, right, top)
+//      else
+//        formatDiffSpecial(left, right, top).getOrElse(
+//          formatDiffSimple(left, right)
+//        )
+//    }
+//
+//    result
+//  }
+
+  override def splainFoundReqMsg(found: Type, req: Type): String = {
+    val body =
+      if (settings.VtypeDiffs.value)
+        ";\n" + showFormattedL(formatDiff(found, req, top = true), break = true).indent.joinLines
+      else ""
+
+    val extra = mutable.Buffer.empty[String]
+
+    val result = (Seq(body) ++ extra.toSeq).mkString("\n")
+    result
+  }
+
+  override def extractArgs(tpe: Type): List[global.Type] = TypeView(tpe).extractArgs
+
+  override def stripType(tt: Type): (List[String], String) = {
+
+    val view = TypeView(tt)
+    view.path -> view.noArgShortName
+  }
+
+  // new implementation is idempotent and won't lose information
+  override def dealias(tpe: Type): Type = {
+
+    if (isAux(tpe)) tpe
+    else {
+
+      val result = tpe.dealias
+//      if (pluginSettings.typeReduction) {
+//        TyperHistory.currentGlobal.TypeReductionCache.pushReduction(tpe)
+//      }
+      result
+    }
+  }
+
+  case class FormattedIndex(
+      ft: Formatted,
+      idHash: Int
+  )
+
+  object FormattedIndex {
+
+    def apply(ft: Formatted) = new FormattedIndex(
+      ft,
+      System.identityHashCode(ft)
+    )
+  }
+
+  case class Reduction(
+      reduced: Formatted,
+      basedOn: Seq[(String, Formatted)]
+  ) {
+
+    def index(): Unit = {
+
+      Reduction.lookup += FormattedIndex(reduced) -> this
+    }
+
+  }
+
+  object Reduction {
+
+    lazy val lookup: TrieMap[FormattedIndex, Reduction] = TrieMap.empty
+  }
+
+  def formatTypeRaw(tpe: Type, top: Boolean): Formatted = {
+    formatWithInfix(tpe, extractArgs(tpe), top)(formatType)
+  }
+
+  override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
+    val dtpe = dealias(tpe)
+
+    val result = Seq(tpe, dtpe).distinct.map { t =>
+      formatTypeRaw(t, top)
+    }.distinct
+
+    result match {
+      case Seq(from, reduced) =>
+        Reduction(reduced, Seq("reduced from" -> from)).index()
+      case _ =>
+    }
+
+    result.last
+  }
+
+  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+    val (left, right) = dealias(found) -> dealias(req)
+
+    val normalized = Seq(left, right).map(_.normalize).distinct
+    if (normalized.size == 1) {
+      val only = normalized.head
+      val result = formatType(only, top)
+
+      val basedOn = Seq(found, req).distinct
+        .map { tt =>
+          formatTypeRaw(tt, top)
+        }
+        .distinct
+        .flatMap { ft =>
+          if (ft == result) None
+          else Some("normalized from" -> ft)
+        }
+
+      Reduction(
+        result,
+        basedOn
+      ).index()
+
+      result
+    } else {
+      val result =
+        if (left.typeSymbol == right.typeSymbol) {
+          formatDiffInfix(left, right, top)
+        } else {
+          formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
+        }
+
+      val basedOn = Seq(
+        "left side reduced from" -> Seq(found, left),
+        "right side reduced from" -> Seq(req, right)
+      )
+        .flatMap {
+          case (clause, fts) =>
+            if (fts.distinct.size == 1) None
+            else {
+              val formatted = fts.map { ft =>
+                formatTypeRaw(ft, top)
+              }.distinct
+              if (formatted.size == 1) None
+              else Some(clause -> formatted.head)
+            }
+        }
+
+      Reduction(
+        result,
+        basedOn
+      ).index()
+
+      result
+    }
+  }
+
+  override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
+    val raw = super.showFormattedLImpl(ft, break)
+
+    if (!pluginSettings.typeReduction) {
+      raw
+    } else {
+      val index = FormattedIndex(ft)
+
+      val maybeReduction = Reduction.lookup.get(index)
+
+      maybeReduction match {
+        case None =>
+          raw
+        case Some(reduction) =>
+          val extra = reduction.basedOn.flatMap {
+            case (clause, ft) =>
+              Seq(s".. ($clause)") ++
+                showFormattedLImpl(ft, break).lines.map { line =>
+                  s"   $line"
+                }
+          }
+
+          raw match {
+            case t: FlatType =>
+              BrokenType(
+                List(t.flat) ++ extra
+              )
+
+            case t: BrokenType =>
+              t.copy(t.lines ++ extra)
+          }
+      }
+    }
+  }
+}

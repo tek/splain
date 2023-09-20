@@ -24,7 +24,9 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(auxType)
 
-  check(refined)
+  check(refined1)
+
+  check(refined2)
 
   check(disambiguateQualified)
 

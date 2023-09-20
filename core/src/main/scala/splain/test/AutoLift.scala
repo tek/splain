@@ -48,10 +48,10 @@ object AutoLift {
 
       val chunks = serialized.sliding(MAX_LITERAL_LENGTH, MAX_LITERAL_LENGTH).toList
 
-      val chunkExpr = chunks.map {
-        cc =>
+      val chunkExpr = chunks
+        .map { cc =>
           s"\"$cc\""
-      }
+        }
         .mkString("(", ", ", ")")
 
       val typeStr = {
@@ -70,10 +70,10 @@ object AutoLift {
 
     def fromPreviousStage[T <: Serializable](strs: String*): T = {
 
-      val bytes = strs.map {
-         str =>
-           decoder.decode(str)
-      }
+      val bytes = strs
+        .map { str =>
+          decoder.decode(str)
+        }
         .reduce(_ ++ _)
 
       val bIStream = new ByteArrayInputStream(bytes)

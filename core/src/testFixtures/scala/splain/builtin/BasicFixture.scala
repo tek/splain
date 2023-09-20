@@ -100,7 +100,7 @@ object Aux
 }
   """
 
-  final val refined =
+  final val refined1 =
     """
 object Refined
 {
@@ -113,8 +113,37 @@ object Refined
   def f(a: A with B with C { type Y = String; type X = String; type Z = String }): Unit = ???
   val x: B with E with A with F { type X = Int; type Y = String } = ???
   f(x)
+
+  object Sub1 {
+    trait A
+
+    object Sub2 {
+      trait B
+
+      def f(a: A with B with C { type Y = String; type X = String; type Z = String }): Unit = ???
+      val x: B with E with A with F { type X = Int; type Y = String } = ???
+      f(x)
+    }
+  }
 }
   """
+
+  final val refined2 =
+    """
+object Refined
+{
+  trait Node {
+    type T
+  }
+
+  type NodeAux[T0] = Node { type T = T0 }
+  type NodeLt[T0] = NodeAux[_ <: T0]
+
+  implicitly[NodeLt[Int]]
+
+  val k: NodeLt[Int] = 1
+}
+    """
 
   final val disambiguateQualified =
     """

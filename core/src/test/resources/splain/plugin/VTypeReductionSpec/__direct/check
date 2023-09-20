@@ -1,0 +1,27 @@
+newSource1.scala:8: error: implicit error;
+!I e: Option[Int] =:= Option[String]
+  Cannot prove that FoundReqVsImplicit.vecInt.Head =:= Option[String].
+
+implicitly[vecInt.Head =:= Option[String]]
+          ^
+newSource1.scala:10: error: type mismatch;
+  Option[String|Int]
+val x: vecInt.Head = ??? : Option[String]
+                         ^
+newSource1.scala:8: error: implicit error;
+!I e:
+  Option[Int]
+  .. (reduced from)
+     FoundReqVsImplicit.vecInt.Head[Int]
+  =:=
+  Option[String]
+  Cannot prove that FoundReqVsImplicit.vecInt.Head =:= Option[String].
+
+implicitly[vecInt.Head =:= Option[String]]
+          ^
+newSource1.scala:10: error: type mismatch;
+  Option[String|Int]
+  .. (right side reduced from)
+     FoundReqVsImplicit.vecInt.Head[Int]
+val x: vecInt.Head = ??? : Option[String]
+                         ^

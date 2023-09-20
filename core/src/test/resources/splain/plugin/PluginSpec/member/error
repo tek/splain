@@ -1,0 +1,3 @@
+newSource1.scala:11: error: value attr is not a member of types.C *** types.D >:< types.D *** types.C
+  a.attr
+    ^

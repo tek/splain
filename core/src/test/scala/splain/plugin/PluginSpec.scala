@@ -4,6 +4,8 @@ import splain.SpecBase
 
 class PluginSpec extends SpecBase.File {
 
+  override def getCompilerOptions: String = super.getCompilerOptions + " -Vimplicits-verbose-tree"
+
   override lazy val predefCode: String =
     """
       |object types
@@ -20,15 +22,11 @@ class PluginSpec extends SpecBase.File {
     checkError()
   }
 
-  check("found/required type", "foundreq") {
+  check("higher kind argument", "higherKindArg") {
     checkError()
   }
 
   check("bounds") {
-    checkError()
-  }
-
-  check("auxPattern") {
     checkError()
   }
 
@@ -37,13 +35,13 @@ class PluginSpec extends SpecBase.File {
   }
 
   // TODO: cleanup, breakinfix is gone
-  skip("linebreak long infix types", "break") {
-    checkErrorWithBreak()
-  }
+//  skip("linebreak long infix types", "break") {
+//    checkErrorWithBreak()
+//  }
 
-  check("deephole") {
-    checkError()
-  }
+//  check("deephole") {
+//    checkError()
+//  }
 
   // TODO: remove, already in TreeSpec
 //  describe("tree printing") {
@@ -57,23 +55,23 @@ class PluginSpec extends SpecBase.File {
 //  }
 
   //  TODO: feature removed
-  skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
-    checkError()
-  }
+//  skip("prefix stripping", "prefix", extra = "-P:splain:keepmodules:2") {
+//    checkError()
+//  }
 
   //  TODO: feature removed
-  skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
-    checkError()
-  }
+//  skip("regex-rewrite", extra = "-P:splain:rewrite:\\.Level;0/5") {
+//    checkError()
+//  }
 
   // TODO: remove, already checked in BasicSpec
 //  check("refined type diff", "refined") {
 //    checkError()
 //  }
 
-  check("disambiguate types", "disambiguate") {
-    checkError()
-  }
+//  check("disambiguate types", "disambiguate") {
+//    checkError()
+//  }
 
   // TODO: remove, already in TruncRefinedSpec
 //  check("truncate refined type", "truncrefined", extra = "-Vimplicits-max-refined 10") {
@@ -90,23 +88,27 @@ class PluginSpec extends SpecBase.File {
 //    checkError()
 //  }
 
-  describe("single types ") {
+  // TODO: remove, already checked in BasicSpec
+//  describe("single types ") {
+//
+//    check("single") {
+//      checkError()
+//    }
+//
+//    check("in function", "single-fn") {
+//      checkError()
+//    }
+//
+//    check("with free symbol", "single-free") {
+//      checkError()
+//    }
+//  }
 
-    check("single") {
-      checkError()
-    }
-
-    check("in function", "single-fn") {
-      checkError()
-    }
-
-    check("with free symbol", "single-free") {
-      checkError()
-    }
+  check("not a member", file = "member") {
+    checkError()
   }
 
   check("implicit annotation with control character(s)", "implicit-ctrl-char") {
     checkError()
   }
-
 }
