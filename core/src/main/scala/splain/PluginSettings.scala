@@ -9,8 +9,13 @@ case class PluginSettings(pluginOpts: mutable.Map[String, String]) {
   def opt(key: String, default: String): String = pluginOpts.getOrElse(key, default)
 
   def enabled: Boolean = opt(Key.enabled, "true") == "true"
+  def enableAll: Boolean = opt(Key.enableAll, "false") == "true"
 
-  def boolean(key: String): Boolean = enabled && opt(key, "true") == "true"
+  def boolean(key: String): Boolean = {
+    if (!enabled) false
+    else if (enableAll) true
+    else opt(key, "true") == "true"
+  }
 
   def int(key: String): Option[Int] =
     if (enabled)
@@ -35,20 +40,20 @@ object PluginSettings {
   object Key {
 
     val enabled = "enabled"
+    val enableAll = "enableAll"
+
     val implicitDiverging = "Vimplicits-diverging"
 
     val implicitDivergingMaxDepth = "Vimplicits-diverging-max-depth"
 
     val typeReduction = "Vtype-reduction"
-
-    val debug = "debug"
   }
 
   val defaults: Map[String, String] = Map(
     Key.enabled -> "true",
+    Key.enableAll -> "false",
     Key.implicitDiverging -> "false",
     Key.implicitDivergingMaxDepth -> "100",
-    Key.typeReduction -> "false",
-    Key.debug -> "false"
+    Key.typeReduction -> "false"
   )
 }
