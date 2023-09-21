@@ -15,6 +15,7 @@ class SplainAnalyzer(val global: Global, val pluginSettings: PluginSettings)
       ShapelessRecordItemFormatter,
       RefinedFormatterImproved,
 //      RefinedFormatter,
-      ByNameFormatter
+      ByNameFormatter,
+      DiffDisambiguationFormatter
     )
 }

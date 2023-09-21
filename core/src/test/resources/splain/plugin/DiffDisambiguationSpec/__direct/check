@@ -1,0 +1,8 @@
+newSource1.scala:6: error: type mismatch;
+  Long {in <none>}|Long {in scala}
+        else add2(x.head, y.head) :: add(x.tail, y.tail)
+                    ^
+newSource1.scala:6: error: type mismatch;
+  Long {in <none>}|Long {in scala}
+        else add2(x.head, y.head) :: add(x.tail, y.tail)
+                            ^

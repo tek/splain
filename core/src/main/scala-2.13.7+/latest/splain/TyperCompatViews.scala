@@ -50,6 +50,12 @@ trait TyperCompatViews {
       }
     }
 
+    lazy val prefixFullName: String = {
+      self.prefix.typeSymbol.fullNameString
+    }
+
+    lazy val prefixContext: String = { s"in $prefixFullName" }
+
     lazy val safeToLongString: String = {
       try {
         self.toLongString
@@ -60,6 +66,35 @@ trait TyperCompatViews {
     }
 
     lazy val extraRationale: String = existentialContext(self) + explainAlias(self)
+  }
+
+  case class TypeDiffView(
+      found: Type,
+      req: Type
+  ) {
+
+    def map(fn: Type => Type): TypeDiffView =
+      TypeDiffView(fn(found), fn(req))
+
+    def toTuple[T](fn: Type => T): (T, T) = (fn(found), fn(req))
+
+    // copied from eponymous variable in Scala compiler
+    // apparently doesn't work after type arg stripped
+    lazy val easilyMistakable: Boolean = {
+
+      val foundWiden = found.widen
+      val reqWiden = req.widen
+      val sameNamesDifferentPrefixes =
+        foundWiden.typeSymbol.name == reqWiden.typeSymbol.name &&
+          foundWiden.prefix.typeSymbol != reqWiden.prefix.typeSymbol
+      val easilyMistakable =
+        sameNamesDifferentPrefixes &&
+          !req.typeSymbol.isConstant &&
+          finalOwners(foundWiden) && finalOwners(reqWiden) &&
+          !found.typeSymbol.isTypeParameterOrSkolem && !req.typeSymbol.isTypeParameterOrSkolem
+
+      easilyMistakable
+    }
   }
 
   case class DivergingImplicitErrorView(self: DivergentImplicitTypeError) {
