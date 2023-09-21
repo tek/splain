@@ -10,6 +10,30 @@ newSource1.scala:6: error: type mismatch;
   FoundReq.L|FoundReq.R
   f(new L)
     ^
+newSource1.scala:16: error: type mismatch;
+  (
+    FoundReqLong.VeryLong[Int]
+    ,
+    FoundReqLong.VeryLong[
+      FoundReqLong.VeryLong[
+        FoundReqLong.VeryLong[
+          FoundReqLong.VeryLong[
+            FoundReqLong.VeryLong[
+              FoundReqLong.VeryLong[
+                FoundReqLong.VeryLong[FoundReqLong.VeryLong[Int|String]]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  ) = x
+      ^
+newSource1.scala:11: error: type mismatch;
+  B.this.t1.type|B.this.t.TT
+    val t2: t.TT = t1
+                   ^
 newSource1.scala:7: error: implicit error;
 !I e: Bounds.F[Bounds.Arg]
 Bounds.g invalid because

@@ -40,8 +40,7 @@ trait TyperCompatViews {
 
       val ownerPathPrefix = ownerPath.mkString(".")
 
-      val ttString = noArgType.safeToString
-//      val ttString = TypeView(noArgType).safeToLongString
+      val ttString = TypeView(noArgType).typeToString
 
       if (ttString.startsWith(ownerPathPrefix)) {
         ownerPath -> ttString.stripPrefix(ownerPathPrefix).stripPrefix(".")
@@ -50,16 +49,79 @@ trait TyperCompatViews {
       }
     }
 
-    lazy val safeToLongString: String = {
-      try {
-        self.toLongString
-      } catch {
-        case _: Exception =>
-          self.safeToString
+    lazy val prefixFullName: String = {
+      self.prefix.typeSymbol.fullNameString
+    }
+
+    // probably not useful, withDisambiguation + longString should cover most cases
+    lazy val prefixContextIfNeeded: Option[String] = {
+
+      prefixFullName.toLowerCase match {
+        case "<root>" | "<empty>" | "<none>" => None
+        case _ =>
+          if (self.toLongString.startsWith(prefixFullName)) None
+          else {
+            Some(s"(in $prefixFullName)")
+          }
       }
     }
 
-    lazy val extraRationale: String = existentialContext(self) + explainAlias(self)
+    def typeToString: String = {
+
+      val detailLvl = pluginSettings.typeDetail
+
+      def short = self.safeToString
+      def long = scala.util.Try(self.toLongString).getOrElse(short)
+
+      def maybeContext = scala.util.Try(existentialContext(self)).toOption
+
+      def maybeAlias = scala.util.Try(explainAlias(self)).toOption
+
+      detailLvl match {
+        case i if i <= 1 => short
+        case 2 => long
+        case 3 =>
+          (Seq(long) ++ maybeContext).mkString("")
+
+        case i if i >= 4 =>
+          (Seq(long) ++ maybeContext ++ maybeAlias).mkString("")
+
+      }
+    }
+  }
+
+  case class TypeDiffView(
+      found: Type,
+      req: Type
+  ) {
+
+    def map(fn: Type => Type): TypeDiffView =
+      TypeDiffView(fn(found), fn(req))
+
+    def toTuple[T](fn: Type => T): (T, T) = (fn(found), fn(req))
+
+    // copied from eponymous variable in Scala compiler
+    // apparently doesn't work after type arg stripped
+//    lazy val easilyMistakable: Boolean = {
+//
+//      val foundWiden = found.widen
+//      val reqWiden = req.widen
+//      val sameNamesDifferentPrefixes =
+//        foundWiden.typeSymbol.name == reqWiden.typeSymbol.name &&
+//          foundWiden.prefix.typeSymbol != reqWiden.prefix.typeSymbol
+//      val easilyMistakable =
+//        sameNamesDifferentPrefixes &&
+//          !req.typeSymbol.isConstant &&
+//          finalOwners(foundWiden) && finalOwners(reqWiden) &&
+//          !found.typeSymbol.isTypeParameterOrSkolem && !req.typeSymbol.isTypeParameterOrSkolem
+//
+//      easilyMistakable
+//    }
+
+    lazy val builtInDiffMsg: String = {
+      val result = builtinFoundReqMsg(found, req)
+      result
+    }
   }
 
   case class DivergingImplicitErrorView(self: DivergentImplicitTypeError) {

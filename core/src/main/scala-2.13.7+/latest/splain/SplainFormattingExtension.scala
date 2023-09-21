@@ -380,36 +380,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     result
   }
 
-//  override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
-//    val (left, right) = dealias(found) -> dealias(req)
-//
-//    val normalized = Seq(left, right).map(_.normalize).distinct
-//
-//    val result = {
-//      if (normalized.size == 1) formatType(normalized.head, top)
-//      else if (left.typeSymbolDirect == right.typeSymbolDirect)
-//        formatDiffInfix(left, right, top)
-//      else
-//        formatDiffSpecial(left, right, top).getOrElse(
-//          formatDiffSimple(left, right)
-//        )
-//    }
-//
-//    result
-//  }
-
-  override def splainFoundReqMsg(found: Type, req: Type): String = {
-    val body =
-      if (settings.VtypeDiffs.value)
-        ";\n" + showFormattedL(formatDiff(found, req, top = true), break = true).indent.joinLines
-      else ""
-
-    val extra = mutable.Buffer.empty[String]
-
-    val result = (Seq(body) ++ extra.toSeq).mkString("\n")
-    result
-  }
-
   override def extractArgs(tpe: Type): List[global.Type] = TypeView(tpe).extractArgs
 
   override def stripType(tt: Type): (List[String], String) = {
@@ -445,21 +415,69 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     )
   }
 
+  trait Based {
+
+    def element: Formatted
+
+    def info(break: Boolean): Seq[String]
+  }
+
+  object Based {
+
+    lazy val lookup: TrieMap[FormattedIndex, Based] = TrieMap.empty
+  }
+
   case class Reduction(
-      reduced: Formatted,
-      basedOn: Seq[(String, Formatted)]
-  ) {
+      element: Formatted,
+      from: Seq[(String, Formatted)]
+  ) extends Based {
 
     def index(): Unit = {
 
-      Reduction.lookup += FormattedIndex(reduced) -> this
+      if (pluginSettings.showTypeReduction)
+        Based.lookup += FormattedIndex(element) -> this
     }
 
+    override def info(break: Boolean): Seq[String] = {
+
+      val extra = from.flatMap {
+        case (clause, ft) =>
+          Seq(s".. ($clause)") ++
+            showFormattedLImpl(ft, break).lines.map { line =>
+              s"   $line"
+            }
+      }
+
+      extra
+    }
   }
 
-  object Reduction {
+  case class BuiltInDiffMsg(
+      element: Formatted,
+      msg: String,
+      infixOpt: Option[Formatted] = None
+  ) extends Based {
 
-    lazy val lookup: TrieMap[FormattedIndex, Reduction] = TrieMap.empty
+    def index(): Unit = {
+
+      if (pluginSettings.TypeDiffsDetail.builtInMsg)
+        Based.lookup += FormattedIndex(element) -> this
+    }
+
+    override def info(break: Boolean): Seq[String] = {
+
+      lazy val infixText = infixOpt match {
+        case None => "|"
+        case Some(ii) => showFormattedLImpl(ii, break).flat
+      }
+
+      val indented = msg
+        .split("\n")
+        .filter(_ != ";")
+        .map(v => s"   $v")
+
+      Seq(s".. (comparing <found>$infixText<required>)") ++ indented
+    }
   }
 
   def formatTypeRaw(tpe: Type, top: Boolean): Formatted = {
@@ -467,22 +485,90 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   }
 
   override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
+
+    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+
+      tpe.typeArgs match {
+        case List(t1, t2) =>
+          val result = withDisambiguation(Nil, t1, t2) {
+            formatTypeImplNoDisambiguation(tpe, top)
+          }
+
+          result match {
+            case Infix(ii, left, right, _) =>
+              val noApparentDiff = (left == right) && (t1 != t2)
+
+              if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+
+                BuiltInDiffMsg(
+                  result,
+                  TypeDiffView(t1, t2).builtInDiffMsg,
+                  Some(ii)
+                ).index()
+              }
+            case _ =>
+          }
+
+          result
+        case _ =>
+          formatTypeImplNoDisambiguation(tpe, top)
+      }
+
+    } else {
+
+      formatTypeImplNoDisambiguation(tpe, top)
+    }
+  }
+
+  protected def formatTypeImplNoDisambiguation(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
 
-    val result = Seq(tpe, dtpe).distinct.map { t =>
+    val results = Seq(tpe, dtpe).distinct.map { t =>
       formatTypeRaw(t, top)
     }.distinct
 
-    result match {
+    results match {
       case Seq(from, reduced) =>
         Reduction(reduced, Seq("reduced from" -> from)).index()
       case _ =>
     }
 
-    result.last
+    val result = results.last
+
+    result
   }
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+
+    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+
+      val result = withDisambiguation(Nil, found, req) {
+        formatDiffImplNoDisambiguation(found, req, top)
+      }
+
+      result match {
+        case diff: Diff =>
+          val noApparentDiff = (diff.left == diff.right) && (found != req)
+
+          if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+
+            BuiltInDiffMsg(
+              diff,
+              TypeDiffView(found, req).builtInDiffMsg
+            ).index()
+          }
+        case _ =>
+      }
+
+      result
+    } else {
+
+      formatDiffImplNoDisambiguation(found, req, top)
+    }
+  }
+
+  protected def formatDiffImplNoDisambiguation(found: Type, req: Type, top: Boolean): Formatted = {
+
     val (left, right) = dealias(found) -> dealias(req)
 
     val normalized = Seq(left, right).map(_.normalize).distinct
@@ -507,12 +593,21 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       result
     } else {
-      val result =
-        if (left.typeSymbol == right.typeSymbol) {
+      val result = {
+        val noArgs = Seq(left, right).map { tt =>
+          TypeView(tt).noArgType
+        }
+
+        if (noArgs.distinct.size == 1) {
           formatDiffInfix(left, right, top)
         } else {
-          formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
+          formatDiffSpecial(left, right, top).getOrElse {
+
+            val result = formatDiffSimple(left, right)
+            result
+          }
         }
+      }
 
       val basedOn = Seq(
         "left side reduced from" -> Seq(found, left),
@@ -540,37 +635,84 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   }
 
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
-    val raw = super.showFormattedLImpl(ft, break)
 
-    if (!pluginSettings.typeReduction) {
-      raw
-    } else {
-      val index = FormattedIndex(ft)
+    /**
+      * If the args of an applied type constructor are multiline, create separate lines for the constructor name and the
+      * closing bracket; else return a single line.
+      */
+    def showTypeApply(
+        cons: String,
+        args: List[TypeRepr],
+        break: Boolean = break,
+        brackets: (String, String) = "[" -> "]"
+    ): TypeRepr = {
+      val flatArgs = args.map(_.flat).mkString(brackets._1, ", ", brackets._2)
+      val flat = FlatType(s"$cons$flatArgs")
 
-      val maybeReduction = Reduction.lookup.get(index)
+      def brokenArgs = args match {
+        case head :: tail => tail.foldLeft(head.lines)((z, a) => z ::: "," :: a.lines)
+        case _ => Nil
+      }
+
+      def broken = BrokenType(s"$cons" + brackets._1 :: indent(brokenArgs) ::: List(brackets._2))
+
+      if (break) decideBreak(flat, broken) else flat
+    }
+
+    def _showFormattedL(v: Formatted) = showFormattedL(v, break)
+
+    val raw = ft match {
+      case Simple(name) => FlatType(name.name)
+      case Qualified(path, name) => showFormattedQualified(path, name)
+      case Applied(cons, args) => showTypeApply(showFormatted(cons), args.map(_showFormattedL))
+      case tpe @ Infix(_, _, _, top) =>
+        wrapParensRepr(
+          if (break) breakInfix(flattenInfix(tpe)) else FlatType(flattenInfix(tpe).map(showFormatted).mkString(" ")),
+          top
+        )
+      case UnitForm => FlatType("Unit")
+      case FunctionForm(args, ret, top) =>
+        FlatType(wrapParens(s"${showFuncParams(args.map(showFormatted))} => ${showFormatted(ret)}", top))
+      case TupleForm(elems) =>
+        val formattedElems = elems.map(_showFormattedL)
+
+        if (elems.size == 1) {
+          FlatType(showTuple(formattedElems.map(_.flat))) // TODO: the name showTuple is obsolete
+        } else {
+          showTypeApply("", formattedElems, brackets = "(" -> ")")
+        }
+
+      case RefinedForm(elems, decls) =>
+        FlatType(
+          showRefined(elems.map(showFormatted), if (truncateDecls(decls)) List("...") else decls.map(showFormatted))
+        )
+      case Diff(left, right) => FlatType(formattedDiff(left, right))
+      case Decl(sym, rhs) => FlatType(s"type ${showFormatted(sym)} = ${showFormatted(rhs)}")
+      case DeclDiff(sym, left, right) => FlatType(s"type ${showFormatted(sym)} = ${formattedDiff(left, right)}")
+      case ByName(tpe) => FlatType(s"(=> ${showFormatted(tpe)})")
+    }
+
+    val index = FormattedIndex(ft)
+
+    val maybeReduction = Based.lookup.get(index)
+
+    val result = {
 
       maybeReduction match {
         case None =>
           raw
-        case Some(reduction) =>
-          val extra = reduction.basedOn.flatMap {
-            case (clause, ft) =>
-              Seq(s".. ($clause)") ++
-                showFormattedLImpl(ft, break).lines.map { line =>
-                  s"   $line"
-                }
-          }
-
+        case Some(based) =>
           raw match {
             case t: FlatType =>
               BrokenType(
-                List(t.flat) ++ extra
+                List(t.flat) ++ based.info(break)
               )
-
             case t: BrokenType =>
-              t.copy(t.lines ++ extra)
+              t.copy(t.lines ++ based.info(break))
           }
       }
     }
+
+    result
   }
 }
