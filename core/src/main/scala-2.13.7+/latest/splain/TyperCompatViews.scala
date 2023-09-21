@@ -60,21 +60,36 @@ trait TyperCompatViews {
       val details = pluginSettings.typeDetails.getOrElse(1)
 
       lazy val short = self.safeToString
-      lazy val long = self.toLongString
+      lazy val long = scala.util.Try(self.toLongString).getOrElse(short)
+
       lazy val ec = existentialContext(self)
+
+      lazy val pc =
+        if (long.startsWith(prefixFullName)) ""
+        else {
+          s" {$prefixContext}"
+        }
+
+      lazy val withEc = scala.util
+        .Try(
+          long + ec
+        )
+        .getOrElse(long)
+
+      lazy val withPcEc = scala.util
+        .Try(
+          long + pc + ec
+        )
+        .getOrElse(withEc)
 
       if (details <= 1) {
         short
       } else if (details == 2) {
-        scala.util.Try(long).getOrElse(short)
+        long
+      } else if (details == 3) {
+        withEc
       } else {
-        scala.util
-          .Try(
-            long + ec
-          )
-          .orElse(scala.util.Try(long))
-          .orElse(scala.util.Try(short + ec))
-          .getOrElse(short)
+        withPcEc
       }
     }
   }
