@@ -14,7 +14,7 @@ object Acceptance {
 
     lazy val buffer: ArrayBuffer[TryCompile] = ArrayBuffer.empty
 
-    def check(v: TryCompile): Unit = {
+    def check(v: TryCompile, numberOfErrors: Int = 1): Unit = {
       buffer += v
     }
 

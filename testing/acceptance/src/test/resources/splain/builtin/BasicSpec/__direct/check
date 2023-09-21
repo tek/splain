@@ -10,6 +10,100 @@ newSource1.scala:6: error: type mismatch;
   splain.acceptance.builtin.StaticBasicSpec.FoundReq.L|splain.acceptance.builtin.StaticBasicSpec.FoundReq.R
   f(new L)
     ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+            splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+              splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[String]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+  implicitly[VeryLong[
+            ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+            splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+              splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[String]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ] {
+    type A = Int;
+    type B = Int;
+    type C = Int;
+    type D = Int;
+    type E = Int;
+    type F = Int;
+    type G = Int;
+    type H = Int
+  }
+  implicitly[VeryLong[
+            ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  (
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int],
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+            splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+              splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  implicitly[
+            ^
+newSource1.scala:16: error: type mismatch;
+  (
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int],
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+            splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+              splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int|String]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  )
+  ) = x
+      ^
+newSource1.scala:11: error: type mismatch;
+  B.this.t1.type|B.this.t.TT
+    val t2: t.TT = t1
+                   ^
 newSource1.scala:7: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.Bounds.F[
@@ -75,16 +169,12 @@ newSource1.scala:11: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.DeepHole.C1[
     splain.acceptance.builtin.StaticBasicSpec.DeepHole.T3[
-      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[List[String], ?]
-      ,
+      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[List[String], ?],
       splain.acceptance.builtin.StaticBasicSpec.DeepHole.T2[
-        splain.acceptance.builtin.StaticBasicSpec.DeepHole.Id
-        ,
-        splain.acceptance.builtin.StaticBasicSpec.DeepHole.C4
-        ,
+        splain.acceptance.builtin.StaticBasicSpec.DeepHole.Id,
+        splain.acceptance.builtin.StaticBasicSpec.DeepHole.C4,
         ?
-      ]
-      ,
+      ],
       ?
     ]
   ]
@@ -93,8 +183,7 @@ newSource1.scala:11: error: implicit error;
 newSource1.scala:9: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.Aux.F.Aux[
-    splain.acceptance.builtin.StaticBasicSpec.Aux.C
-    ,
+    splain.acceptance.builtin.StaticBasicSpec.Aux.C,
     splain.acceptance.builtin.StaticBasicSpec.Aux.D
   ]
 Aux.f invalid because
@@ -102,7 +191,14 @@ Aux.f invalid because
   implicitly[F.Aux[C, D]]
             ^
 newSource1.scala:11: error: type mismatch;
-  splain.acceptance.builtin.StaticBasicSpec.Refined.A with splain.acceptance.builtin.StaticBasicSpec.Refined.B with splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {type X = Int|String; type Y = String; type Z = <none>|String}
+  splain.acceptance.builtin.StaticBasicSpec.Refined.A with
+  splain.acceptance.builtin.StaticBasicSpec.Refined.B with
+  splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with
+  splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {
+    type X = Int|String;
+    type Y = String;
+    type Z = <none>|String
+  }
   f(x)
     ^
 newSource1.scala:10: error: implicit error;

@@ -42,21 +42,22 @@ object SpecBase {
 
     def check(
         code: String,
-        extra: String = defaultExtra,
+        profile: Profile = Profile.empty,
         nameOverride: String = "",
         numberOfErrors: Int = 1,
         verbose: Boolean = false
     ): Unit = {
 
       val name = getName(code, nameOverride)
-      val cc = DirectCase(code, extra)
+
+      val cc = DirectCase(code, profile)
 
       val from = runner.pointer.getAndAdd(numberOfErrors)
       val until = runner.pointer.get()
       val groundTruth = runner.groundTruths.slice(from, until).mkString("\n")
 
       _it(name) {
-        val error = cc.splainC.compileError()
+        val error = cc.compileWith.compileError()
         error must_== groundTruth
 
         if (verbose)
@@ -68,7 +69,12 @@ object SpecBase {
       }
     }
 
-    def skip(code: String, extra: String = defaultExtra, nameOverride: String = "", numberOfBlocks: Int = 1): Unit = {
+    def skip(
+        code: String,
+        setting: Profile = Profile.empty,
+        nameOverride: String = "",
+        numberOfBlocks: Int = 1
+    ): Unit = {
 
       val name = getName(code, nameOverride)
 
@@ -83,7 +89,7 @@ object SpecBase {
     def check(
         name: String,
         file: String = "",
-        extra: String = defaultExtra
+        profile: Profile = Profile.empty
     )(
         check: CheckFile
     ): Unit = {
@@ -96,14 +102,14 @@ object SpecBase {
 
       _it(testName) {
 
-        check(FileCase(_file, extra))
+        check(FileCase(_file, profile))
       }
     }
 
     def skip(
         name: String,
         file: String = "",
-        extra: String = defaultExtra
+        setting: Profile = Profile.empty
     )(
         check: CheckFile
     ): Unit = {
@@ -116,7 +122,7 @@ object SpecBase {
 
       ignore(testName) {
 
-        check(FileCase(_file, extra))
+        check(FileCase(_file, setting))
       }
     }
   }

@@ -8,6 +8,16 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(foundReq)
 
+  check(LongArg)
+
+  check(LongRefined)
+
+  check(LongTuple)
+
+  check(foundReqLongTuple)
+
+  check(foundReqSameSymbol)
+
   check(bounds)
 
   check(longAnnotationMessage)

@@ -10,6 +10,76 @@ newSource1.scala:6: error: type mismatch;
   FoundReq.L|FoundReq.R
   f(new L)
     ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  Long.VeryLong[
+    Long.VeryLong[
+      Long.VeryLong[
+        Long.VeryLong[
+          Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+        ]
+      ]
+    ]
+  ]
+  implicitly[VeryLong[
+            ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  Long.VeryLong[
+    Long.VeryLong[
+      Long.VeryLong[
+        Long.VeryLong[
+          Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+        ]
+      ]
+    ]
+  ] {
+    type A = Int;
+    type B = Int;
+    type C = Int;
+    type D = Int;
+    type E = Int;
+    type F = Int;
+    type G = Int;
+    type H = Int
+  }
+  implicitly[VeryLong[
+            ^
+newSource1.scala:4: error: implicit error;
+!I e:
+  (
+    Long.VeryLong[Int],
+    Long.VeryLong[
+      Long.VeryLong[
+        Long.VeryLong[
+          Long.VeryLong[
+            Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[Int]]]]
+          ]
+        ]
+      ]
+    ]
+  )
+  implicitly[
+            ^
+newSource1.scala:16: error: type mismatch;
+  (
+    Long.VeryLong[Int],
+    Long.VeryLong[
+      Long.VeryLong[
+        Long.VeryLong[
+          Long.VeryLong[
+            Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[Int|String]]]]
+          ]
+        ]
+      ]
+    ]
+  )
+  ) = x
+      ^
+newSource1.scala:11: error: type mismatch;
+  B.this.t1.type|B.this.t.TT
+    val t2: t.TT = t1
+                   ^
 newSource1.scala:7: error: implicit error;
 !I e: Bounds.F[Bounds.Arg]
 Bounds.g invalid because
@@ -68,10 +138,8 @@ newSource1.scala:11: error: implicit error;
 !I e:
   DeepHole.C1[
     DeepHole.T3[
-      DeepHole.T1[List[String], ?]
-      ,
-      DeepHole.T2[DeepHole.Id, DeepHole.C4, ?]
-      ,
+      DeepHole.T1[List[String], ?],
+      DeepHole.T2[DeepHole.Id, DeepHole.C4, ?],
       ?
     ]
   ]
@@ -84,11 +152,25 @@ Aux.f invalid because
   implicitly[F.Aux[C, D]]
             ^
 newSource1.scala:11: error: type mismatch;
-  Refined.A with Refined.B with Refined.E|Refined.C with Refined.F|<none> {type X = Int|String; type Y = String; type Z = <none>|String}
+  Refined.A with
+  Refined.B with
+  Refined.E|Refined.C with
+  Refined.F|<none> {
+    type X = Int|String;
+    type Y = String;
+    type Z = <none>|String
+  }
   f(x)
     ^
 newSource1.scala:21: error: type mismatch;
-  Refined.E|Refined.C with Refined.F|<none> with Refined.Sub1.A with Refined.Sub1.Sub2.B {type X = Int|String; type Y = String; type Z = <none>|String}
+  Refined.E|Refined.C with
+  Refined.F|<none> with
+  Refined.Sub1.A with
+  Refined.Sub1.Sub2.B {
+    type X = Int|String;
+    type Y = String;
+    type Z = <none>|String
+  }
       f(x)
         ^
 newSource1.scala:10: error: implicit error;

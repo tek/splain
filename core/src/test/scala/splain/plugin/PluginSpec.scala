@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class PluginSpec extends SpecBase.File {
 
-  override def getCompilerOptions: String = super.getCompilerOptions + " -Vimplicits-verbose-tree"
+  override def basicSetting: String = super.basicSetting + " -Vimplicits-verbose-tree"
 
   override lazy val predefCode: String =
     """
