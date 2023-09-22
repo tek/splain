@@ -1,12 +1,14 @@
 newSource1.scala:6: error: type mismatch;
   Long|Long
-  ..  found   : Long(in method add)
-  ..  required: scala.Long
+  .. (minor type difference where <found>|<required>)
+      found   : Long(in method add)
+      required: scala.Long
         else add2(x.head, y.head) :: add(x.tail, y.tail)
                     ^
 newSource1.scala:6: error: type mismatch;
   Long|Long
-  ..  found   : Long(in method add)
-  ..  required: scala.Long
+  .. (minor type difference where <found>|<required>)
+      found   : Long(in method add)
+      required: scala.Long
         else add2(x.head, y.head) :: add(x.tail, y.tail)
                             ^

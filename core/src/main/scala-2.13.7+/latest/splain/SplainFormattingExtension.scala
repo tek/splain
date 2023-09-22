@@ -442,8 +442,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     def element: Formatted
 
     def annotations(break: Boolean): Seq[String]
-
-//    def basedOn: Seq[(String, Formatted)]
   }
 
   object Based {
@@ -478,7 +476,8 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   case class ExplainDiff(
       element: Formatted,
-      basedOn: String
+      basedOn: String,
+      infix: String = "|"
   ) extends Based {
 
     def index(): Unit = {
@@ -488,10 +487,12 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     override def annotations(break: Boolean): Seq[String] = {
 
-      basedOn
+      val indented = basedOn
         .split("\n")
         .filter(_ != ";")
-        .map(v => s".. $v")
+        .map(v => s"   $v")
+
+      Seq(s".. (minor type difference where <found>$infix<required>)") ++ indented
     }
   }
 
