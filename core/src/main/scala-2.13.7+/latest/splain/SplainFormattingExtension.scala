@@ -549,7 +549,26 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         if (noArgs.distinct.size == 1) {
           formatDiffInfix(left, right, top)
         } else {
-          formatDiffSpecial(left, right, top).getOrElse(formatDiffSimple(left, right))
+          formatDiffSpecial(left, right, top).getOrElse {
+
+            val result = formatDiffSimple(left, right)
+
+            result match {
+              case diff: Diff =>
+                val noApparentDiff = diff.left == diff.right
+
+                if (noApparentDiff) {
+
+                  ExplainDiff(
+                    diff,
+                    TypeDiffView(left, right).builtInDiffMsg
+                  ).index()
+                }
+              case _ =>
+            }
+
+            result
+          }
         }
       }
 
@@ -576,26 +595,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       result
     }
-  }
-
-  override def formatDiffSimple(left: Type, right: Type): Formatted = {
-
-    val result = super.formatDiffSimple(left, right)
-
-    result match {
-      case diff: Diff =>
-        val noApparentDiff = diff.left == diff.right
-
-        if (noApparentDiff) {
-
-          ExplainDiff(
-            diff,
-            TypeDiffView(left, right).builtInDiffMsg
-          ).index()
-        }
-    }
-
-    result
   }
 
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
