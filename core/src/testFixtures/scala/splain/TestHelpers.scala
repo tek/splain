@@ -7,17 +7,16 @@ import splain.test.TryCompile
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
+import scala.language.implicitConversions
 import scala.util.Try
 
 trait TestHelpers extends Suite {
 
   import TestHelpers._
 
-  def getCompilerOptions: String = "-Vimplicits -Vtype-diffs"
+  protected def basicSetting: String = "-Vimplicits -Vtype-diffs"
 
-  final protected lazy val specCompilerOptions = getCompilerOptions
-
-  protected lazy val defaultExtra: String = ""
+  protected def defaultExtraSetting: String = ""
 
   lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
 
@@ -60,7 +59,38 @@ trait TestHelpers extends Suite {
     TryCompile.UseNSC(settings)
   }
 
-  class TestCase(code: String, extra: String) {
+  sealed trait CompilerSetting {
+
+    def text: String
+  }
+
+  object CompilerSetting {
+
+    final lazy val basic = basicSetting
+
+    final lazy val defaultExtra: String = defaultExtraSetting
+
+    case class Splain(extraSetting: String = CompilerSetting.defaultExtra) extends CompilerSetting {
+
+      override lazy val text = s"$enableSplainPlugin $basicSetting $extraSetting"
+    }
+
+    case class BuiltIn(extraSetting: String = CompilerSetting.defaultExtra) extends CompilerSetting {
+
+      override lazy val text = s"$basicSetting $extraSetting"
+    } // use the compiler with option but no plugin
+
+    object Disabled extends CompilerSetting {
+
+      override def text: String = ""
+    } // just use the plain old compiler as-is
+
+    implicit def fromString(v: String): Splain = Splain(v)
+
+    lazy val default: Splain = Splain()
+  }
+
+  class TestCase(code: String, setting: CompilerSetting) {
 
     lazy val codeWithPredef: String = effectivePredef + code
 
@@ -82,7 +112,7 @@ trait TestHelpers extends Suite {
     }
 
     def compileSuccess(): Option[String] =
-      splainC.compile() match {
+      compileWith.compile() match {
         case _: TryCompile.Success =>
           None
         case v: TryCompile.Failure =>
@@ -92,9 +122,7 @@ trait TestHelpers extends Suite {
     def checkSuccess(): Assertion =
       assert(compileSuccess().isEmpty)
 
-    lazy val splainC: CompileWith = CompileWith(s"$enableSplainPlugin $specCompilerOptions $extra")
-
-    lazy val scalaC: CompileWith = CompileWith(s"$specCompilerOptions")
+    lazy val compileWith: CompileWith = CompileWith(setting.text)
   }
 
   implicit class SpecStringOps(self: String) {
@@ -137,23 +165,23 @@ trait TestHelpers extends Suite {
     }
   }
 
-  case class FileCase(name: String, extra: String = defaultExtra)
-      extends TestCase(fileContentString(name, "code.scala"), extra) {
+  case class FileCase(name: String, setting: CompilerSetting = CompilerSetting.default)
+      extends TestCase(fileContentString(name, "code.scala"), setting) {
 
     def checkError(errorFile: Option[String] = None): Unit = {
 
-      splainC.compileError() must_== groundTruth(name, errorFile)
+      compileWith.compileError() must_== groundTruth(name, errorFile)
     }
   }
 
   type CheckFile = FileCase => Unit
 
   def checkError(errorFile: Option[String] = None): CheckFile = { cc =>
-    cc.splainC.compileError() must_== groundTruth(cc.name, errorFile)
+    cc.compileWith.compileError() must_== groundTruth(cc.name, errorFile)
   }
 
   def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): CheckFile = { cc =>
-    val withBreak = cc.copy(extra = s"-Vimplicits-breakinfix $length")
+    val withBreak = cc.copy(setting = s"-Vimplicits-breakinfix $length")
     withBreak.checkError(errorFile)
   }
 
@@ -162,7 +190,8 @@ trait TestHelpers extends Suite {
     ()
   }
 
-  case class DirectCase(code: String, extra: String = defaultExtra) extends TestCase(code, extra)
+  case class DirectCase(code: String, setting: CompilerSetting = CompilerSetting.default)
+      extends TestCase(code, setting)
 
   case class DirectRunner() {
 
@@ -239,4 +268,5 @@ object TestHelpers {
 
     rows.split('\n').mkString(" ")
   }
+
 }

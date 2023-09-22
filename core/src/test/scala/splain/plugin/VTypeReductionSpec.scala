@@ -21,5 +21,5 @@ val x: vecInt.Head = ??? : Option[String]
 
   check(foundReqVsImplicit, nameOverride = "original", numberOfErrors = 2)
 
-  check(foundReqVsImplicit, extra = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+  check(foundReqVsImplicit, setting = "-P:splain:Vtype-reduction", numberOfErrors = 2)
 }

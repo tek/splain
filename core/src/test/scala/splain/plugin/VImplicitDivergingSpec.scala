@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class VImplicitDivergingSpec extends SpecBase.File {
 
-  override lazy val defaultExtra: String = "-Vimplicits-verbose-tree -P:splain:Vimplicits-diverging"
+  override def defaultExtraSetting: String = "-Vimplicits-verbose-tree -P:splain:Vimplicits-diverging"
 
   check("self") {
     checkError()
@@ -14,7 +14,11 @@ class VImplicitDivergingSpec extends SpecBase.File {
     checkError()
   }
 
-  check("... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth:5") {
+  check(
+    "... with max depth",
+    "circular",
+    setting = s"${CompilerSetting.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
+  ) {
     checkError()
   }
 
@@ -22,7 +26,11 @@ class VImplicitDivergingSpec extends SpecBase.File {
     checkSuccess()
   }
 
-  check(".... with max depth", "circular", extra = s"$defaultExtra -P:splain:Vimplicits-diverging-max-depth:5") {
+  check(
+    ".... with max depth",
+    "circular",
+    setting = s"${CompilerSetting.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
+  ) {
     checkError()
   }
 
@@ -30,7 +38,7 @@ class VImplicitDivergingSpec extends SpecBase.File {
     checkError()
   }
 
-  check("... without verbose-tree", "diverging-compact", extra = "-P:splain:Vimplicits-diverging") {
+  check("... without verbose-tree", "diverging-compact", setting = "-P:splain:Vimplicits-diverging") {
     checkError()
   }
 }

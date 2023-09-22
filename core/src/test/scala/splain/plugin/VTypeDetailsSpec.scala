@@ -16,9 +16,9 @@ class VTypeDetailsSpec extends SpecBase.Direct {
     }
 """
 
-  check(singleType, nameOverride = "1", extra = "-P:splain:Vtype-details:1")
+  check(singleType, nameOverride = "1", setting = "-P:splain:Vtype-details:1")
 
-  check(singleType, nameOverride = "2", extra = "-P:splain:Vtype-details:2")
+  check(singleType, nameOverride = "2", setting = "-P:splain:Vtype-details:2")
 
-  check(singleType, nameOverride = "3", extra = "-P:splain:Vtype-details:3")
+  check(singleType, nameOverride = "3", setting = "-P:splain:Vtype-details:3")
 }

@@ -4,5 +4,5 @@ class BasicXSource3Spec extends BasicSpec {
 
   override lazy val suiteCanonicalName: String = classOf[BasicSpec].getCanonicalName
 
-  override lazy val defaultExtra: String = "-Xsource:3"
+  override def defaultExtraSetting: String = "-Xsource:3"
 }
