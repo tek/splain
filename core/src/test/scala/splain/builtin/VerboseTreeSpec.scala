@@ -36,7 +36,7 @@ object Tree
 }
   """
 
-  check(verboseTree, setting = "-Vimplicits-verbose-tree")
+  check(verboseTree, profile = "-Vimplicits-verbose-tree")
 
-  check(verboseTree, setting = "", nameOverride = "original")
+  check(verboseTree, profile = "", nameOverride = "original")
 }

@@ -437,21 +437,62 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     )
   }
 
+  trait Based {
+
+    def element: Formatted
+
+    def annotations(break: Boolean): Seq[String]
+
+//    def basedOn: Seq[(String, Formatted)]
+  }
+
+  object Based {
+
+    lazy val lookup: TrieMap[FormattedIndex, Based] = TrieMap.empty
+  }
+
   case class Reduction(
-      reduced: Formatted,
+      element: Formatted,
       basedOn: Seq[(String, Formatted)]
-  ) {
+  ) extends Based {
 
     def index(): Unit = {
 
-      Reduction.lookup += FormattedIndex(reduced) -> this
+      if (pluginSettings.typeReduction)
+        Based.lookup += FormattedIndex(element) -> this
     }
 
+    override def annotations(break: Boolean): Seq[String] = {
+
+      val extra = basedOn.flatMap {
+        case (clause, ft) =>
+          Seq(s".. ($clause)") ++
+            showFormattedLImpl(ft, break).lines.map { line =>
+              s"   $line"
+            }
+      }
+
+      extra
+    }
   }
 
-  object Reduction {
+  case class ExplainDiff(
+      element: Formatted,
+      basedOn: String
+  ) extends Based {
 
-    lazy val lookup: TrieMap[FormattedIndex, Reduction] = TrieMap.empty
+    def index(): Unit = {
+
+      Based.lookup += FormattedIndex(element) -> this
+    }
+
+    override def annotations(break: Boolean): Seq[String] = {
+
+      basedOn
+        .split("\n")
+        .filter(_ != ";")
+        .map(v => s".. $v")
+    }
   }
 
   def formatTypeRaw(tpe: Type, top: Boolean): Formatted = {
@@ -536,6 +577,26 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
   }
 
+  override def formatDiffSimple(left: Type, right: Type): Formatted = {
+
+    val result = super.formatDiffSimple(left, right)
+
+    result match {
+      case diff: Diff =>
+        val noApparentDiff = diff.left == diff.right
+
+        if (noApparentDiff) {
+
+          ExplainDiff(
+            diff,
+            TypeDiffView(left, right).builtInDiffMsg
+          ).index()
+        }
+    }
+
+    result
+  }
+
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
 
     /**
@@ -594,33 +655,23 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       case ByName(tpe) => FlatType(s"(=> ${showFormatted(tpe)})")
     }
 
-    val result = if (!pluginSettings.typeReduction) {
-      raw
-    } else {
-      val index = FormattedIndex(ft)
+    val index = FormattedIndex(ft)
 
-      val maybeReduction = Reduction.lookup.get(index)
+    val maybeReduction = Based.lookup.get(index)
+
+    val result = {
 
       maybeReduction match {
         case None =>
           raw
-        case Some(reduction) =>
-          val extra = reduction.basedOn.flatMap {
-            case (clause, ft) =>
-              Seq(s".. ($clause)") ++
-                showFormattedLImpl(ft, break).lines.map { line =>
-                  s"   $line"
-                }
-          }
-
+        case Some(based) =>
           raw match {
             case t: FlatType =>
               BrokenType(
-                List(t.flat) ++ extra
+                List(t.flat) ++ based.annotations(break)
               )
-
             case t: BrokenType =>
-              t.copy(t.lines ++ extra)
+              t.copy(t.lines ++ based.annotations(break))
           }
       }
     }

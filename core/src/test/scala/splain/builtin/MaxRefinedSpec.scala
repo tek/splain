@@ -18,5 +18,5 @@ object TruncRefined
 
   check(truncrefined, nameOverride = "original")
 
-  check(truncrefined, setting = "-Vimplicits-max-refined 5")
+  check(truncrefined, profile = "-Vimplicits-max-refined 5")
 }

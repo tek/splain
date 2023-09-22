@@ -106,20 +106,24 @@ trait TyperCompatViews {
 
     // copied from eponymous variable in Scala compiler
     // apparently doesn't work after type arg stripped
-    lazy val easilyMistakable: Boolean = {
+//    lazy val easilyMistakable: Boolean = {
+//
+//      val foundWiden = found.widen
+//      val reqWiden = req.widen
+//      val sameNamesDifferentPrefixes =
+//        foundWiden.typeSymbol.name == reqWiden.typeSymbol.name &&
+//          foundWiden.prefix.typeSymbol != reqWiden.prefix.typeSymbol
+//      val easilyMistakable =
+//        sameNamesDifferentPrefixes &&
+//          !req.typeSymbol.isConstant &&
+//          finalOwners(foundWiden) && finalOwners(reqWiden) &&
+//          !found.typeSymbol.isTypeParameterOrSkolem && !req.typeSymbol.isTypeParameterOrSkolem
+//
+//      easilyMistakable
+//    }
 
-      val foundWiden = found.widen
-      val reqWiden = req.widen
-      val sameNamesDifferentPrefixes =
-        foundWiden.typeSymbol.name == reqWiden.typeSymbol.name &&
-          foundWiden.prefix.typeSymbol != reqWiden.prefix.typeSymbol
-      val easilyMistakable =
-        sameNamesDifferentPrefixes &&
-          !req.typeSymbol.isConstant &&
-          finalOwners(foundWiden) && finalOwners(reqWiden) &&
-          !found.typeSymbol.isTypeParameterOrSkolem && !req.typeSymbol.isTypeParameterOrSkolem
-
-      easilyMistakable
+    lazy val builtInDiffMsg: String = {
+      builtinFoundReqMsg(found, req)
     }
   }
 

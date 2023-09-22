@@ -18,6 +18,12 @@ trait TestHelpers extends Suite {
 
   protected def defaultExtraSetting: String = ""
 
+  object Settings {
+
+    final lazy val basic = basicSetting
+    final lazy val defaultExtra: String = defaultExtraSetting
+  }
+
   lazy val suiteCanonicalName: String = this.getClass.getCanonicalName
 
   final protected lazy val resourceDir: String = suiteCanonicalName.split('.').mkString("/")
@@ -59,38 +65,34 @@ trait TestHelpers extends Suite {
     TryCompile.UseNSC(settings)
   }
 
-  sealed trait CompilerSetting {
+  sealed trait Profile {
 
     def text: String
   }
 
-  object CompilerSetting {
+  object Profile {
 
-    final lazy val basic = basicSetting
-
-    final lazy val defaultExtra: String = defaultExtraSetting
-
-    case class Splain(extraSetting: String = CompilerSetting.defaultExtra) extends CompilerSetting {
+    case class Splain(extraSetting: String = Settings.defaultExtra) extends Profile {
 
       override lazy val text = s"$enableSplainPlugin $basicSetting $extraSetting"
     }
 
-    case class BuiltIn(extraSetting: String = CompilerSetting.defaultExtra) extends CompilerSetting {
+    case class BuiltIn(extraSetting: String = Settings.defaultExtra) extends Profile {
 
       override lazy val text = s"$basicSetting $extraSetting"
     } // use the compiler with option but no plugin
 
-    object Disabled extends CompilerSetting {
+    case object Disabled extends Profile {
 
       override def text: String = ""
     } // just use the plain old compiler as-is
 
     implicit def fromString(v: String): Splain = Splain(v)
 
-    lazy val default: Splain = Splain()
+    lazy val empty: Splain = Splain()
   }
 
-  class TestCase(code: String, setting: CompilerSetting) {
+  class TestCase(code: String, setting: Profile) {
 
     lazy val codeWithPredef: String = effectivePredef + code
 
@@ -165,8 +167,8 @@ trait TestHelpers extends Suite {
     }
   }
 
-  case class FileCase(name: String, setting: CompilerSetting = CompilerSetting.default)
-      extends TestCase(fileContentString(name, "code.scala"), setting) {
+  case class FileCase(name: String, profile: Profile = Profile.empty)
+      extends TestCase(fileContentString(name, "code.scala"), profile) {
 
     def checkError(errorFile: Option[String] = None): Unit = {
 
@@ -181,7 +183,7 @@ trait TestHelpers extends Suite {
   }
 
   def checkErrorWithBreak(errorFile: Option[String] = None, length: Int = 20): CheckFile = { cc =>
-    val withBreak = cc.copy(setting = s"-Vimplicits-breakinfix $length")
+    val withBreak = cc.copy(profile = s"-Vimplicits-breakinfix $length")
     withBreak.checkError(errorFile)
   }
 
@@ -190,8 +192,7 @@ trait TestHelpers extends Suite {
     ()
   }
 
-  case class DirectCase(code: String, setting: CompilerSetting = CompilerSetting.default)
-      extends TestCase(code, setting)
+  case class DirectCase(code: String, setting: Profile = Profile.empty) extends TestCase(code, setting)
 
   case class DirectRunner() {
 

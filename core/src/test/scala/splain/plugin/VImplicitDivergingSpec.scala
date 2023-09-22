@@ -17,7 +17,7 @@ class VImplicitDivergingSpec extends SpecBase.File {
   check(
     "... with max depth",
     "circular",
-    setting = s"${CompilerSetting.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
+    profile = s"${Settings.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
   ) {
     checkError()
   }
@@ -29,7 +29,7 @@ class VImplicitDivergingSpec extends SpecBase.File {
   check(
     ".... with max depth",
     "circular",
-    setting = s"${CompilerSetting.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
+    profile = s"${Settings.defaultExtra} -P:splain:Vimplicits-diverging-max-depth:5"
   ) {
     checkError()
   }
@@ -38,7 +38,7 @@ class VImplicitDivergingSpec extends SpecBase.File {
     checkError()
   }
 
-  check("... without verbose-tree", "diverging-compact", setting = "-P:splain:Vimplicits-diverging") {
+  check("... without verbose-tree", "diverging-compact", profile = "-P:splain:Vimplicits-diverging") {
     checkError()
   }
 }

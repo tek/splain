@@ -2,7 +2,7 @@ package splain.plugin
 
 import splain.SpecBase
 
-class DiffDisambiguationSpec extends SpecBase.Direct {
+class ExplainDiffSpec extends SpecBase.Direct {
 
   final val basic =
     """
