@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class ExplainDiffSpec extends SpecBase.Direct {
 
-  final val basic =
+  final val diff =
     """
     object Test {
       def add2(x:Long,y:Long): Long = x + y
@@ -15,5 +15,39 @@ class ExplainDiffSpec extends SpecBase.Direct {
     }
 """
 
-  check(basic, numberOfErrors = 2)
+  final val diffInEq =
+    """
+    object Test {
+      def add2[T](y: T)(
+          implicit
+          ev: T =:= Long
+      ): Long = 1L + ev(y)
+
+      def add[Long](x: List[Long]): List[Long] = {
+
+        add2(x.head)
+      }
+    }
+"""
+
+  final val diffInSubtype =
+    """
+    object Test {
+      def add2[T](y: T)(
+          implicit
+          ev: T <:< Long
+      ): Long = 1L + ev(y)
+
+      def add[Long](x: List[Long]): List[Long] = {
+
+        add2(x.head)
+      }
+    }
+"""
+
+  check(diff, numberOfErrors = 2)
+
+  check(diffInEq)
+
+  check(diffInSubtype)
 }

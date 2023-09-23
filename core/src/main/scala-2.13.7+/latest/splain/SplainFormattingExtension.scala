@@ -492,7 +492,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         .filter(_ != ";")
         .map(v => s"   $v")
 
-      Seq(s".. (minor type difference where <found>$infix<required>)") ++ indented
+      Seq(s".. (type arguments in <found>$infix<required> are different)") ++ indented
     }
   }
 
@@ -500,20 +500,50 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     formatWithInfix(tpe, extractArgs(tpe), top)(formatType)
   }
 
+  val _EQ = Qualified(List(), InfixName("=:="))
+  val _SUB = Qualified(List(), InfixName("<:<"))
+
   override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
 
-    val result = Seq(tpe, dtpe).distinct.map { t =>
+    val results = Seq(tpe, dtpe).distinct.map { t =>
       formatTypeRaw(t, top)
     }.distinct
 
-    result match {
+    results match {
       case Seq(from, reduced) =>
         Reduction(reduced, Seq("reduced from" -> from)).index()
       case _ =>
     }
 
-    result.last
+    val result = results.last
+
+    result match {
+      case Infix(ii, left, right, _) =>
+        val noApparentDiff = left == right
+
+        val diffInfix = if (ii == _EQ) {
+          Some(_EQ.tpe.name)
+        } else if (ii == _SUB) {
+          Some(_SUB.tpe.name)
+        } else None
+
+        if (noApparentDiff && diffInfix.nonEmpty) {
+
+          tpe.typeArgs match {
+            case List(t1, t2) =>
+              ExplainDiff(
+                result,
+                TypeDiffView(t1, t2).builtInDiffMsg,
+                s" ${diffInfix.get.name} "
+              ).index()
+            case _ =>
+          }
+        }
+      case _ =>
+    }
+
+    result
   }
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
