@@ -6,7 +6,7 @@ class VTypeDetailsSpec extends SpecBase.Direct {
 
   override def defaultExtraSetting: String = Settings.defaultExtra + "-P:splain:Vtype-reduction"
 
-  final val t7636 =
+  final val wrongContexts =
     """
     object Test {
 
@@ -18,11 +18,11 @@ class VTypeDetailsSpec extends SpecBase.Direct {
       class F[T]
 
       val a = new A
-      
-      def wrongf(a: A)(b: a.B): a.B = b
 
-      wrongf(a)(new F[a.type])
-      wrongf(new A)(a.b)
+      def wrongf(a: A)(implicit b: (F[a.type])): Unit = {}
+
+      wrongf(new A)(new F[a.type])
+      wrongf(new A)
     }
     """
 //    """
@@ -44,11 +44,11 @@ class VTypeDetailsSpec extends SpecBase.Direct {
 //    }
 //  """
 
-  check(t7636, nameOverride = "1", profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
+  check(wrongContexts, nameOverride = "1", profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
 
-  check(t7636, nameOverride = "2", profile = "-P:splain:Vtype-detail:2", numberOfErrors = 2)
+  check(wrongContexts, nameOverride = "2", profile = "-P:splain:Vtype-detail:2", numberOfErrors = 2)
 
-  check(t7636, nameOverride = "3", profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
+  check(wrongContexts, nameOverride = "3", profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
 
-  check(t7636, nameOverride = "4", profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
+  check(wrongContexts, nameOverride = "4", profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
 }

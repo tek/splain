@@ -1,32 +1,38 @@
 newSource1.scala:14: error: type mismatch;
-  Test.F[Test.a.type]|Test.a.B
-      wrongf(a)(new F[a.type])
-                ^
-newSource1.scala:15: error: type mismatch;
-  Test.a.B|a.B
-      wrongf(new A)(a.b)
-                      ^
+  Test.F[Test.a.type|a.type]
+      wrongf(new A)(new F[a.type])
+                    ^
+newSource1.scala:15: error: implicit error;
+!I b: Test.F[a.type]
+      wrongf(new A)
+            ^
 newSource1.scala:14: error: type mismatch;
-  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
-      wrongf(a)(new F[a.type])
-                ^
-newSource1.scala:15: error: type mismatch;
-  Test.a.B|a.B
-      wrongf(new A)(a.b)
-                      ^
+  Test.F[
+    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type)
+  ]
+      wrongf(new A)(new F[a.type])
+                    ^
+newSource1.scala:15: error: implicit error;
+!I b: Test.F[a.type (with underlying type a.type)]
+      wrongf(new A)
+            ^
 newSource1.scala:14: error: type mismatch;
-  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
-      wrongf(a)(new F[a.type])
-                ^
-newSource1.scala:15: error: type mismatch;
-  Test.a.B|a.B where val a: Test.A
-      wrongf(new A)(a.b)
-                      ^
+  Test.F[
+    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A
+  ]
+      wrongf(new A)(new F[a.type])
+                    ^
+newSource1.scala:15: error: implicit error;
+!I b: Test.F[a.type (with underlying type a.type) where val a: Test.A]
+      wrongf(new A)
+            ^
 newSource1.scala:14: error: type mismatch;
-  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
-      wrongf(a)(new F[a.type])
-                ^
-newSource1.scala:15: error: type mismatch;
-  Test.a.B|a.B where val a: Test.A
-      wrongf(new A)(a.b)
-                      ^
+  Test.F[
+    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A
+  ]
+      wrongf(new A)(new F[a.type])
+                    ^
+newSource1.scala:15: error: implicit error;
+!I b: Test.F[a.type (with underlying type a.type) where val a: Test.A]
+      wrongf(new A)
+            ^
