@@ -40,24 +40,24 @@ newSource1.scala:27: error: implicit error;
             ^
 newSource1.scala:6: error: type mismatch;
   Long(in method add)|scala.Long
-  .. (comparing <found>|<required>)
-      found   : Long(in method add)
-      required: scala.Long
+  ――(comparing <found>|<required>)
+     found   : Long(in method add)
+     required: scala.Long
         else add2(x.head, y.head) :: add(x.tail, y.tail)
                     ^
 newSource1.scala:6: error: type mismatch;
   Long(in method add)|scala.Long
-  .. (comparing <found>|<required>)
-      found   : Long(in method add)
-      required: scala.Long
+  ――(comparing <found>|<required>)
+     found   : Long(in method add)
+     required: scala.Long
         else add2(x.head, y.head) :: add(x.tail, y.tail)
                             ^
 newSource1.scala:16: error: implicit error;
 !I ev:
   Long(in method add) =:= scala.Long
-  .. (comparing <found>=:=<required>)
-      found   : Long(in method add)
-      required: scala.Long
+  ――(comparing <found>=:=<required>)
+     found   : Long(in method add)
+     required: scala.Long
   Cannot prove that Long =:= Long.
 
         add2(x.head)
@@ -65,9 +65,9 @@ newSource1.scala:16: error: implicit error;
 newSource1.scala:27: error: implicit error;
 !I ev:
   Long(in method add) <:< scala.Long
-  .. (comparing <found><:<<required>)
-      found   : Long(in method add)
-      required: scala.Long
+  ――(comparing <found><:<<required>)
+     found   : Long(in method add)
+     required: scala.Long
   Cannot prove that Long <:< Long.
 
         add2(x.head)

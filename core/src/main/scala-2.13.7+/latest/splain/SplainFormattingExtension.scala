@@ -3,6 +3,7 @@ package splain
 import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.typechecker
 import scala.tools.nsc.typechecker.splain._
 
@@ -44,7 +45,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       fromHistory.sym.fullLocationString == fromTree.candidate.symbol.fullLocationString
     }
 
-//    lazy val divergingSearchStartingWithHere: Boolean = sameStartingWith
+    //    lazy val divergingSearchStartingWithHere: Boolean = sameStartingWith
 
     lazy val divergingSearchDiscoveredHere: Boolean = sameCandidateTree && moreSpecificPendingType
   }
@@ -395,9 +396,9 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     else {
 
       val result = tpe.dealias
-//      if (pluginSettings.typeReduction) {
-//        TyperHistory.currentGlobal.TypeReductionCache.pushReduction(tpe)
-//      }
+      //      if (pluginSettings.typeReduction) {
+      //        TyperHistory.currentGlobal.TypeReductionCache.pushReduction(tpe)
+      //      }
       result
     }
   }
@@ -419,36 +420,49 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     def element: Formatted
 
-    def info(break: Boolean): Seq[String]
+    protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr])
+
+    lazy val flat: String = {
+      val (header, body) = formattedHeader_Body(false)
+
+      s"$header { ${body.map(v => v.flat).mkString(";")} }"
+    }
+
+    lazy val broken: Seq[String] = {
+      val (header, body) = formattedHeader_Body(true)
+      val result = indentTree(List((header, body.flatMap(_.lines).toList, 0)), 1)
+
+      result
+    }
   }
 
   object Based {
 
-    lazy val lookup: TrieMap[FormattedIndex, Based] = TrieMap.empty
+    lazy val lookup: TrieMap[FormattedIndex, ArrayBuffer[Based]] = TrieMap.empty
+
+    // MultiMap shortcuts
+    def +=(kv: (FormattedIndex, Based)): Unit = {
+
+      lookup.getOrElseUpdate(kv._1, ArrayBuffer.empty) += kv._2
+    }
+
+    def getAll(k: FormattedIndex): List[Based] = lookup.get(k).toList.flatten
   }
 
   case class Reduction(
       element: Formatted,
-      from: Seq[(String, Formatted)]
+      from: (String, Formatted)
   ) extends Based {
 
     def index(): Unit = {
 
       if (pluginSettings.showTypeReduction)
-        Based.lookup += FormattedIndex(element) -> this
+        Based += FormattedIndex(element) -> this
     }
 
-    override def info(break: Boolean): Seq[String] = {
+    override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
 
-      val extra = from.flatMap {
-        case (clause, ft) =>
-          Seq(s".. ($clause)") ++
-            showFormattedLImpl(ft, break).lines.map { line =>
-              s"   $line"
-            }
-      }
-
-      extra
+      s"(${from._1})" -> Seq(showFormattedLImpl(from._2, break))
     }
   }
 
@@ -461,10 +475,10 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     def index(): Unit = {
 
       if (pluginSettings.TypeDiffsDetail.builtInMsg)
-        Based.lookup += FormattedIndex(element) -> this
+        Based += FormattedIndex(element) -> this
     }
 
-    override def info(break: Boolean): Seq[String] = {
+    override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
 
       lazy val infixText = infixOpt match {
         case None => "|"
@@ -474,9 +488,8 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       val indented = msg
         .split("\n")
         .filter(_ != ";")
-        .map(v => s"   $v")
 
-      Seq(s".. (comparing <found>$infixText<required>)") ++ indented
+      s"(comparing <found>$infixText<required>)" -> indented.map(v => FlatType(v))
     }
   }
 
@@ -529,7 +542,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     results match {
       case Seq(from, reduced) =>
-        Reduction(reduced, Seq("reduced from" -> from)).index()
+        Reduction(reduced, "reduced from" -> from).index()
       case _ =>
     }
 
@@ -586,10 +599,12 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           else Some("normalized from" -> ft)
         }
 
-      Reduction(
-        result,
-        basedOn
-      ).index()
+      basedOn.foreach { v =>
+        Reduction(
+          result,
+          v
+        ).index()
+      }
 
       result
     } else {
@@ -625,10 +640,12 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
             }
         }
 
-      Reduction(
-        result,
-        basedOn
-      ).index()
+      basedOn.foreach { v =>
+        Reduction(
+          result,
+          v
+        ).index()
+      }
 
       result
     }
@@ -643,7 +660,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     def showTypeApply(
         cons: String,
         args: List[TypeRepr],
-        break: Boolean = break,
         brackets: (String, String) = "[" -> "]"
     ): TypeRepr = {
       val flatArgs = args.map(_.flat).mkString(brackets._1, ", ", brackets._2)
@@ -693,22 +709,21 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
 
     val index = FormattedIndex(ft)
-
-    val maybeReduction = Based.lookup.get(index)
+    val basedOn = Based.getAll(index)
 
     val result = {
 
-      maybeReduction match {
-        case None =>
+      basedOn match {
+        case Nil =>
           raw
-        case Some(based) =>
+        case _ =>
+          def flat = FlatType(raw.flat + " " + basedOn.map(_.flat).mkString(" "))
+          def broken = BrokenType(raw.lines ++ basedOn.flatMap(_.broken))
+
           raw match {
-            case t: FlatType =>
-              BrokenType(
-                List(t.flat) ++ based.info(break)
-              )
-            case t: BrokenType =>
-              t.copy(t.lines ++ based.info(break))
+            case _: BrokenType => broken
+            case _ if break => decideBreak(flat, broken)
+            case _ => flat
           }
       }
     }
