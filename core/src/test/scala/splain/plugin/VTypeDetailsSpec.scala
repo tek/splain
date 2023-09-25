@@ -8,21 +8,47 @@ class VTypeDetailsSpec extends SpecBase.Direct {
 
   final val t7636 =
     """
-    object SingleImp
-    {
-      object Main extends App {
-        class Foo[A](x: A)
-        object bar extends Foo(5: T forSome { type T })
+    object Test {
+
+      class A {
+        class B
+        def b: B = new B
       }
+
+      class F[T]
+
+      val a = new A
+      
+      def wrongf(a: A)(b: a.B): a.B = b
+
+      wrongf(a)(new F[a.type])
+      wrongf(new A)(a.b)
     }
-  """
-
-//  check(t7636, nameOverride = "1", profile = "-P:splain:Vtype-details:1")
-
-//  check(t7636, nameOverride = "2", profile = "-P:splain:Vtype-details:2")
+    """
+//    """
+//    object SingleImp {
 //
-//  check(t7636, nameOverride = "3", profile = "-P:splain:Vtype-details:3")
+//      trait F[T] {
 //
-  check(t7636, nameOverride = "4", profile = "-P:splain:Vtype-details:4")
-//  check(t7636, nameOverride = "4", profile = Profile.Disabled)
+//        trait G {
+//
+//          type FF = F.this.type
+//        }
+//      }
+//
+//      val a = 1
+//      val f = new F[a.type] {}
+//
+//      implicitly[F[a.type] { type FF = Int }]
+//      implicitly[f.G]
+//    }
+//  """
+
+  check(t7636, nameOverride = "1", profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
+
+  check(t7636, nameOverride = "2", profile = "-P:splain:Vtype-detail:2", numberOfErrors = 2)
+
+  check(t7636, nameOverride = "3", profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
+
+  check(t7636, nameOverride = "4", profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
 }

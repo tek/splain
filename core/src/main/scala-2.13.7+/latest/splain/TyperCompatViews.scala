@@ -53,43 +53,39 @@ trait TyperCompatViews {
       self.prefix.typeSymbol.fullNameString
     }
 
-    lazy val prefixContext: String = { s"in $prefixFullName" }
+    // probably not useful, withDisambiguation + longString should cover most cases
+    lazy val prefixContextIfNeeded: Option[String] = {
 
-    lazy val typeToString: String = {
+      prefixFullName.toLowerCase match {
+        case "<root>" | "<empty>" | "<none>" => None
+        case _ =>
+          if (self.toLongString.startsWith(prefixFullName)) None
+          else {
+            Some(s"(in $prefixFullName)")
+          }
+      }
+    }
 
-      val details = pluginSettings.typeDetails.getOrElse(1)
+    def typeToString: String = {
 
-      lazy val short = self.safeToString
-      lazy val long = scala.util.Try(self.toLongString).getOrElse(short)
+      val detailLvl = pluginSettings.typeDetail
 
-      lazy val ec = existentialContext(self)
+      def short = self.safeToString
+      def long = scala.util.Try(self.toLongString).getOrElse(short)
 
-      lazy val pc =
-        if (long.startsWith(prefixFullName)) ""
-        else {
-          s" {$prefixContext}"
-        }
+      def maybeContext = scala.util.Try(existentialContext(self)).toOption
 
-      lazy val withEc = scala.util
-        .Try(
-          long + ec
-        )
-        .getOrElse(long)
+      def maybeAlias = scala.util.Try(explainAlias(self)).toOption
 
-      lazy val withPcEc = scala.util
-        .Try(
-          long + pc + ec
-        )
-        .getOrElse(withEc)
+      detailLvl match {
+        case i if i <= 1 => short
+        case 2 => long
+        case 3 =>
+          (Seq(long) ++ maybeContext).mkString("")
 
-      if (details <= 1) {
-        short
-      } else if (details == 2) {
-        long
-      } else if (details == 3) {
-        withEc
-      } else {
-        withPcEc
+        case i if i >= 4 =>
+          (Seq(long) ++ maybeContext ++ maybeAlias).mkString("")
+
       }
     }
   }
@@ -123,7 +119,8 @@ trait TyperCompatViews {
 //    }
 
     lazy val builtInDiffMsg: String = {
-      builtinFoundReqMsg(found, req)
+      val result = builtinFoundReqMsg(found, req)
+      result
     }
   }
 

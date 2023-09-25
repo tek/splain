@@ -380,28 +380,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     result
   }
 
-  override def splainFoundReqMsg(found: Type, req: Type): String = {
-    val body =
-      if (settings.VtypeDiffs.value) {
-        val formatted = formatDiff(found, req, top = true)
-        val show = showFormattedL(formatted, break = true)
-
-        ";\n" + show.indent.joinLines
-      } else ""
-
-    val extra = mutable.Buffer.empty[String]
-
-    if (pluginSettings.debug) {
-
-      extra += "===[ ORIGINAL ERROR ]===" +
-        builtinFoundReqMsg(found, req) +
-        "\n"
-    }
-
-    val result = (Seq(body) ++ extra.toSeq).mkString("\n")
-    result
-  }
-
   override def extractArgs(tpe: Type): List[global.Type] = TypeView(tpe).extractArgs
 
   override def stripType(tt: Type): (List[String], String) = {
@@ -441,7 +419,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     def element: Formatted
 
-    def annotations(break: Boolean): Seq[String]
+    def info(break: Boolean): Seq[String]
   }
 
   object Based {
@@ -451,18 +429,18 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   case class Reduction(
       element: Formatted,
-      basedOn: Seq[(String, Formatted)]
+      from: Seq[(String, Formatted)]
   ) extends Based {
 
     def index(): Unit = {
 
-      if (pluginSettings.typeReduction)
+      if (pluginSettings.showTypeReduction)
         Based.lookup += FormattedIndex(element) -> this
     }
 
-    override def annotations(break: Boolean): Seq[String] = {
+    override def info(break: Boolean): Seq[String] = {
 
-      val extra = basedOn.flatMap {
+      val extra = from.flatMap {
         case (clause, ft) =>
           Seq(s".. ($clause)") ++
             showFormattedLImpl(ft, break).lines.map { line =>
@@ -474,25 +452,31 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
   }
 
-  case class ExplainDiff(
+  case class BuiltInDiffMsg(
       element: Formatted,
-      basedOn: String,
-      infix: String = "|"
+      msg: String,
+      infixOpt: Option[Formatted] = None
   ) extends Based {
 
     def index(): Unit = {
 
-      Based.lookup += FormattedIndex(element) -> this
+      if (pluginSettings.TypeDiffsDetail.builtInMsg)
+        Based.lookup += FormattedIndex(element) -> this
     }
 
-    override def annotations(break: Boolean): Seq[String] = {
+    override def info(break: Boolean): Seq[String] = {
 
-      val indented = basedOn
+      lazy val infixText = infixOpt match {
+        case None => "|"
+        case Some(ii) => showFormattedLImpl(ii, break).flat
+      }
+
+      val indented = msg
         .split("\n")
         .filter(_ != ";")
         .map(v => s"   $v")
 
-      Seq(s".. (type arguments in <found>$infix<required> are different)") ++ indented
+      Seq(s".. (comparing <found>$infixText<required>)") ++ indented
     }
   }
 
@@ -500,10 +484,43 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     formatWithInfix(tpe, extractArgs(tpe), top)(formatType)
   }
 
-  val _EQ = Qualified(List(), InfixName("=:="))
-  val _SUB = Qualified(List(), InfixName("<:<"))
-
   override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
+
+    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+
+      tpe.typeArgs match {
+        case List(t1, t2) =>
+          val result = withDisambiguation(Nil, t1, t2) {
+            formatTypeImplNoDisambiguation(tpe, top)
+          }
+
+          result match {
+            case Infix(ii, left, right, _) =>
+              val noApparentDiff = (left == right) && (t1 != t2)
+
+              if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+
+                BuiltInDiffMsg(
+                  result,
+                  TypeDiffView(t1, t2).builtInDiffMsg,
+                  Some(ii)
+                ).index()
+              }
+            case _ =>
+          }
+
+          result
+        case _ =>
+          formatTypeImplNoDisambiguation(tpe, top)
+      }
+
+    } else {
+
+      formatTypeImplNoDisambiguation(tpe, top)
+    }
+  }
+
+  protected def formatTypeImplNoDisambiguation(tpe: Type, top: Boolean): Formatted = {
     val dtpe = dealias(tpe)
 
     val results = Seq(tpe, dtpe).distinct.map { t =>
@@ -518,35 +535,40 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     val result = results.last
 
-    result match {
-      case Infix(ii, left, right, _) =>
-        val noApparentDiff = left == right
-
-        val diffInfix = if (ii == _EQ) {
-          Some(_EQ.tpe.name)
-        } else if (ii == _SUB) {
-          Some(_SUB.tpe.name)
-        } else None
-
-        if (noApparentDiff && diffInfix.nonEmpty) {
-
-          tpe.typeArgs match {
-            case List(t1, t2) =>
-              ExplainDiff(
-                result,
-                TypeDiffView(t1, t2).builtInDiffMsg,
-                s" ${diffInfix.get.name} "
-              ).index()
-            case _ =>
-          }
-        }
-      case _ =>
-    }
-
     result
   }
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
+
+    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+
+      val result = withDisambiguation(Nil, found, req) {
+        formatDiffImplNoDisambiguation(found, req, top)
+      }
+
+      result match {
+        case diff: Diff =>
+          val noApparentDiff = (diff.left == diff.right) && (found != req)
+
+          if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+
+            BuiltInDiffMsg(
+              diff,
+              TypeDiffView(found, req).builtInDiffMsg
+            ).index()
+          }
+        case _ =>
+      }
+
+      result
+    } else {
+
+      formatDiffImplNoDisambiguation(found, req, top)
+    }
+  }
+
+  protected def formatDiffImplNoDisambiguation(found: Type, req: Type, top: Boolean): Formatted = {
+
     val (left, right) = dealias(found) -> dealias(req)
 
     val normalized = Seq(left, right).map(_.normalize).distinct
@@ -582,21 +604,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           formatDiffSpecial(left, right, top).getOrElse {
 
             val result = formatDiffSimple(left, right)
-
-            result match {
-              case diff: Diff =>
-                val noApparentDiff = diff.left == diff.right
-
-                if (noApparentDiff) {
-
-                  ExplainDiff(
-                    diff,
-                    TypeDiffView(left, right).builtInDiffMsg
-                  ).index()
-                }
-              case _ =>
-            }
-
             result
           }
         }
@@ -698,10 +705,10 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           raw match {
             case t: FlatType =>
               BrokenType(
-                List(t.flat) ++ based.annotations(break)
+                List(t.flat) ++ based.info(break)
               )
             case t: BrokenType =>
-              t.copy(t.lines ++ based.annotations(break))
+              t.copy(t.lines ++ based.info(break))
           }
       }
     }

@@ -1,16 +1,32 @@
-newSource1.scala:7: error: implicit error;
-!I e: SingleImp.a.type *** SingleImp.b.type
-      implicitly[a.type *** b.type]
+newSource1.scala:14: error: type mismatch;
+  Test.F[Test.a.type]|Test.a.B
+      wrongf(a)(new F[a.type])
                 ^
-newSource1.scala:7: error: implicit error;
-!I e:
-  SingleImp.a.type (with underlying type Int) ***
-  SingleImp.b.type (with underlying type Int)
-      implicitly[a.type *** b.type]
+newSource1.scala:15: error: type mismatch;
+  Test.a.B|a.B
+      wrongf(new A)(a.b)
+                      ^
+newSource1.scala:14: error: type mismatch;
+  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
+      wrongf(a)(new F[a.type])
                 ^
-newSource1.scala:7: error: implicit error;
-!I e:
-  SingleImp.a.type (with underlying type Int) ***
-  SingleImp.b.type (with underlying type Int)
-      implicitly[a.type *** b.type]
+newSource1.scala:15: error: type mismatch;
+  Test.a.B|a.B
+      wrongf(new A)(a.b)
+                      ^
+newSource1.scala:14: error: type mismatch;
+  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
+      wrongf(a)(new F[a.type])
                 ^
+newSource1.scala:15: error: type mismatch;
+  Test.a.B|a.B where val a: Test.A
+      wrongf(new A)(a.b)
+                      ^
+newSource1.scala:14: error: type mismatch;
+  Test.F[Test.a.type (with underlying type Test.A)]|Test.a.B
+      wrongf(a)(new F[a.type])
+                ^
+newSource1.scala:15: error: type mismatch;
+  Test.a.B|a.B where val a: Test.A
+      wrongf(new A)(a.b)
+                      ^

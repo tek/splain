@@ -41,11 +41,11 @@ object SpecBase {
     lazy val runner: DirectRunner = DirectRunner()
 
     def check(
-               code: String,
-               profile: Profile = Profile.empty,
-               nameOverride: String = "",
-               numberOfErrors: Int = 1,
-               verbose: Boolean = false
+        code: String,
+        profile: Profile = Profile.empty,
+        nameOverride: String = "",
+        numberOfErrors: Int = 1,
+        verbose: Boolean = false
     ): Unit = {
 
       val name = getName(code, nameOverride)
@@ -70,10 +70,10 @@ object SpecBase {
     }
 
     def skip(
-              code: String,
-              setting: Profile = Profile.empty,
-              nameOverride: String = "",
-              numberOfBlocks: Int = 1
+        code: String,
+        setting: Profile = Profile.empty,
+        nameOverride: String = "",
+        numberOfBlocks: Int = 1
     ): Unit = {
 
       val name = getName(code, nameOverride)
@@ -87,9 +87,9 @@ object SpecBase {
   trait File extends SpecBase {
 
     def check(
-               name: String,
-               file: String = "",
-               profile: Profile = Profile.empty
+        name: String,
+        file: String = "",
+        profile: Profile = Profile.empty
     )(
         check: CheckFile
     ): Unit = {

@@ -10,5 +10,5 @@ trait SplainPluginLike extends plugins.Plugin {
   val description = "better types and implicit errors"
   val components: List[PluginComponent] = Nil
 
-  val opts: mutable.Map[String, String] = PluginSettings.defaults.to(mutable.Map)
+  val opts: mutable.Map[String, String] = PluginSettings.inits.to(mutable.Map)
 }

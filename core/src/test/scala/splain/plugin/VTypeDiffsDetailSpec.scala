@@ -2,22 +2,18 @@ package splain.plugin
 
 import splain.SpecBase
 
-class ExplainDiffSpec extends SpecBase.Direct {
+class VTypeDiffsDetailSpec extends SpecBase.Direct {
 
   final val diff =
     """
-    object Test {
+    object Diff {
       def add2(x:Long,y:Long): Long = x + y
 
       def add[Long](x: List[Long], y: List[Long]): List[Long] =
         if (x.isEmpty || y.isEmpty) Nil
         else add2(x.head, y.head) :: add(x.tail, y.tail)
     }
-"""
-
-  final val diffInEq =
-    """
-    object Test {
+    object DiffInEq {
       def add2[T](y: T)(
           implicit
           ev: T =:= Long
@@ -28,11 +24,7 @@ class ExplainDiffSpec extends SpecBase.Direct {
         add2(x.head)
       }
     }
-"""
-
-  final val diffInSubtype =
-    """
-    object Test {
+    object DiffInSubtype {
       def add2[T](y: T)(
           implicit
           ev: T <:< Long
@@ -45,9 +37,9 @@ class ExplainDiffSpec extends SpecBase.Direct {
     }
 """
 
-  check(diff, numberOfErrors = 2)
+  check(diff, nameOverride = "1", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:1")
 
-  check(diffInEq)
+  check(diff, nameOverride = "2", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:2")
 
-  check(diffInSubtype)
+  check(diff, nameOverride = "4", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:4")
 }
