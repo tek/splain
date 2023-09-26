@@ -25,24 +25,6 @@ class VTypeDetailsSpec extends SpecBase.Direct {
       wrongf(new A)
     }
     """
-//    """
-//    object SingleImp {
-//
-//      trait F[T] {
-//
-//        trait G {
-//
-//          type FF = F.this.type
-//        }
-//      }
-//
-//      val a = 1
-//      val f = new F[a.type] {}
-//
-//      implicitly[F[a.type] { type FF = Int }]
-//      implicitly[f.G]
-//    }
-//  """
 
   check(wrongContexts, nameOverride = "1", profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
 

@@ -34,9 +34,47 @@ object FoundReq
 }
   """
 
+  final val LongArg =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[VeryLong[
+    VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ]]
+}
+"""
+
+  final val LongRefined =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[VeryLong[
+    VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ] { type A = Int; type B = Int; type C = Int; type D = Int; type E = Int; type F = Int; type G = Int; type H = Int}]
+}
+    """
+
+  final val LongTuple =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[
+      (
+          VeryLong[Int],
+          VeryLong[
+            VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[Int]]]]]]]
+          ]
+      )
+  ]
+}
+  """
+
   final val foundReqLongTuple =
     """
-object FoundReqLong {
+object Long {
   class VeryLong[T]
 
   val x: (

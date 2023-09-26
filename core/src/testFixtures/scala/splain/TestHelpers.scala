@@ -147,18 +147,18 @@ trait TestHelpers extends Suite {
       } catch {
         case e: TestFailedException =>
           // augmenting
-          val detail = {
+
+          val result =
             s"""
-               |"
-               |$left
-               |" did not equal "
-               |$right
-               |"
-               |""".stripMargin.trim
-          }
+               |expected: <
+               |${right}
+               |> but was: <
+               |${left}
+               |>
+            """.stripMargin.trim
 
           val ee = e.modifyMessage { _ =>
-            Some(detail)
+            Some(result)
           }
 
           throw ee

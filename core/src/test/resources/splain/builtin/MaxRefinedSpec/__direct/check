@@ -1,5 +1,8 @@
 newSource1.scala:7: error: type mismatch;
-  TruncRefined.D|TruncRefined.C {type X = TruncRefined.C; type Y = TruncRefined.D}
+  TruncRefined.D|TruncRefined.C {
+    type X = TruncRefined.C;
+    type Y = TruncRefined.D
+  }
   f(new D { type X = C; type Y = D })
     ^
 newSource1.scala:7: error: type mismatch;

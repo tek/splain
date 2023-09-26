@@ -653,24 +653,47 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
 
+    def appendLastLine(lines: List[String], suffix: String): List[String] = {
+      lines match {
+        case Nil => List(suffix)
+        case head :: Nil => List(head + suffix)
+        case head :: tail => head :: appendLastLine(tail, suffix)
+      }
+    }
+
     /**
       * If the args of an applied type constructor are multiline, create separate lines for the constructor name and the
       * closing bracket; else return a single line.
       */
-    def showTypeApply(
-        cons: String,
+    def showEnclosed(
+        base: TypeRepr,
         args: List[TypeRepr],
-        brackets: (String, String) = "[" -> "]"
+        brackets: (String, String) = "[" -> "]",
+        splitter: String = ","
     ): TypeRepr = {
-      val flatArgs = args.map(_.flat).mkString(brackets._1, ", ", brackets._2)
-      val flat = FlatType(s"$cons$flatArgs")
+      val flatArgs = args.map(_.flat).mkString(brackets._1, splitter + " ", brackets._2)
+      val flat = FlatType(s"${base.flat}$flatArgs")
 
       def brokenArgs = args match {
-        case head :: tail => tail.foldLeft(head.lines)((z, a) => z ::: "," :: a.lines)
+        case head :: tail => tail.foldLeft(head.lines)((z, a) => appendLastLine(z, splitter) ::: a.lines)
         case _ => Nil
       }
 
-      def broken = BrokenType(s"$cons" + brackets._1 :: indent(brokenArgs) ::: List(brackets._2))
+      def broken = BrokenType(appendLastLine(base.lines, brackets._1) ::: indent(brokenArgs) ::: List(brackets._2))
+
+      if (break) decideBreak(flat, broken) else flat
+    }
+
+    def showCompound(
+        types: List[TypeRepr],
+        infixText: String = "with"
+    ): TypeRepr = {
+      val infixWithSpace = s" $infixText "
+
+      def flat = FlatType(types.map(_.flat).mkString(infixWithSpace))
+      def broken = BrokenType(
+        types.map(_.lines).reduceLeft((z, a) => appendLastLine(z, infixWithSpace) ::: a)
+      )
 
       if (break) decideBreak(flat, broken) else flat
     }
@@ -680,7 +703,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     val raw = ft match {
       case Simple(name) => FlatType(name.name)
       case Qualified(path, name) => showFormattedQualified(path, name)
-      case Applied(cons, args) => showTypeApply(showFormatted(cons), args.map(_showFormattedL))
+      case Applied(cons, args) => showEnclosed(_showFormattedL(cons), args.map(_showFormattedL))
       case tpe @ Infix(_, _, _, top) =>
         wrapParensRepr(
           if (break) breakInfix(flattenInfix(tpe)) else FlatType(flattenInfix(tpe).map(showFormatted).mkString(" ")),
@@ -695,13 +718,22 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         if (elems.size == 1) {
           FlatType(showTuple(formattedElems.map(_.flat))) // TODO: the name showTuple is obsolete
         } else {
-          showTypeApply("", formattedElems, brackets = "(" -> ")")
+          showEnclosed(FlatType(""), formattedElems, brackets = "(" -> ")")
         }
 
       case RefinedForm(elems, decls) =>
-        FlatType(
-          showRefined(elems.map(showFormatted), if (truncateDecls(decls)) List("...") else decls.map(showFormatted))
-        )
+        val compound = showCompound(elems.map(_showFormattedL))
+
+        val refined =
+          if (decls.isEmpty)
+            compound
+          else if (truncateDecls(decls))
+            showEnclosed(compound, List(FlatType("...")), brackets = " {" -> "}", splitter = ";")
+          else
+            showEnclosed(compound, decls.map(_showFormattedL), brackets = " {" -> "}", splitter = ";")
+
+        refined
+
       case Diff(left, right) => FlatType(formattedDiff(left, right))
       case Decl(sym, rhs) => FlatType(s"type ${showFormatted(sym)} = ${showFormatted(rhs)}")
       case DeclDiff(sym, left, right) => FlatType(s"type ${showFormatted(sym)} = ${formattedDiff(left, right)}")
@@ -722,8 +754,8 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
           raw match {
             case _: BrokenType => broken
-            case _ if break => decideBreak(flat, broken)
-            case _ => flat
+            case _ if !break => flat
+            case _ => decideBreak(flat, broken)
           }
       }
     }
