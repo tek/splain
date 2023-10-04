@@ -23,6 +23,14 @@ newSource1.scala:4: error: implicit error;
   ]
   implicitly[VeryLong[
             ^
+newSource1.scala:7: error: type mismatch;
+  Compound.y.type|String
+  f(y)
+    ^
+newSource1.scala:10: error: type mismatch;
+  Compound.T|<none> with Int|String
+  f(z)
+    ^
 newSource1.scala:4: error: implicit error;
 !I e:
   Long.VeryLong[

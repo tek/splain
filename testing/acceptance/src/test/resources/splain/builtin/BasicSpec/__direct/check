@@ -29,6 +29,10 @@ newSource1.scala:4: error: implicit error;
   ]
   implicitly[VeryLong[
             ^
+newSource1.scala:7: error: type mismatch;
+  splain.acceptance.builtin.StaticBasicSpec.Compound.y.type|String
+  f(y)
+    ^
 newSource1.scala:4: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[

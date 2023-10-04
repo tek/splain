@@ -16,6 +16,10 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(LongArg)
 
+  describe("#34") {
+    check(compoundDiff, numberOfErrors = 2)
+  }
+
   describe("#111") {
 
     check(LongRefined)

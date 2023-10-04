@@ -10,6 +10,10 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(LongArg)
 
+  describe("#34") {
+    check(compoundDiff, numberOfErrors = 2)
+  }
+
   describe("#111") {
 
     check(LongRefined)

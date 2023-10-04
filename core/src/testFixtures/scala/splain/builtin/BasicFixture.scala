@@ -45,6 +45,21 @@ object Long {
 }
 """
 
+  final val compoundDiff =
+    """
+object Compound {
+  trait T
+  type F[A] = A
+  def x[A](y: A): F[A with T] = y.asInstanceOf[A with T]
+  def f[A](a: A with String): F[A] = a
+  val y: F[Int with T] = x(x(1))
+  f(y)
+
+  val z: Int with T = x(x(1))
+  f(z)
+}
+    """
+
   final val LongRefined =
     """
 object Long {
