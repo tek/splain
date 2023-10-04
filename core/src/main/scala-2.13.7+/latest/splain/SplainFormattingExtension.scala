@@ -482,7 +482,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       lazy val infixText = infixOpt match {
         case None => "|"
-        case Some(ii) => showFormattedLImpl(ii, break).flat
+        case Some(ii) => " " + showFormattedLImpl(ii, break).flat + " "
       }
 
       val indented = msg
