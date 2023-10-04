@@ -1,5 +1,7 @@
 package splain
 
+import scala.reflect.internal.util.{NoSourceFile, Position}
+
 trait TyperCompatViews {
   self: SplainAnalyzer =>
 
@@ -66,18 +68,41 @@ trait TyperCompatViews {
       }
     }
 
+    object _DefPosition {
+
+      lazy val value: Position = definingSymbol.pos
+
+      lazy val noSource: Boolean = value.source == NoSourceFile
+
+      lazy val shortText: String = {
+
+        val prefix = value.source.file.path + ":"
+
+        val result = s"$prefix${value.line}:${value.column}"
+        result
+      }
+
+      lazy val formattedText: String = {
+
+        Position.formatMessage(value, "", shortenFile = false)
+      }
+    }
+
+    def defPositionOpt: Option[_DefPosition.type] = Option(_DefPosition).filterNot(_.noSource)
+
     def typeToString: String = {
 
-      val detailLvl = pluginSettings.typeDetail
+      val typeDetail = pluginSettings.typeDetail
 
       def short = self.safeToString
+
       def long = scala.util.Try(self.toLongString).getOrElse(short)
 
       def maybeContext = scala.util.Try(existentialContext(self)).toOption
 
       def maybeAlias = scala.util.Try(explainAlias(self)).toOption
 
-      detailLvl match {
+      typeDetail match {
         case i if i <= 1 => short
         case 2 => long
         case 3 =>
@@ -85,7 +110,6 @@ trait TyperCompatViews {
 
         case i if i >= 4 =>
           (Seq(long) ++ maybeContext ++ maybeAlias).mkString("")
-
       }
     }
   }

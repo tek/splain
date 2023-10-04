@@ -40,6 +40,8 @@ case class PluginSettings(pluginOpts: mutable.Map[String, String]) {
 
   def showTypeReduction: Boolean = boolean(PluginSettings.Key.typeReduction)
 
+  def showTypeDefPosition: Boolean = boolean(PluginSettings.Key.typeDefPosition)
+
   def typeDiffsDetail: Int = int(PluginSettings.Key.typeDiffsDetail)
 
   object TypeDiffsDetail {
@@ -66,6 +68,8 @@ object PluginSettings {
 
     val typeReduction = "Vtype-reduction"
 
+    val typeDefPosition = "Vtype-def-position"
+
     val typeDetail = "Vtype-detail"
 
     val typeDiffsDetail = "Vtype-diffs-detail"
@@ -79,6 +83,7 @@ object PluginSettings {
     Key.implicitDiverging -> "false",
     Key.implicitDivergingMaxDepth -> "100",
     Key.typeReduction -> "false",
+    Key.typeDefPosition -> "false",
     Key.typeDetail -> "1",
     Key.typeDiffsDetail -> "1",
     Key.debug -> "false"

@@ -493,44 +493,62 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
   }
 
+  case class DefPosition(
+      element: Formatted,
+      msg: String
+  ) extends Based {
+
+    def index(): Unit = {
+
+      if (pluginSettings.showTypeDefPosition)
+        Based += FormattedIndex(element) -> this
+    }
+
+    override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
+
+      s"(defined at)" -> Seq(BrokenType(List(msg)))
+    }
+  }
+
   def formatTypeRaw(tpe: Type, top: Boolean): Formatted = {
     formatWithInfix(tpe, extractArgs(tpe), top)(formatType)
   }
 
   override def formatTypeImpl(tpe: Type, top: Boolean): Formatted = {
 
-    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+    tpe.typeArgs match {
+      case List(t1, t2) =>
+        val result =
+          if (pluginSettings.TypeDiffsDetail.disambiguation) {
 
-      tpe.typeArgs match {
-        case List(t1, t2) =>
-          val result = withDisambiguation(Nil, t1, t2) {
+            withDisambiguation(Nil, t1, t2) {
+              formatTypeImplNoDisambiguation(tpe, top)
+            }
+          } else {
+
             formatTypeImplNoDisambiguation(tpe, top)
           }
 
-          result match {
-            case Infix(ii, left, right, _) =>
-              val noApparentDiff = (left == right) && (t1 != t2)
+        result match {
+          case Infix(ii, left, right, _) =>
+            val noApparentDiff = (left == right) && (t1 != t2)
 
-              if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+            if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
 
-                BuiltInDiffMsg(
-                  result,
-                  TypeDiffView(t1, t2).builtInDiffMsg,
-                  Some(ii)
-                ).index()
-              }
-            case _ =>
-          }
+              BuiltInDiffMsg(
+                result,
+                TypeDiffView(t1, t2).builtInDiffMsg,
+                Some(ii)
+              ).index()
+            }
+          case _ =>
+        }
 
-          result
-        case _ =>
-          formatTypeImplNoDisambiguation(tpe, top)
-      }
-
-    } else {
-
-      formatTypeImplNoDisambiguation(tpe, top)
+        result
+      case _ =>
+        formatTypeImplNoDisambiguation(tpe, top)
     }
+
   }
 
   protected def formatTypeImplNoDisambiguation(tpe: Type, top: Boolean): Formatted = {
@@ -547,6 +565,13 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
 
     val result = results.last
+
+    TypeView(tpe).defPositionOpt.foreach { v =>
+      DefPosition(
+        result,
+        v.shortText
+      ).index()
+    }
 
     result
   }
