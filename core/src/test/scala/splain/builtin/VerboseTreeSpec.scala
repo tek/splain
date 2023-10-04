@@ -38,5 +38,5 @@ object Tree
 
   check(verboseTree, profile = "-Vimplicits-verbose-tree")
 
-  check(verboseTree, profile = "", nameOverride = "original")
+  check(verboseTree)
 }

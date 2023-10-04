@@ -10,11 +10,14 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(LongArg)
 
-  check(LongRefined)
+  describe("#111") {
 
-  check(LongTuple)
+    check(LongRefined)
 
-  check(foundReqLongTuple)
+    check(LongTuple)
+
+    check(foundReqLongTuple)
+  }
 
   check(foundReqSameSymbol)
 

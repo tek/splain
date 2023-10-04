@@ -16,11 +16,14 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(LongArg)
 
-  check(LongRefined)
+  describe("#111") {
 
-  check(LongTuple)
+    check(LongRefined)
 
-  check(foundReqLongTuple)
+    check(LongTuple)
+
+    check(foundReqLongTuple)
+  }
 
   check(foundReqSameSymbol)
 

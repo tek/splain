@@ -89,7 +89,7 @@ trait TestHelpers extends Suite {
 
     implicit def fromString(v: String): Splain = Splain(v)
 
-    lazy val empty: Splain = Splain()
+    lazy val default: Splain = Splain()
   }
 
   class TestCase(code: String, setting: Profile) {
@@ -167,7 +167,7 @@ trait TestHelpers extends Suite {
     }
   }
 
-  case class FileCase(name: String, profile: Profile = Profile.empty)
+  case class FileCase(name: String, profile: Profile = Profile.default)
       extends TestCase(fileContentString(name, "code.scala"), profile) {
 
     def checkError(errorFile: Option[String] = None): Unit = {
@@ -192,7 +192,7 @@ trait TestHelpers extends Suite {
     ()
   }
 
-  case class DirectCase(code: String, setting: Profile = Profile.empty) extends TestCase(code, setting)
+  case class DirectCase(code: String, setting: Profile = Profile.default) extends TestCase(code, setting)
 
   case class DirectRunner() {
 

@@ -19,7 +19,10 @@ val x: vecInt.Head = ??? : Option[String]
 }
 """
 
-  check(foundReqVsImplicit, nameOverride = "original", numberOfErrors = 2)
+  describe("#101") {
 
-  check(foundReqVsImplicit, profile = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+    check(foundReqVsImplicit, numberOfErrors = 2)
+
+    check(foundReqVsImplicit, profile = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+  }
 }

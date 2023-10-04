@@ -4,7 +4,7 @@ import splain.SpecBase
 
 class VTypeDetailsSpec extends SpecBase.Direct {
 
-  override def defaultExtraSetting: String = Settings.defaultExtra + "-P:splain:Vtype-reduction"
+  override def defaultExtraSetting: String = "-P:splain:Vtype-reduction"
 
   final val wrongContexts =
     """
@@ -26,11 +26,15 @@ class VTypeDetailsSpec extends SpecBase.Direct {
     }
     """
 
-  check(wrongContexts, nameOverride = "1", profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
+  describe("#113") {
 
-  check(wrongContexts, nameOverride = "2", profile = "-P:splain:Vtype-detail:2", numberOfErrors = 2)
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
 
-  check(wrongContexts, nameOverride = "3", profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:2", numberOfErrors = 2)
 
-  check(wrongContexts, nameOverride = "4", profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
+
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
+  }
+
 }

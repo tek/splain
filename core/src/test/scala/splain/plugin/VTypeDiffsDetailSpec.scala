@@ -37,9 +37,12 @@ class VTypeDiffsDetailSpec extends SpecBase.Direct {
     }
 """
 
-  check(diff, nameOverride = "1", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:1")
+  describe("#112") {
 
-  check(diff, nameOverride = "2", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:2")
+    check(diff, numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:1")
 
-  check(diff, nameOverride = "4", numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:4")
+    check(diff, numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:2")
+
+    check(diff, numberOfErrors = 4, profile = "-P:splain:Vtype-diffs-detail:4")
+  }
 }

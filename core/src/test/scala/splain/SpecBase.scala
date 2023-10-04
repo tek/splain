@@ -33,22 +33,29 @@ object SpecBase {
       Map(methodSeq: _*)
     }
 
-    def getName(code: String, nameOverride: String): String = {
-      if (nameOverride.nonEmpty) nameOverride
-      else codeToName(code)
+    def getName(code: String, nameOverride: String, profile: Profile = Profile.default): String = {
+      val baseName =
+        if (nameOverride.nonEmpty) nameOverride
+        else codeToName(code)
+
+      val name =
+        if (profile == Profile.default) baseName
+        else s"$baseName - $profile"
+
+      name
     }
 
     lazy val runner: DirectRunner = DirectRunner()
 
     def check(
         code: String,
-        profile: Profile = Profile.empty,
+        profile: Profile = Profile.default,
         nameOverride: String = "",
         numberOfErrors: Int = 1,
         verbose: Boolean = false
     ): Unit = {
 
-      val name = getName(code, nameOverride)
+      val name = getName(code, nameOverride, profile)
 
       val cc = DirectCase(code, profile)
 
@@ -71,12 +78,12 @@ object SpecBase {
 
     def skip(
         code: String,
-        setting: Profile = Profile.empty,
+        profile: Profile = Profile.default,
         nameOverride: String = "",
         numberOfBlocks: Int = 1
     ): Unit = {
 
-      val name = getName(code, nameOverride)
+      val name = getName(code, nameOverride, profile)
 
       runner.pointer.getAndAdd(numberOfBlocks)
 
@@ -89,7 +96,7 @@ object SpecBase {
     def check(
         name: String,
         file: String = "",
-        profile: Profile = Profile.empty
+        profile: Profile = Profile.default
     )(
         check: CheckFile
     ): Unit = {
@@ -109,7 +116,7 @@ object SpecBase {
     def skip(
         name: String,
         file: String = "",
-        setting: Profile = Profile.empty
+        setting: Profile = Profile.default
     )(
         check: CheckFile
     ): Unit = {
