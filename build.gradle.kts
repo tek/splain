@@ -205,6 +205,33 @@ allprojects {
         withSourcesJar()
         withJavadocJar()
     }
+
+    idea {
+
+        module {
+
+            excludeDirs = excludeDirs + files(
+
+                "target",
+                "out",
+
+                ".idea",
+                ".vscode",
+                ".bloop",
+                ".bsp",
+                ".metals",
+                "bin",
+
+                ".ammonite",
+
+                "logs",
+
+                )
+
+            isDownloadJavadoc = true
+            isDownloadSources = true
+        }
+    }
 }
 
 subprojects {
@@ -312,26 +339,10 @@ idea {
 
     module {
 
-        excludeDirs = excludeDirs + listOf(
-            file(".gradle"),
-//            file(".github"),
-
-            file("target"),
-//                        file ("out"),
-
-            file(".idea"),
-            file(".vscode"),
-            file(".bloop"),
-            file(".bsp"),
-            file(".metals"),
-            file(".ammonite"),
-
-            file("logs"),
-
-            file("spike"),
+        excludeDirs = excludeDirs + files(
+            (".gradle"),
+            ("gradle"),
+            ("spike"),
         )
-
-        isDownloadJavadoc = true
-        isDownloadSources = true
     }
 }

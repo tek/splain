@@ -7,7 +7,7 @@ g invalid because
 ――f invalid because
   !I impPar2:
     (types.D *** types.C *** String) >:<
-    (types.C,types.D,types.C) ***
+    (types.C, types.D, types.C) ***
     types.D
 ――――t3a invalid because
     !I impPar11: (types.D >:< types.C) >:< types.D

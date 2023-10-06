@@ -33,30 +33,38 @@ object SpecBase {
       Map(methodSeq: _*)
     }
 
-    def getName(code: String, nameOverride: String): String = {
-      if (nameOverride.nonEmpty) nameOverride
-      else codeToName(code)
+    def getName(code: String, nameOverride: String, profile: Profile = Profile.default): String = {
+      val baseName =
+        if (nameOverride.nonEmpty) nameOverride
+        else codeToName(code)
+
+      val name =
+        if (profile == Profile.default) baseName
+        else s"$baseName - $profile"
+
+      name
     }
 
     lazy val runner: DirectRunner = DirectRunner()
 
     def check(
         code: String,
-        extra: String = defaultExtra,
+        profile: Profile = Profile.default,
         nameOverride: String = "",
         numberOfErrors: Int = 1,
         verbose: Boolean = false
     ): Unit = {
 
-      val name = getName(code, nameOverride)
-      val cc = DirectCase(code, extra)
+      val name = getName(code, nameOverride, profile)
+
+      val cc = DirectCase(code, profile)
 
       val from = runner.pointer.getAndAdd(numberOfErrors)
       val until = runner.pointer.get()
       val groundTruth = runner.groundTruths.slice(from, until).mkString("\n")
 
       _it(name) {
-        val error = cc.splainC.compileError()
+        val error = cc.compileWith.compileError()
         error must_== groundTruth
 
         if (verbose)
@@ -68,9 +76,14 @@ object SpecBase {
       }
     }
 
-    def skip(code: String, extra: String = defaultExtra, nameOverride: String = "", numberOfBlocks: Int = 1): Unit = {
+    def skip(
+        code: String,
+        profile: Profile = Profile.default,
+        nameOverride: String = "",
+        numberOfBlocks: Int = 1
+    ): Unit = {
 
-      val name = getName(code, nameOverride)
+      val name = getName(code, nameOverride, profile)
 
       runner.pointer.getAndAdd(numberOfBlocks)
 
@@ -83,7 +96,7 @@ object SpecBase {
     def check(
         name: String,
         file: String = "",
-        extra: String = defaultExtra
+        profile: Profile = Profile.default
     )(
         check: CheckFile
     ): Unit = {
@@ -96,14 +109,14 @@ object SpecBase {
 
       _it(testName) {
 
-        check(FileCase(_file, extra))
+        check(FileCase(_file, profile))
       }
     }
 
     def skip(
         name: String,
         file: String = "",
-        extra: String = defaultExtra
+        setting: Profile = Profile.default
     )(
         check: CheckFile
     ): Unit = {
@@ -116,7 +129,7 @@ object SpecBase {
 
       ignore(testName) {
 
-        check(FileCase(_file, extra))
+        check(FileCase(_file, setting))
       }
     }
   }

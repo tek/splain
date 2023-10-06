@@ -34,6 +34,97 @@ object FoundReq
 }
   """
 
+  final val LongArg =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[VeryLong[
+    VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ]]
+}
+"""
+
+  final val compoundDiff =
+    """
+object Compound {
+  trait T
+  type F[A] = A
+  def x[A](y: A): F[A with T] = y.asInstanceOf[A with T]
+  def f[A](a: A with String): F[A] = a
+  val y: F[Int with T] = x(x(1))
+  f(y)
+
+  val z: Int with T = x(x(1))
+  f(z)
+}
+    """
+
+  final val LongRefined =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[VeryLong[
+    VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ] { type A = Int; type B = Int; type C = Int; type D = Int; type E = Int; type F = Int; type G = Int; type H = Int}]
+}
+    """
+
+  final val LongTuple =
+    """
+object Long {
+  class VeryLong[T]
+
+  implicitly[
+      (
+          VeryLong[Int],
+          VeryLong[
+            VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[Int]]]]]]]
+          ]
+      )
+  ]
+}
+  """
+
+  final val foundReqLongTuple =
+    """
+object Long {
+  class VeryLong[T]
+
+  val x: (
+      VeryLong[Int],
+      VeryLong[
+        VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[Int]]]]]]]
+      ]
+  ) = ???
+
+  val y: (
+      VeryLong[Int],
+      VeryLong[
+        VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+      ]
+  ) = x
+}
+"""
+
+  final val foundReqSameSymbol =
+    """
+object FoundReqSameSymbol {
+
+  trait T { type TT }
+  trait A { val t: T }
+
+  trait B {
+    val a: A
+    final val t = a.t
+
+    val t1: a.t.TT = ???
+    val t2: t.TT = t1
+  }
+}
+  """
+
   final val bounds =
     """
 object Bounds

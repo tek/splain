@@ -4,8 +4,6 @@ import splain.SpecBase
 
 class VTypeReductionSpec extends SpecBase.Direct {
 
-  override protected lazy val defaultExtra: String = "-Vimplicits-max-refined 5"
-
   final val foundReqVsImplicit =
     """
 object FoundReqVsImplicit
@@ -21,7 +19,10 @@ val x: vecInt.Head = ??? : Option[String]
 }
 """
 
-  check(foundReqVsImplicit, nameOverride = "original", numberOfErrors = 2)
+  describe("#101") {
 
-  check(foundReqVsImplicit, extra = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+    check(foundReqVsImplicit, numberOfErrors = 2)
+
+    check(foundReqVsImplicit, profile = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+  }
 }
