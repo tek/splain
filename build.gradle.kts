@@ -1,5 +1,8 @@
 import org.gradle.util.internal.VersionNumber
 
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import org.gradle.api.specs.Spec
+
 val vs = versions()
 
 buildscript {
@@ -10,6 +13,12 @@ buildscript {
 
     dependencies {
         classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.1") // suffix is always 2.12, weird
+    }
+}
+
+tasks.named<DependencyUpdatesTask>("dependencyUpdates").configure {
+    filterConfigurations = Spec<Configuration> {
+        !it.name.startsWith("incrementalScalaAnalysis")
     }
 }
 
@@ -24,7 +33,7 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 
-    id("com.github.ben-manes.versions") version "0.44.0"
+    id("com.github.ben-manes.versions") version "0.49.0"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
