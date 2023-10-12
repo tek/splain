@@ -3,7 +3,7 @@ package splain
 import org.scalatest.exceptions.TestFailedException
 import org.scalatest.{Assertion, Suite}
 import org.slf4j.LoggerFactory
-import splain.test.TryCompile
+import splain.test.{Issue, TryCompile}
 
 import java.nio.file.{FileSystems, Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
@@ -197,7 +197,7 @@ trait TestHelpers extends Suite {
   case class DirectRunner() {
 
     case class ParseGroundTruths(
-        startsWith: String = "newSource1.scala:",
+        startsWith: String = Issue.defaultSrcName,
         fName: Option[String] = None
     ) {
 
@@ -208,9 +208,11 @@ trait TestHelpers extends Suite {
       }
 
       lazy val cases: Seq[String] = {
+        val regex = s"(^|\n)$startsWith"
+
         val result = raw
           .split(
-            startsWith
+            regex
           )
           .toSeq
           .filter(_.nonEmpty)
