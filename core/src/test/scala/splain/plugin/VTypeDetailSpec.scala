@@ -2,9 +2,7 @@ package splain.plugin
 
 import splain.SpecBase
 
-class VTypeDetailsSpec extends SpecBase.Direct {
-
-  override def defaultExtraSetting: String = "-P:splain:Vtype-reduction"
+class VTypeDetailSpec extends SpecBase.Direct {
 
   final val wrongContexts =
     """
@@ -18,10 +16,11 @@ class VTypeDetailsSpec extends SpecBase.Direct {
       class F[T]
 
       val a = new A
+      type AA = a.type
 
       def wrongf(a: A)(implicit b: (F[a.type])): Unit = {}
 
-      wrongf(new A)(new F[a.type])
+      wrongf(new A)(new F[AA])
       wrongf(new A)
     }
     """
@@ -35,6 +34,10 @@ class VTypeDetailsSpec extends SpecBase.Direct {
     check(wrongContexts, profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
 
     check(wrongContexts, profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
+
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:5", numberOfErrors = 2)
+
+    check(wrongContexts, profile = "-P:splain:Vtype-detail:6", numberOfErrors = 2)
   }
 
 }

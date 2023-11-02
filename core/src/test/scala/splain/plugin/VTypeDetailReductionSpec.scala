@@ -2,7 +2,7 @@ package splain.plugin
 
 import splain.SpecBase
 
-class VTypeReductionSpec extends SpecBase.Direct {
+class VTypeDetailReductionSpec extends SpecBase.Direct {
 
   final val foundReqVsImplicit =
     """
@@ -23,6 +23,6 @@ val x: vecInt.Head = ??? : Option[String]
 
     check(foundReqVsImplicit, numberOfErrors = 2)
 
-    check(foundReqVsImplicit, profile = "-P:splain:Vtype-reduction", numberOfErrors = 2)
+    check(foundReqVsImplicit, profile = "-P:splain:Vtype-detail:reduction", numberOfErrors = 2)
   }
 }

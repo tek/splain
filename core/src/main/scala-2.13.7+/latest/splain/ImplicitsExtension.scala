@@ -65,10 +65,11 @@ trait ImplicitsExtension extends TyperCompatViews with typechecker.Implicits {
   ): SearchResult = {
 
     import ImplicitsHistory._
+    import PluginSettings.Keys._
 
     def getResult = super.inferImplicit(tree, pt, reportAmbiguous, isView, context, saveAmbiguousDivergent, pos)
 
-    if (settings.Vimplicits.value && pluginSettings.implicitDiverging) {
+    if (settings.Vimplicits.value && `Vimplicits-diverging`.isEnabled) {
 
       val posII = PositionIndex(
         tree.pos
@@ -80,7 +81,7 @@ trait ImplicitsExtension extends TyperCompatViews with typechecker.Implicits {
       }
 
       val previousSimilarErrorsN = previousSimilarErrors.size
-      if (previousSimilarErrorsN >= pluginSettings.implicitDivergingMaxDepth) {
+      if (previousSimilarErrorsN >= `Vimplicits-diverging-max-depth`.get) {
 
         local.DivergingImplicitErrors.logs +=
           s"""

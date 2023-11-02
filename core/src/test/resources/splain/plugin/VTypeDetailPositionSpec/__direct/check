@@ -9,12 +9,12 @@ newSource1.scala:13: error: type mismatch;
   val x: e1.VV = ??? : String
                      ^
 newSource1.scala:12: error: implicit error;
-!I e: Diff.e1.VV (defined at) { newSource1.scala:9:10 } =:= String
+!I e: Diff.e1.VV (defined at newSource1.scala:9:10) =:= String
   Cannot prove that Diff.e1.VV =:= String.
 
   implicitly[e1.VV =:= String]
             ^
 newSource1.scala:13: error: type mismatch;
-  String|Diff.e1.VV (defined at) { newSource1.scala:9:10 }
+  String|Diff.e1.VV (defined at newSource1.scala:9:10)
   val x: e1.VV = ??? : String
                      ^

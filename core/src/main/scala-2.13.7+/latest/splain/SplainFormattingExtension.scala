@@ -19,6 +19,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   import SplainFormattingExtension._
   import global._
+  import PluginSettings._
 
   case class SplainImplicitErrorLink(
       fromTree: ImplicitError,
@@ -396,9 +397,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     else {
 
       val result = tpe.dealias
-      //      if (pluginSettings.typeReduction) {
-      //        TyperHistory.currentGlobal.TypeReductionCache.pushReduction(tpe)
-      //      }
       result
     }
   }
@@ -425,7 +423,8 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     lazy val flat: String = {
       val (header, body) = formattedHeader_Body(false)
 
-      s"$header { ${body.map(v => v.flat).mkString(";")} }"
+      if (body.isEmpty) header
+      else s"$header { ${body.map(v => v.flat).mkString(";")} }"
     }
 
     lazy val broken: Seq[String] = {
@@ -456,8 +455,9 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     def index(): Unit = {
 
-      if (pluginSettings.showTypeReduction)
+      if (TypeDetail.reduction.isEnabled) {
         Based += FormattedIndex(element) -> this
+      }
     }
 
     override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
@@ -474,7 +474,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     def index(): Unit = {
 
-      if (pluginSettings.TypeDiffsDetail.builtInMsg)
+      if (TypeDiffsDetail.`builtin-msg`.isEnabled)
         Based += FormattedIndex(element) -> this
     }
 
@@ -495,18 +495,19 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   case class DefPosition(
       element: Formatted,
-      msg: String
+      srcInfo: String,
+      quotes: Seq[String] = Nil
   ) extends Based {
 
     def index(): Unit = {
 
-      if (pluginSettings.showTypeDefPosition)
+      if (TypeDetail.position.isEnabled)
         Based += FormattedIndex(element) -> this
     }
 
     override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
 
-      s"(defined at)" -> Seq(BrokenType(List(msg)))
+      s"(defined at $srcInfo)" -> quotes.map(quote => BrokenType(List(quote)))
     }
   }
 
@@ -519,7 +520,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     tpe.typeArgs match {
       case List(t1, t2) =>
         val result =
-          if (pluginSettings.TypeDiffsDetail.disambiguation) {
+          if (TypeDiffsDetail.disambiguation.isEnabled) {
 
             withDisambiguation(Nil, t1, t2) {
               formatTypeImplNoDisambiguation(tpe, top)
@@ -533,7 +534,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
           case Infix(ii, left, right, _) =>
             val noApparentDiff = (left == right) && (t1 != t2)
 
-            if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+            if (noApparentDiff || TypeDiffsDetail.`builtin-msg-always`.isEnabled) {
 
               BuiltInDiffMsg(
                 result,
@@ -578,7 +579,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   override def formatDiffImpl(found: Type, req: Type, top: Boolean): Formatted = {
 
-    if (pluginSettings.TypeDiffsDetail.disambiguation) {
+    if (TypeDiffsDetail.disambiguation.isEnabled) {
 
       val result = withDisambiguation(Nil, found, req) {
         formatDiffImplNoDisambiguation(found, req, top)
@@ -588,7 +589,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         case diff: Diff =>
           val noApparentDiff = (diff.left == diff.right) && (found != req)
 
-          if (noApparentDiff || pluginSettings.TypeDiffsDetail.builtInMsgAlways) {
+          if (noApparentDiff || TypeDiffsDetail.`builtin-msg-always`.isEnabled) {
 
             BuiltInDiffMsg(
               diff,
