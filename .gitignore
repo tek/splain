@@ -38,6 +38,7 @@ project/plugins/project/
 
 # VSCode
 .vscode/
+.obsidian/
 
 # BSP & Metals
 .bsp/

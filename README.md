@@ -55,8 +55,10 @@ We strongly recommend you to upgrade to Scala 2.13.6+ to benefit from active sup
 ### Build Matrix
 
 | Version                          | Status                                                                                                                                                            | Compatibility                                                                                 |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+|----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
 | v1.x <br> (current) - latest     | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/tek/splain/actions/workflows/main.yml)               | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=master)               |
+| v1.0.3 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.3)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.3)        |
+| v1.0.2 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.2)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.2)        |
 | v1.0.1 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.1)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.1)        |
 | v1.0.0 <br> (current)            | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0)](https://github.com/tek/splain/actions/workflows/main.yml)        | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0)        |
 | v1.0.0-RC2 <br> (current)        | [![CI](https://github.com/tek/splain/actions/workflows/main.yml/badge.svg?branch=Release/1.0.0-RC2)](https://github.com/tek/splain/actions/workflows/main.yml)    | ![badge](https://github-actions.40ants.com/tek/splain/matrix.svg?branch=Release/1.0.0-RC2)    |
@@ -116,10 +118,10 @@ The plugin can be configured via compiler Options with the format:
 
 | v0.x              | built-in, v1.x                            | default value    |
 | ----------------- |-------------------------------------------|------------------|
-| `all`             | (dropped)                                 |                  |
+| `all`             | `enabled`                                 | true             |
 | `infix`           | (dropped)                                 |                  |
-| `foundreq`        | `Vtype-diffs`                             |                  |
-| `implicits`       | `Vimplicits`                              |                  |
+| `foundreq`        | `Vtype-diffs`                             | false            |
+| `implicits`       | `Vimplicits`                              | false            |
 | `bounds`          | (dropped)                                 | false            |
 | `color`           | (dropped)                                 |                  |
 | `breakinfix`      | (dropped)                                 | 0                |
@@ -323,6 +325,19 @@ The option `-P:splain:Vtype-detail:X` can take an integer from 1 to 6 to attach 
 - `5` = `4` + (**position** : type definition position in code)
 - `6` = `5` + (**alias** : explain type aliases, this generally contains duplicate information with `3`, it is only included for completeness)
 
+For example:
+
+(`-P:splain:Vtype-detail:1`)
+
+```
+XXX.scala:15: error: type mismatch;
+  Test.F[Test.a.type|a.type]
+```
+
+(`-P:splain:Vtype-detail:6`)
+
+![](img/bc959e77.png)
+
 In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-detail:1,reduction,position` can attach type reduction process & type definition position while bypassing **long** and **existential**.
 
 # type diffs detail (experimental)
@@ -335,6 +350,20 @@ The option `-P:splain:Vtype-diffs-detail:X` can take an integer from 1 to 4 to a
 - `4` = `3` + (**builtInAlways** : ALWAYS attach original found/required error info, even if both sides of the error message are different)
 
 In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-diffs-detail:1,builtIn` can attach built-in errors while bypassing **disambiguation**.
+
+For example:
+
+(`-P:splain:Vtype-diffs-detail:1`)
+
+```
+XXX.scala:16: error: implicit error;
+!I ev: Long =:= Long
+  Cannot prove that Long =:= Long.
+```
+
+(`-P:splain:Vtype-diffs-detail:4`)
+
+![](img/86df485f.png)
 
 # Development
 
@@ -356,6 +385,21 @@ The bug can thus be identified by the team quickly on our [continuous integratio
 
 ## How to compile
 
+### v1.x (from git branch master)
+
+Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
+
+```
+./gradlew clean testClasses publishToMavenLocal
+```
+
+to run all tests:
+
+```
+./gradlew test
+```
+
+
 ### v0.x (from git branch Maintenance/master)
 
 Built with the latest stable [SBT](https://www.scala-sbt.org/). to compile and publish locally:
@@ -370,19 +414,6 @@ to run all tests:
 sbt test
 ```
 
-### v1.x (from git branch master)
-
-Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
-
-```
-./gradlew clean testClasses publishToMavenLocal
-```
-
-to run all tests:
-
-```
-./gradlew test
-```
 
 ## How to edit
 
