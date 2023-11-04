@@ -116,10 +116,10 @@ The plugin can be configured via compiler Options with the format:
 
 | v0.x              | built-in, v1.x                            | default value    |
 | ----------------- |-------------------------------------------|------------------|
-| `all`             | (dropped)                                 |                  |
+| `all`             | `enabled`                                 | true             |
 | `infix`           | (dropped)                                 |                  |
-| `foundreq`        | `Vtype-diffs`                             |                  |
-| `implicits`       | `Vimplicits`                              |                  |
+| `foundreq`        | `Vtype-diffs`                             | false            |
+| `implicits`       | `Vimplicits`                              | false            |
 | `bounds`          | (dropped)                                 | false            |
 | `color`           | (dropped)                                 |                  |
 | `breakinfix`      | (dropped)                                 | 0                |
@@ -323,6 +323,31 @@ The option `-P:splain:Vtype-detail:X` can take an integer from 1 to 6 to attach 
 - `5` = `4` + (**position** : type definition position in code)
 - `6` = `5` + (**alias** : explain type aliases, this generally contains duplicate information with `3`, it is only included for completeness)
 
+For example:
+
+(`-P:splain:Vtype-detail:1`)
+
+```
+XXX.scala:15: error: type mismatch;
+  Test.F[Test.a.type|a.type]
+```
+
+(`-P:splain:Vtype-detail:6`)
+
+XXX.scala:15: error: type mismatch;
+
+- Test.F\[
+
+    - Test.a.type (<label class="ob-comment" title="" style="background:red"> with underlying type Test.A <input type="checkbox"> <span style=""> long </span></label>)|a.type (with underlying type a.type) <label class="ob-comment" title="" style="background:orange"> where val a: Test.A <input type="checkbox"> <span style=""> existential </span></label> (<label class="ob-comment" title="" style="background:yellow"> defined at newSource1.scala:13:18 <input type="checkbox"> <span style=""> position </span></label>)
+
+        - <label class="ob-comment" title="" style="background:green">     ――(left side reduced from) <input type="checkbox"> <span style=""> reduction </span></label>
+
+            - Test.AA
+
+    - <label class="ob-comment" title="" style="background:blue"> (which expands to)  Test.a.type <input type="checkbox"> <span style=""> alias </span></label>
+
+- \]
+
 In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-detail:1,reduction,position` can attach type reduction process & type definition position while bypassing **long** and **existential**.
 
 # type diffs detail (experimental)
@@ -335,6 +360,31 @@ The option `-P:splain:Vtype-diffs-detail:X` can take an integer from 1 to 4 to a
 - `4` = `3` + (**builtInAlways** : ALWAYS attach original found/required error info, even if both sides of the error message are different)
 
 In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-diffs-detail:1,builtIn` can attach built-in errors while bypassing **disambiguation**.
+
+For example:
+
+(`-P:splain:Vtype-diffs-detail:1`)
+
+```
+XXX.scala:16: error: implicit error;
+!I ev: Long =:= Long
+  Cannot prove that Long =:= Long.
+```
+
+(`-P:splain:Vtype-diffs-detail:4`)
+
+XXX.scala:16: error: implicit error;
+- !I ev:
+
+    - Long(<label class="ob-comment" title="" style="background:red"> in method add <input type="checkbox"> <span style=""> disambiguation </span></label>) =:= scala.Long
+
+    - ――(<label class="ob-comment" title="" style="background:yellow"> comparing \<found\> =:= \<required\> <input type="checkbox"> <span style=""> builtIn </span></label>)
+
+        - found   : Long(in method add)
+
+        - required: scala.Long
+
+    - Cannot prove that Long =:= Long.
 
 # Development
 
