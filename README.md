@@ -334,19 +334,7 @@ XXX.scala:15: error: type mismatch;
 
 (`-P:splain:Vtype-detail:6`)
 
-XXX.scala:15: error: type mismatch;
-
-- Test.F\[
-
-    - Test.a.type (<label class="ob-comment" title="" style="background:red"> with underlying type Test.A <input type="checkbox"> <span style=""> long </span></label>)|a.type (with underlying type a.type) <label class="ob-comment" title="" style="background:orange"> where val a: Test.A <input type="checkbox"> <span style=""> existential </span></label> (<label class="ob-comment" title="" style="background:yellow"> defined at newSource1.scala:13:18 <input type="checkbox"> <span style=""> position </span></label>)
-
-        - <label class="ob-comment" title="" style="background:green">     ――(left side reduced from) <input type="checkbox"> <span style=""> reduction </span></label>
-
-            - Test.AA
-
-    - <label class="ob-comment" title="" style="background:blue"> (which expands to)  Test.a.type <input type="checkbox"> <span style=""> alias </span></label>
-
-- \]
+![](img/bc959e77.png)
 
 In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-detail:1,reduction,position` can attach type reduction process & type definition position while bypassing **long** and **existential**.
 
@@ -373,18 +361,7 @@ XXX.scala:16: error: implicit error;
 
 (`-P:splain:Vtype-diffs-detail:4`)
 
-XXX.scala:16: error: implicit error;
-- !I ev:
-
-    - Long(<label class="ob-comment" title="" style="background:red"> in method add <input type="checkbox"> <span style=""> disambiguation </span></label>) =:= scala.Long
-
-    - ――(<label class="ob-comment" title="" style="background:yellow"> comparing \<found\> =:= \<required\> <input type="checkbox"> <span style=""> builtIn </span></label>)
-
-        - found   : Long(in method add)
-
-        - required: scala.Long
-
-    - Cannot prove that Long =:= Long.
+![](img/86df485f.png)
 
 # Development
 
