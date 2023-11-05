@@ -34,6 +34,8 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 
     id("com.github.ben-manes.versions") version "0.49.0"
+
+    id("io.github.cosmicsilence.scalafix") version "0.1.14"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -127,6 +129,26 @@ allprojects {
         }
     }
 
+    dependencies {
+
+        // see https://github.com/gradle/gradle/issues/13067
+        fun bothImpl(constraintNotation: Any) {
+            implementation(constraintNotation)
+            testFixturesImplementation(constraintNotation)
+        }
+
+        constraints {}
+
+        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
+        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+
+        val scalaTestV = "3.2.11"
+        testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+
+        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
+    }
+
     task("dependencyTree") {
 
         dependsOn("dependencies")
@@ -135,6 +157,9 @@ allprojects {
     val jvmTarget = JavaVersion.VERSION_1_8
 
     java {
+
+        withSourcesJar()
+        withJavadocJar()
 
         sourceCompatibility = jvmTarget
         targetCompatibility = jvmTarget
@@ -210,9 +235,10 @@ allprojects {
         }
     }
 
-    java {
-        withSourcesJar()
-        withJavadocJar()
+    apply(plugin = "io.github.cosmicsilence.scalafix")
+    scalafix {
+        semanticdb.autoConfigure.set(true)
+        semanticdb.version.set("4.8.11")
     }
 
     idea {
@@ -244,26 +270,6 @@ allprojects {
 }
 
 subprojects {
-
-    dependencies {
-
-        // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
-            implementation(constraintNotation)
-            testFixturesImplementation(constraintNotation)
-        }
-
-        constraints {}
-
-        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
-
-        val scalaTestV = "3.2.11"
-        testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
-    }
 
     // https://stackoverflow.com/a/66352905/1772342
 
@@ -349,9 +355,9 @@ idea {
     module {
 
         excludeDirs = excludeDirs + files(
-            (".gradle"),
-            ("gradle"),
-            ("spike"),
+            ".gradle",
+            "gradle",
+            "spike",
         )
     }
 }

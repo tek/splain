@@ -3,9 +3,9 @@ package splain
 import scala.tools.nsc._
 import scala.tools.nsc.typechecker.{Analyzer, MacroAnnotationNamers}
 
-class SplainPlugin(val global: Global) extends SplainPluginLike {
+class SplainPlugin(val global: Global) extends SplainPluginLike with PluginSettings.Implicits {
 
-  lazy val pluginSettings: PluginSettings = PluginSettings(this.opts)
+  override lazy val pluginSettings: PluginSettings = PluginSettings(this.opts)
 
   lazy val splainAnalyzer: SplainAnalyzer =
     if (global.settings.YmacroAnnotations.value)
@@ -47,8 +47,10 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
   }
 
   override def init(options: List[String], error: String => Unit): Boolean = {
-    def invalid(opt: String) = error(s"splain: invalid option `$opt`")
-    def setOpt(key: String, value: String) =
+    def invalid(opt: String): Unit = error(
+      s"splain: invalid option `$opt`, supported options are ${PluginSettings.nameToKey.map(kv => "`" + kv._1 + "`").mkString(", ")}"
+    )
+    def setOpt(key: String, value: String): Unit =
       if (opts.contains(key))
         opts.update(key, value)
       else
@@ -63,6 +65,6 @@ class SplainPlugin(val global: Global) extends SplainPluginLike {
           invalid(opt)
       }
     }
-    pluginSettings.enabled
+    PluginSettings.Keys.enabled.get
   }
 }

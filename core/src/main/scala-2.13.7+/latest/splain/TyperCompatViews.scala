@@ -92,25 +92,31 @@ trait TyperCompatViews {
 
     def typeToString: String = {
 
-      val typeDetail = pluginSettings.typeDetail
+      import PluginSettings.TypeDetail
 
       def short = self.safeToString
 
-      def long = scala.util.Try(self.toLongString).getOrElse(short)
-
-      def maybeContext = scala.util.Try(existentialContext(self)).toOption
-
-      def maybeAlias = scala.util.Try(explainAlias(self)).toOption
-
-      typeDetail match {
-        case i if i <= 1 => short
-        case 2 => long
-        case 3 =>
-          (Seq(long) ++ maybeContext).mkString("")
-
-        case i if i >= 4 =>
-          (Seq(long) ++ maybeContext ++ maybeAlias).mkString("")
+      val base = {
+        if (TypeDetail.long.isEnabled)
+          scala.util.Try(self.toLongString).getOrElse(short)
+        else
+          short
       }
+
+      val extraExistential =
+        if (TypeDetail.existential.isEnabled)
+          scala.util.Try(existentialContext(self)).toOption
+        else
+          None
+
+      val extraAlias =
+        if (TypeDetail.alias.isEnabled)
+          scala.util.Try(explainAlias(self)).toOption
+        else
+          None
+
+      (Seq(base) ++ extraExistential ++ extraAlias).mkString("")
+
     }
   }
 

@@ -115,7 +115,7 @@ The plugin can be configured via compiler Options with the format:
 `param` can be one of the following:
 
 | v0.x              | built-in, v1.x                            | default value    |
-| ----------------- | ----------------------------------------- | ---------------- |
+| ----------------- |-------------------------------------------|------------------|
 | `all`             | (dropped)                                 |                  |
 | `infix`           | (dropped)                                 |                  |
 | `foundreq`        | `Vtype-diffs`                             |                  |
@@ -131,6 +131,9 @@ The plugin can be configured via compiler Options with the format:
 | `keepmodules`     | (dropped)                                 | 0                |
 | (N/A)             | `P:splain:Vimplicits-diverging`           | false            |
 | (N/A)             | `P:splain:Vimplicits-diverging-max-depth` | 100              |
+| (N/A)             | `P:splain:Vtype-detail`                   | 1                |
+| (N/A)             | `P:splain:Vtype-diffs-detail`             | 1                |
+
 
 `value` can either be `true` or `false`. If omitted, the default is `true` for
 both value and parameter.
@@ -283,9 +286,9 @@ So with `-P:splain:keepmodules:2`, the qualified type `cats.free.FreeT.Suspend` 
 `free.FreeT.Suspend`, keeping the two segments `free.FreeT` before the type name.
 The default is `0`, so only the type name itself will be displayed
 
-# diverging implicit errors (experimental)
+# expanding diverging implicit errors (experimental)
 
-This error may be thrown by the Scala compiler if it cannot decide if an implicit search can terminate in polynomial time (e.g. if the search algorithm encounter a loop or infinite expansion). In most cases, such error will cause the entire search to fail immediately, but there are few exceptions to this rule, for which the search can backtrack and try an alternative path to fulfil the implicit argument. Either way, the Scala compiler error is only capable of showing the entry point of such loop or infinite expansion:
+A `diverging implicit error` is thrown by compiler if it cannot decide if an implicit search can terminate in polynomial time (e.g. if the search algorithm encounter a loop or infinite expansion). In most cases, such error will cause the entire search to fail immediately, but there are few exceptions to this rule, for which the search can backtrack and try an alternative path to fulfil the implicit argument. Either way, the Scala compiler error is only capable of showing the entry point of such loop or infinite expansion:
 
 ```
 diverging implicit expansion for type splain.DivergingImplicits.C
@@ -307,7 +310,31 @@ starting with method f in object Endo
   starting with method f in object Endo
 ```
 
-**WARNING!** This feature is marked "experimental" as sometimes it may cause failed implicit resolution to succeed, due to the delay in throwing the diverging implicit error. It may also increase compilation time slightly. If your build has been broken by this feature, please consider simplifying your code base to create a minimal reproducible test case, and submit it with a pull request.
+**EXPERIMENTAL!** sometimes this feature may cause failed implicit resolution to succeed, due to the delay in throwing the diverging implicit error. It may also increase compilation time slightly. If your build has been broken by this feature, please consider simplifying your code base to create a minimal reproducible test case, and submit it with a pull request.
+
+# type detail (experimental)
+
+The option `-P:splain:Vtype-detail:X` can take an integer from 1 to 6 to attach different kinds of details to type information in any error message.
+
+- `1` (DEFAULT) : type info in short form, by using toString (same as pre-1.1.0)
+- `2` = **long** : type info in long form, by using toLongString
+- `3` = `2` + (**existential** : existential context)
+- `4` = `3` + (**reduction** : explain type reduction process)
+- `5` = `4` + (**position** : type definition position in code)
+- `6` = `5` + (**alias** : explain type aliases, this generally contains duplicate information with `3`, it is only included for completeness)
+
+In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-detail:1,reduction,position` can attach type reduction process & type definition position while bypassing **long** and **existential**.
+
+# type diffs detail (experimental)
+
+The option `-P:splain:Vtype-diffs-detail:X` can take an integer from 1 to 4 to augment type diff errors with different kinds of details.
+
+- `1` (DEFAULT) : no augmentation (same as pre-1.1.0)
+- `2` = **disambiguation** : augment type info with disambiguation for both sides in `<found>|<required>` and infix types (e.g. `A =:= B`, `A <:< B`) in error message
+- `3` = `2` + (**builtIn** : attach built-in found/required errors emitted by Scala compiler IF AND ONLY IF both sides of the error message are identical)
+- `4` = `3` + (**builtInAlways** : ALWAYS attach original found/required error info, even if both sides of the error message are different)
+
+In addition, multiple names of the detail kind (denoted by bold text in the above list) can be appended to the option value to enable it, e.g. `-P:splain:Vtype-diffs-detail:1,builtIn` can attach built-in errors while bypassing **disambiguation**.
 
 # Development
 

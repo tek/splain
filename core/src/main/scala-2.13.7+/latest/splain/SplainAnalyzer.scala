@@ -7,7 +7,8 @@ class SplainAnalyzer(val global: Global, val pluginSettings: PluginSettings)
     extends typechecker.Analyzer
     with SplainFormattingExtension
     with ImplicitsExtension
-    with SplainAnalyzerShim {
+    with SplainAnalyzerShim
+    with PluginSettings.Implicits {
 
   override val specialFormatters: List[SpecialFormatter] =
     List(
@@ -24,7 +25,7 @@ class SplainAnalyzer(val global: Global, val pluginSettings: PluginSettings)
 
     val extra = mutable.Buffer.empty[String]
 
-    if (pluginSettings.debug) {
+    if (PluginSettings.Keys.debug.isEnabled) {
 
       extra += "===[ ORIGINAL ERROR ]===" +
         builtinFoundReqMsg(found, req) +

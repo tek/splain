@@ -2,7 +2,7 @@ package splain.plugin
 
 import splain.SpecBase
 
-class VTypeDefPositionSpec extends SpecBase.Direct {
+class VTypeDetailPositionSpec extends SpecBase.Direct {
 
   final val diff =
     """
@@ -26,6 +26,6 @@ object Diff {
 
     check(diff, numberOfErrors = 2)
 
-    check(diff, profile = "-P:splain:Vtype-def-position", numberOfErrors = 2)
+    check(diff, profile = "-P:splain:Vtype-detail:position", numberOfErrors = 2)
   }
 }
