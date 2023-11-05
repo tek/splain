@@ -40,7 +40,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{github.ref_name}}-${{matrix.scalaVersion}}"
           title: "${{github.ref_name}}-${{matrix.scalaVersion}}"
-          prerelease: true
+          prerelease: false
           files: |
             LICENSE
             core/build/libs/*.jar
