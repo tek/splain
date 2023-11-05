@@ -385,6 +385,21 @@ The bug can thus be identified by the team quickly on our [continuous integratio
 
 ## How to compile
 
+### v1.x (from git branch master)
+
+Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
+
+```
+./gradlew clean testClasses publishToMavenLocal
+```
+
+to run all tests:
+
+```
+./gradlew test
+```
+
+
 ### v0.x (from git branch Maintenance/master)
 
 Built with the latest stable [SBT](https://www.scala-sbt.org/). to compile and publish locally:
@@ -399,19 +414,6 @@ to run all tests:
 sbt test
 ```
 
-### v1.x (from git branch master)
-
-Built with the latest [Gradle](https://gradle.org/), to compile and publish locally:
-
-```
-./gradlew clean testClasses publishToMavenLocal
-```
-
-to run all tests:
-
-```
-./gradlew test
-```
 
 ## How to edit
 
