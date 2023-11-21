@@ -35,7 +35,7 @@ plugins {
 
     id("com.github.ben-manes.versions") version "0.50.0"
 
-    id("io.github.cosmicsilence.scalafix") version "0.1.15"
+    id("io.github.cosmicsilence.scalafix") version "0.1.14"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
