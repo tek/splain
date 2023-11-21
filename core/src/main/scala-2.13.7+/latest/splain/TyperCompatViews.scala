@@ -20,6 +20,24 @@ trait TyperCompatViews {
       self
     }
 
+    lazy val dealias_normal: Type = {
+
+      if (isAux(self)) self
+      else {
+        val result = self.dealias.normalize
+        result match {
+          case p: PolyType =>
+            val target = TypeView(p.resultType).dealias_normal
+            val _p = p.copy(
+              resultType = target
+            )
+            _p
+          case _ =>
+            result
+        }
+      }
+    }
+
     lazy val definingSymbol: Symbol = {
 
       self match {

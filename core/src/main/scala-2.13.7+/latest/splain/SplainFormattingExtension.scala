@@ -393,20 +393,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   // new implementation is idempotent and won't lose information
   override def dealias(tpe: Type): Type = {
 
-    if (isAux(tpe)) tpe
-    else {
-      val result = tpe.dealias.normalize
-      result match {
-        case p: PolyType =>
-          val target = dealias(p.resultType)
-          val _p = p.copy(
-            resultType = target
-          )
-          _p
-        case _ =>
-          result
-      }
-    }
+    TypeView(tpe).dealias_normal
   }
 
   case class FormattedIndex(
