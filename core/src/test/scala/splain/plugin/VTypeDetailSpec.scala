@@ -25,6 +25,18 @@ class VTypeDetailSpec extends SpecBase.Direct {
     }
     """
 
+  final val reduceToInfix =
+    """
+    object Test {
+      trait ::[A, B]
+
+      type K = String :: Int :: Boolean
+      implicitly[K]
+
+      def v: K = "abc"
+    }
+    """
+
   describe("#113") {
 
     check(wrongContexts, profile = "-P:splain:Vtype-detail:1", numberOfErrors = 2)
@@ -38,6 +50,13 @@ class VTypeDetailSpec extends SpecBase.Direct {
     check(wrongContexts, profile = "-P:splain:Vtype-detail:5", numberOfErrors = 2)
 
     check(wrongContexts, profile = "-P:splain:Vtype-detail:6", numberOfErrors = 2)
+  }
+
+  describe("#119") {
+
+    check(reduceToInfix, profile = "-P:splain:Vtype-detail:3", numberOfErrors = 2)
+
+    check(reduceToInfix, profile = "-P:splain:Vtype-detail:4", numberOfErrors = 2)
   }
 
 }

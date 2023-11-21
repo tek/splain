@@ -358,6 +358,7 @@ idea {
             ".gradle",
             "gradle",
             "spike",
+            ".history"
         )
     }
 }

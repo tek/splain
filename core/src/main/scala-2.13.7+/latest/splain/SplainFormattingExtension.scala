@@ -395,9 +395,17 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
     if (isAux(tpe)) tpe
     else {
-
-      val result = tpe.dealias
-      result
+      val result = tpe.dealias.normalize
+      result match {
+        case p: PolyType =>
+          val target = dealias(p.resultType)
+          val _p = p.copy(
+            resultType = target
+          )
+          _p
+        case _ =>
+          result
+      }
     }
   }
 
@@ -608,11 +616,11 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   protected def formatDiffImplNoDisambiguation(found: Type, req: Type, top: Boolean): Formatted = {
 
-    val (left, right) = dealias(found) -> dealias(req)
+    val reduced = Seq(found, req).map(dealias)
+    val Seq(left, right) = reduced
 
-    val normalized = Seq(left, right).map(_.normalize).distinct
-    if (normalized.size == 1) {
-      val only = normalized.head
+    if (reduced.distinct.size == 1) {
+      val only = reduced.head
       val result = formatType(only, top)
 
       val basedOn = Seq(found, req).distinct

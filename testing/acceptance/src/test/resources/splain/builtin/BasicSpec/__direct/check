@@ -172,15 +172,7 @@ f invalid because
 newSource1.scala:11: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.DeepHole.C1[
-    splain.acceptance.builtin.StaticBasicSpec.DeepHole.T3[
-      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1[List[String], ?],
-      splain.acceptance.builtin.StaticBasicSpec.DeepHole.T2[
-        splain.acceptance.builtin.StaticBasicSpec.DeepHole.Id,
-        splain.acceptance.builtin.StaticBasicSpec.DeepHole.C4,
-        ?
-      ],
-      ?
-    ]
+    [Z]splain.acceptance.builtin.StaticBasicSpec.DeepHole.C2[splain.acceptance.builtin.StaticBasicSpec.DeepHole.T1,splain.acceptance.builtin.StaticBasicSpec.DeepHole.T2,Z]
   ]
   implicitly[C1[T3]]
             ^
