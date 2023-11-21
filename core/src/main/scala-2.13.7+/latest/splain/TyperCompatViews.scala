@@ -9,17 +9,33 @@ trait TyperCompatViews {
 
   case class TypeView(self: Type) {
 
-    lazy val extractArgs: List[global.Type] = self match {
-      // PolyType handling is removed for being unsound
-      case t: AliasTypeRef if !isAux(self) =>
-        t.betaReduce.typeArgs.map(a => if (a.typeSymbolDirect.isTypeParameter) WildcardType else a)
-      case _ => self.typeArgs
+    lazy val extractArgs: List[global.Type] = {
+
+      self.typeArgs
     }
 
     lazy val noArgType: Type = if (extractArgs.nonEmpty) {
       self.typeConstructor
     } else {
       self
+    }
+
+    lazy val dealias_normal: Type = {
+
+      if (isAux(self)) self
+      else {
+        val result = self.dealias.normalize
+        result match {
+          case p: PolyType =>
+            val target = TypeView(p.resultType).dealias_normal
+            val _p = p.copy(
+              resultType = target
+            )
+            _p
+          case _ =>
+            result
+        }
+      }
     }
 
     lazy val definingSymbol: Symbol = {

@@ -76,3 +76,21 @@ newSource1.scala:16: error: implicit error;
   ――(defined at newSource1.scala:8:13)
       wrongf(new A)
             ^
+newSource1.scala:5: error: implicit error;
+!I e: String :: Int :: Boolean
+      implicitly[K]
+                ^
+newSource1.scala:7: error: type mismatch;
+  String("abc")|String :: Int :: Boolean
+      def v: K = "abc"
+                 ^
+newSource1.scala:5: error: implicit error;
+!I e: String :: Int :: Boolean (reduced from) { Test.K }
+      implicitly[K]
+                ^
+newSource1.scala:7: error: type mismatch;
+  String("abc")|String :: Int :: Boolean
+  ――(right side reduced from)
+    Test.K
+      def v: K = "abc"
+                 ^

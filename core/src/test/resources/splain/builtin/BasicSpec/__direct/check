@@ -143,14 +143,7 @@ f invalid because
   implicitly[String]
             ^
 newSource1.scala:11: error: implicit error;
-!I e:
-  DeepHole.C1[
-    DeepHole.T3[
-      DeepHole.T1[List[String], ?],
-      DeepHole.T2[DeepHole.Id, DeepHole.C4, ?],
-      ?
-    ]
-  ]
+!I e: DeepHole.C1[[Z]DeepHole.C2[DeepHole.T1,DeepHole.T2,Z]]
   implicitly[C1[T3]]
             ^
 newSource1.scala:9: error: implicit error;

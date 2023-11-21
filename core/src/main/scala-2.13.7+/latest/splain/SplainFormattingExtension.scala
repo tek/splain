@@ -393,12 +393,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   // new implementation is idempotent and won't lose information
   override def dealias(tpe: Type): Type = {
 
-    if (isAux(tpe)) tpe
-    else {
-
-      val result = tpe.dealias
-      result
-    }
+    TypeView(tpe).dealias_normal
   }
 
   case class FormattedIndex(
@@ -608,11 +603,11 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   protected def formatDiffImplNoDisambiguation(found: Type, req: Type, top: Boolean): Formatted = {
 
-    val (left, right) = dealias(found) -> dealias(req)
+    val reduced = Seq(found, req).map(dealias)
+    val Seq(left, right) = reduced
 
-    val normalized = Seq(left, right).map(_.normalize).distinct
-    if (normalized.size == 1) {
-      val only = normalized.head
+    if (reduced.distinct.size == 1) {
+      val only = reduced.head
       val result = formatType(only, top)
 
       val basedOn = Seq(found, req).distinct

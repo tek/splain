@@ -12,7 +12,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.1") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.2") // suffix is always 2.12, weird
     }
 }
 
@@ -33,7 +33,7 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 
-    id("com.github.ben-manes.versions") version "0.49.0"
+    id("com.github.ben-manes.versions") version "0.50.0"
 
     id("io.github.cosmicsilence.scalafix") version "0.1.14"
 }
@@ -144,7 +144,7 @@ allprojects {
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
     }
@@ -358,6 +358,7 @@ idea {
             ".gradle",
             "gradle",
             "spike",
+            ".history"
         )
     }
 }
