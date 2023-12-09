@@ -50,7 +50,7 @@ if (sonatypeApiUser.isPresent && sonatypeApiKey.isPresent) {
 
                 username.set(sonatypeApiUser)
                 password.set(sonatypeApiKey)
-                useStaging.set(true)
+//                useStaging.set(true)
             }
         }
     }
@@ -312,6 +312,9 @@ subprojects {
                     javaComponent.withVariantsFromConfiguration(configurations["testFixturesRuntimeElements"]) { skip() }
 
                     artifactId = moduleID
+                    version = project.version.toString()
+
+                    println("=== $version ===")
 
                     pom {
                         licenses {
