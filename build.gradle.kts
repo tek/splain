@@ -35,7 +35,7 @@ plugins {
 
     id("com.github.ben-manes.versions") version "0.50.0"
 
-    id("io.github.cosmicsilence.scalafix") version "0.1.14"
+    id("io.github.cosmicsilence.scalafix") version "0.2.0"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -77,7 +77,6 @@ allprojects {
     version = vs.projectV
 
     repositories {
-        mavenLocal()
         mavenCentral()
 //        jcenter()
         maven("https://dl.bintray.com/kotlin/kotlin-dev")
@@ -313,8 +312,6 @@ subprojects {
 
                     artifactId = moduleID
                     version = project.version.toString()
-
-                    println("=== $version ===")
 
                     pom {
                         licenses {

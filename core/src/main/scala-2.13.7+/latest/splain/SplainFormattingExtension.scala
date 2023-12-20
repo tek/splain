@@ -674,11 +674,27 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
 
+    import scala.reflect.internal.TypeDebugging.AnsiColor._
+
     def appendLastLine(lines: List[String], suffix: String): List[String] = {
       lines match {
         case Nil => List(suffix)
         case head :: Nil => List(head + suffix)
         case head :: tail => head :: appendLastLine(tail, suffix)
+      }
+    }
+
+    def formattedDiff(left: Formatted, right: Formatted): String = {
+      lazy val | = "┃"
+
+      (left, right) match {
+        case (Qualified(lpath, lname), Qualified(rpath, rname)) if lname == rname =>
+          val prefix = lpath.reverseIterator.zip(rpath.reverseIterator).takeWhile { case (l, r) => l == r }.size + 1
+          s"${qualifiedName(lpath.takeRight(prefix), lname).red}$|${qualifiedName(rpath.takeRight(prefix), rname).green}"
+        case (left, right) =>
+          val l = showFormatted(left)
+          val r = showFormatted(right)
+          s"${l.red}$|${r.green}"
       }
     }
 
