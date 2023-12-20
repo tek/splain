@@ -6,9 +6,14 @@ class BasicSpec extends SpecBase.Direct with BasicFixture {
 
   check(chain)
 
-  check(foundReq)
+  describe("#121") {
 
-  check(LongArg)
+    check(foundReq)
+
+    check(longFoundReq)
+  }
+
+  check(longArg)
 
   describe("#34") {
     check(compoundDiff, numberOfErrors = 2)

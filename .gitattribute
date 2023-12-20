@@ -5,5 +5,7 @@
 *.xml text eol=lf
 *.py text eol=lf
 *.R text eol=lf
-
 # from apache spark
+
+*.sh text eol=lf
+* text eol=lf

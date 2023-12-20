@@ -4,7 +4,7 @@ object Annotation {
 
   trait Arg
 
-  @implicitNotFound("A\n   | B\n  | C")
+  @implicitNotFound("A\n   ┃ B\n  ┃ C")
   trait F[A]
 
   trait G[A]

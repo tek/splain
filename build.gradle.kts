@@ -33,9 +33,9 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 
-    id("com.github.ben-manes.versions") version "0.50.0"
+    id("com.github.ben-manes.versions") version "0.51.0"
 
-    id("io.github.cosmicsilence.scalafix") version "0.1.14"
+    id("io.github.cosmicsilence.scalafix") version "0.2.0"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -77,7 +77,6 @@ allprojects {
     version = vs.projectV
 
     repositories {
-        mavenLocal()
         mavenCentral()
 //        jcenter()
         maven("https://dl.bintray.com/kotlin/kotlin-dev")
@@ -131,16 +130,15 @@ allprojects {
 
     dependencies {
 
-        // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
-            implementation(constraintNotation)
-            testFixturesImplementation(constraintNotation)
-        }
-
         constraints {}
 
-        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+        // see https://github.com/gradle/gradle/issues/13067
+//        fun bothImpl(constraintNotation: Any) {
+//            implementation(constraintNotation)
+//            testFixturesImplementation(constraintNotation)
+//        }
+
+        implementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
@@ -313,8 +311,6 @@ subprojects {
 
                     artifactId = moduleID
                     version = project.version.toString()
-
-                    println("=== $version ===")
 
                     pom {
                         licenses {

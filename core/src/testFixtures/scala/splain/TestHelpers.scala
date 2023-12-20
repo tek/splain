@@ -131,7 +131,9 @@ trait TestHelpers extends Suite {
 
     def stripSpaceAtEnd(v: String): String = {
 
-      v.reverse.dropWhile(v => v == ' ').reverse
+      v.reverse.dropWhile { v =>
+        (v == ' ') || (v == '\r')
+      }.reverse
     }
 
     def canonize(v: String): String = {
@@ -215,7 +217,7 @@ trait TestHelpers extends Suite {
             regex
           )
           .toSeq
-          .filter(_.nonEmpty)
+          .filter(_.trim.nonEmpty)
           .map { line =>
             (startsWith + line).trim
           }
