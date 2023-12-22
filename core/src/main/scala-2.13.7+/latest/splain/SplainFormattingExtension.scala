@@ -690,11 +690,11 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       (left, right) match {
         case (Qualified(lpath, lname), Qualified(rpath, rname)) if lname == rname =>
           val prefix = lpath.reverseIterator.zip(rpath.reverseIterator).takeWhile { case (l, r) => l == r }.size + 1
-          s"${qualifiedName(lpath.takeRight(prefix), lname).red}$|${qualifiedName(rpath.takeRight(prefix), rname).green}"
+          s"${qualifiedName(lpath.takeRight(prefix), lname).red}${|}${qualifiedName(rpath.takeRight(prefix), rname).green}"
         case (left, right) =>
           val l = showFormatted(left)
           val r = showFormatted(right)
-          s"${l.red}$|${r.green}"
+          s"${l.red}${|}${r.green}"
       }
     }
 
