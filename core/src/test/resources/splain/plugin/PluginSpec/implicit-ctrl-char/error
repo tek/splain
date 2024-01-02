@@ -3,8 +3,8 @@ newSource1.scala:25: error: implicit error;
 Annotation.f invalid because
 !I ev: Annotation.F[Annotation.Arg]
   A
-     | B
-    | C
+     ┃ B
+    ┃ C
 
   implicitly[G[Arg]]
             ^

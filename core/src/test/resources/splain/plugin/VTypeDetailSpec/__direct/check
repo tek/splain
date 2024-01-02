@@ -1,6 +1,6 @@
 
 newSource1.scala:15: error: type mismatch;
-  Test.F[Test.a.type|a.type]
+  Test.F[Test.a.type┃a.type]
       wrongf(new A)(new F[AA])
                     ^
 newSource1.scala:16: error: implicit error;
@@ -9,7 +9,7 @@ newSource1.scala:16: error: implicit error;
             ^
 newSource1.scala:15: error: type mismatch;
   Test.F[
-    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type)
+    Test.a.type (with underlying type Test.A)┃a.type (with underlying type a.type)
   ]
       wrongf(new A)(new F[AA])
                     ^
@@ -19,7 +19,7 @@ newSource1.scala:16: error: implicit error;
             ^
 newSource1.scala:15: error: type mismatch;
   Test.F[
-    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A
+    Test.a.type (with underlying type Test.A)┃a.type (with underlying type a.type) where val a: Test.A
   ]
       wrongf(new A)(new F[AA])
                     ^
@@ -29,7 +29,7 @@ newSource1.scala:16: error: implicit error;
             ^
 newSource1.scala:15: error: type mismatch;
   Test.F[
-    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A
+    Test.a.type (with underlying type Test.A)┃a.type (with underlying type a.type) where val a: Test.A
     ――(left side reduced from)
       Test.AA
   ]
@@ -42,7 +42,7 @@ newSource1.scala:16: error: implicit error;
 
 newSource1.scala:15: error: type mismatch;
   Test.F[
-    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A (defined at newSource1.scala:13:18)
+    Test.a.type (with underlying type Test.A)┃a.type (with underlying type a.type) where val a: Test.A (defined at newSource1.scala:13:18)
     ――(left side reduced from)
       Test.AA
   ]
@@ -60,7 +60,7 @@ newSource1.scala:16: error: implicit error;
 
 newSource1.scala:15: error: type mismatch;
   Test.F[
-    Test.a.type (with underlying type Test.A)|a.type (with underlying type a.type) where val a: Test.A (defined at newSource1.scala:13:18)
+    Test.a.type (with underlying type Test.A)┃a.type (with underlying type a.type) where val a: Test.A (defined at newSource1.scala:13:18)
     ――(left side reduced from)
       Test.AA
     (which expands to)  Test.a.type
@@ -81,7 +81,7 @@ newSource1.scala:5: error: implicit error;
       implicitly[K]
                 ^
 newSource1.scala:7: error: type mismatch;
-  String("abc")|String :: Int :: Boolean
+  String("abc")┃String :: Int :: Boolean
       def v: K = "abc"
                  ^
 newSource1.scala:5: error: implicit error;
@@ -89,7 +89,7 @@ newSource1.scala:5: error: implicit error;
       implicitly[K]
                 ^
 newSource1.scala:7: error: type mismatch;
-  String("abc")|String :: Int :: Boolean
+  String("abc")┃String :: Int :: Boolean
   ――(right side reduced from)
     Test.K
       def v: K = "abc"

@@ -5,7 +5,7 @@ newSource1.scala:8: error: implicit error;
 implicitly[vecInt.Head =:= Option[String]]
           ^
 newSource1.scala:10: error: type mismatch;
-  Option[String|Int]
+  Option[String┃Int]
 val x: vecInt.Head = ??? : Option[String]
                          ^
 newSource1.scala:8: error: implicit error;
@@ -17,7 +17,7 @@ newSource1.scala:8: error: implicit error;
 implicitly[vecInt.Head =:= Option[String]]
           ^
 newSource1.scala:10: error: type mismatch;
-  Option[String|Int]
+  Option[String┃Int]
   ――(right side reduced from)
     FoundReqVsImplicit.vecInt.Head
 val x: vecInt.Head = ??? : Option[String]

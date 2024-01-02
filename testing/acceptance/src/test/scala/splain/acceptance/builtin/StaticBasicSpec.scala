@@ -14,7 +14,7 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(foundReq)
 
-  check(LongArg)
+  check(longArg)
 
   describe("#34") {
     check(compoundDiff, numberOfErrors = 2)

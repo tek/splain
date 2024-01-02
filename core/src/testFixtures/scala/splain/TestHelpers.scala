@@ -131,7 +131,9 @@ trait TestHelpers extends Suite {
 
     def stripSpaceAtEnd(v: String): String = {
 
-      v.reverse.dropWhile(v => v == ' ').reverse
+      v.reverse.dropWhile { v =>
+        (v == ' ') || (v == '\r')
+      }.reverse
     }
 
     def canonize(v: String): String = {
