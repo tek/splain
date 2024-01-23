@@ -130,16 +130,15 @@ allprojects {
 
     dependencies {
 
-        // see https://github.com/gradle/gradle/issues/13067
-        fun bothImpl(constraintNotation: Any) {
-            implementation(constraintNotation)
-            testFixturesImplementation(constraintNotation)
-        }
-
         constraints {}
 
-        bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
-        bothImpl("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+        // see https://github.com/gradle/gradle/issues/13067
+//        fun bothImpl(constraintNotation: Any) {
+//            implementation(constraintNotation)
+//            testFixturesImplementation(constraintNotation)
+//        }
+
+        implementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")

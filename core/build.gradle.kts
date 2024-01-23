@@ -2,6 +2,14 @@ val vs: Versions = versions()
 
 dependencies {
 
+    // see https://github.com/gradle/gradle/issues/13067
+    fun bothImpl(constraintNotation: Any) {
+        implementation(constraintNotation)
+        testFixturesImplementation(constraintNotation)
+    }
+
+    bothImpl("${vs.scalaGroup}:scala-compiler:${vs.scalaV}")
+
 //    testImplementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
     testFixturesApi("com.chuusai:shapeless_${vs.scalaBinaryV}:2.3.7")
 

@@ -14,6 +14,7 @@ object SplainFormattingExtension {
   val ELLIPSIS: String = "⋮".blue
 
   val | = "┃"
+  val vertical_| = "━━━━━━━━:"
 }
 
 trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
@@ -691,6 +692,14 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       }
     }
 
+    def withVerticalDelimiter(v: TypeRepr): String = {
+      v.lines
+        .map { ll =>
+          | + ll
+        }
+        .mkString("\n")
+    }
+
     def showDiff(left: Formatted, right: Formatted): TypeRepr = {
 
       val (ll, rr) = (left, right) match {
@@ -704,33 +713,26 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
             _showFormattedL(right)
       }
 
-      def flat =
+      lazy val flat =
         FlatType(s"${ll.flat}${|}${rr.flat}")
 
-      def broken: BrokenType = {
+      lazy val broken: BrokenType = {
 
-//        val result =
-//          s"""
-//           |"
-//           |${ll.lines.mkString("\n")}
-//           |" did not equal "
-//           |${rr.lines.mkString("\n")}
-//           |"
-//           """.stripMargin.trim
+        val Seq(_ll, _rr) = Seq(ll, rr).map { v =>
+          v.indent.indent.indent.indent.indent.joinLines.stripLeading()
+        }
 
         val result =
           s"""
-             |expected: "
-             |${ll.lines.mkString("\n")}
-             |" but was: "
-             |${rr.lines.mkString("\n")}
-             |"
-      """.stripMargin.trim
+             |found   : ${_ll}
+             |${vertical_|}
+             |required: ${_rr}""".stripMargin.trim
 
-        BrokenType(List("") ++ result.split("\n").toList ++ List(""))
+        BrokenType(result.split("\n").toList)
       }
 
-      _decideBreak(flat, broken)
+      val result = _decideBreak(flat, broken)
+      result
     }
 
     case class Tree(

@@ -217,7 +217,7 @@ trait TestHelpers extends Suite {
             regex
           )
           .toSeq
-          .filter(_.nonEmpty)
+          .filter(_.trim.nonEmpty)
           .map { line =>
             (startsWith + line).trim
           }

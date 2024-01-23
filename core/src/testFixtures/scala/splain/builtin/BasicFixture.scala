@@ -1,7 +1,5 @@
 package splain.builtin
 
-object BasicFixture extends BasicFixture
-
 trait BasicFixture {
 
   // from scalac tests START HERE

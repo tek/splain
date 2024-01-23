@@ -7,9 +7,41 @@ ImplicitChain.g invalid because
   implicitly[II]
             ^
 newSource1.scala:6: error: type mismatch;
-  splain.acceptance.builtin.StaticBasicSpec.FoundReq.L|splain.acceptance.builtin.StaticBasicSpec.FoundReq.R
+  found   : splain.acceptance.builtin.StaticBasicSpec.FoundReq.L
+  ━━━━━━━━:
+  required: splain.acceptance.builtin.StaticBasicSpec.FoundReq.R
   f(new L)
     ^
+newSource1.scala:13: error: type mismatch;
+  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+      found   : splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[String]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+      ━━━━━━━━:
+      required: splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong2[
+                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                    splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                      splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                        splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
+                          splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[String]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+    ]
+  ]
+  val str: Req = ??? : Found
+                     ^
 newSource1.scala:4: error: implicit error;
 !I e:
   splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
@@ -30,7 +62,7 @@ newSource1.scala:4: error: implicit error;
   implicitly[VeryLong[
             ^
 newSource1.scala:7: error: type mismatch;
-  splain.acceptance.builtin.StaticBasicSpec.Compound.y.type|String
+  splain.acceptance.builtin.StaticBasicSpec.Compound.y.type┃String
   f(y)
     ^
 newSource1.scala:4: error: implicit error;
@@ -93,7 +125,7 @@ newSource1.scala:16: error: type mismatch;
             splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
               splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
                 splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[
-                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int|String]
+                  splain.acceptance.builtin.StaticBasicSpec.Long.VeryLong[Int┃String]
                 ]
               ]
             ]
@@ -105,7 +137,7 @@ newSource1.scala:16: error: type mismatch;
   ) = x
       ^
 newSource1.scala:11: error: type mismatch;
-  B.this.t1.type|B.this.t.TT
+  B.this.t1.type┃B.this.t.TT
     val t2: t.TT = t1
                    ^
 newSource1.scala:7: error: implicit error;
@@ -189,11 +221,13 @@ Aux.f invalid because
 newSource1.scala:11: error: type mismatch;
   splain.acceptance.builtin.StaticBasicSpec.Refined.A with
   splain.acceptance.builtin.StaticBasicSpec.Refined.B with
-  splain.acceptance.builtin.StaticBasicSpec.Refined.E|splain.acceptance.builtin.StaticBasicSpec.Refined.C with
-  splain.acceptance.builtin.StaticBasicSpec.Refined.F|<none> {
-    type X = Int|String;
+  found   : splain.acceptance.builtin.StaticBasicSpec.Refined.E
+  ━━━━━━━━:
+  required: splain.acceptance.builtin.StaticBasicSpec.Refined.C with
+  splain.acceptance.builtin.StaticBasicSpec.Refined.F┃<none> {
+    type X = Int┃String;
     type Y = String;
-    type Z = <none>|String
+    type Z = <none>┃String
   }
   f(x)
     ^
@@ -202,15 +236,17 @@ newSource1.scala:10: error: implicit error;
   implicitly[NodeLt[Int]]
             ^
 newSource1.scala:25: error: type mismatch;
-  C.X.Y.T|B.X.Y.T
+  C.X.Y.T┃B.X.Y.T
   f(x: C.X.Y.T)
      ^
 newSource1.scala:6: error: type mismatch;
-  Int|(=> splain.acceptance.builtin.StaticBasicSpec.Foo.A) => splain.acceptance.builtin.StaticBasicSpec.Foo.B
+  found   : Int
+  ━━━━━━━━:
+  required: (=> splain.acceptance.builtin.StaticBasicSpec.Foo.A) => splain.acceptance.builtin.StaticBasicSpec.Foo.B
   f(1: Int)
      ^
 newSource1.scala:3: error: type mismatch;
-  String|Tuple1[String]
+  String┃Tuple1[String]
   val a: Tuple1[String] = "Tuple1": String
                                   ^
 newSource1.scala:7: error: implicit error;

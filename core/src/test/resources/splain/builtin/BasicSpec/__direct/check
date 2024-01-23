@@ -10,6 +10,24 @@ newSource1.scala:6: error: type mismatch;
   FoundReq.L┃FoundReq.R
   f(new L)
     ^
+newSource1.scala:13: error: type mismatch;
+  Long.VeryLong[
+    Long.VeryLong[
+      found   : Long.VeryLong[
+                  Long.VeryLong[
+                    Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+                  ]
+                ]
+      ━━━━━━━━:
+      required: Long.VeryLong2[
+                  Long.VeryLong[
+                    Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+                  ]
+                ]
+    ]
+  ]
+  val str: Req = ??? : Found
+                     ^
 newSource1.scala:4: error: implicit error;
 !I e:
   Long.VeryLong[
