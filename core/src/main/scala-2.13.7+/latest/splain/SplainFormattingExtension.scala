@@ -487,7 +487,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         .split("\n")
         .filter(_ != ";")
 
-      s"(comparing <found>$infixText<required>)" -> indented.map(v => FlatType(v))
+      s"(comparing <found>$infixText<required>)" -> indented.toSeq.map(v => FlatType(v))
     }
   }
 
