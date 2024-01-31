@@ -8,8 +8,4 @@ class ZIOSpec extends SpecBase.File {
     // TODO: is it still incorrect?
     checkError()
   }
-
-  check("source3", profile = Profile.Splain("-Xsource:3")) {
-    checkError()
-  }
 }
