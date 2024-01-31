@@ -9,7 +9,7 @@ class ZIOSpec extends SpecBase.File {
     checkError()
   }
 
-  check("console", profile = Profile.Splain("-Xsource:3")) {
+  check("source3", profile = Profile.Splain("-Xsource:3")) {
     checkError()
   }
 }

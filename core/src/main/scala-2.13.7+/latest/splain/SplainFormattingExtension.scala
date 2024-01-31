@@ -719,7 +719,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       lazy val broken: BrokenType = {
 
         val Seq(_ll, _rr) = Seq(ll, rr).map { v =>
-          v.indent.indent.indent.indent.indent.joinLines.stripLeading()
+          v.indent.indent.indent.indent.indent.joinLines.trim
         }
 
         val result =
