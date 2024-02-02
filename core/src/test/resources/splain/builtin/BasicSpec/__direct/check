@@ -7,9 +7,27 @@ ImplicitChain.g invalid because
   implicitly[II]
             ^
 newSource1.scala:6: error: type mismatch;
-  FoundReq.L|FoundReq.R
+  FoundReq.L┃FoundReq.R
   f(new L)
     ^
+newSource1.scala:13: error: type mismatch;
+  Long.VeryLong[
+    Long.VeryLong[
+      found   : Long.VeryLong[
+                  Long.VeryLong[
+                    Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+                  ]
+                ]
+      ━━━━━━━━:
+      required: Long.VeryLong2[
+                  Long.VeryLong[
+                    Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[String]]]]
+                  ]
+                ]
+    ]
+  ]
+  val str: Req = ??? : Found
+                     ^
 newSource1.scala:4: error: implicit error;
 !I e:
   Long.VeryLong[
@@ -24,11 +42,11 @@ newSource1.scala:4: error: implicit error;
   implicitly[VeryLong[
             ^
 newSource1.scala:7: error: type mismatch;
-  Compound.y.type|String
+  Compound.y.type┃String
   f(y)
     ^
 newSource1.scala:10: error: type mismatch;
-  Compound.T|<none> with Int|String
+  Compound.T┃<none> with Int┃String
   f(z)
     ^
 newSource1.scala:4: error: implicit error;
@@ -76,7 +94,7 @@ newSource1.scala:16: error: type mismatch;
       Long.VeryLong[
         Long.VeryLong[
           Long.VeryLong[
-            Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[Int|String]]]]
+            Long.VeryLong[Long.VeryLong[Long.VeryLong[Long.VeryLong[Int┃String]]]]
           ]
         ]
       ]
@@ -85,7 +103,7 @@ newSource1.scala:16: error: type mismatch;
   ) = x
       ^
 newSource1.scala:11: error: type mismatch;
-  B.this.t1.type|B.this.t.TT
+  B.this.t1.type┃B.this.t.TT
     val t2: t.TT = t1
                    ^
 newSource1.scala:7: error: implicit error;
@@ -155,22 +173,22 @@ Aux.f invalid because
 newSource1.scala:11: error: type mismatch;
   Refined.A with
   Refined.B with
-  Refined.E|Refined.C with
-  Refined.F|<none> {
-    type X = Int|String;
+  Refined.E┃Refined.C with
+  Refined.F┃<none> {
+    type X = Int┃String;
     type Y = String;
-    type Z = <none>|String
+    type Z = <none>┃String
   }
   f(x)
     ^
 newSource1.scala:21: error: type mismatch;
-  Refined.E|Refined.C with
-  Refined.F|<none> with
+  Refined.E┃Refined.C with
+  Refined.F┃<none> with
   Refined.Sub1.A with
   Refined.Sub1.Sub2.B {
-    type X = Int|String;
+    type X = Int┃String;
     type Y = String;
-    type Z = <none>|String
+    type Z = <none>┃String
   }
       f(x)
         ^
@@ -179,19 +197,19 @@ newSource1.scala:10: error: implicit error;
   implicitly[NodeLt[Int]]
             ^
 newSource1.scala:12: error: type mismatch;
-  Int(1)|Refined.Node{type T = _$2} forSome { type _$2 <: Int }
+  Int(1)┃Refined.Node{type T = _$2} forSome { type _$2 <: Int }
   val k: NodeLt[Int] = 1
                        ^
 newSource1.scala:25: error: type mismatch;
-  C.X.Y.T|B.X.Y.T
+  C.X.Y.T┃B.X.Y.T
   f(x: C.X.Y.T)
      ^
 newSource1.scala:6: error: type mismatch;
-  Int|(=> Foo.A) => Foo.B
+  Int┃(=> Foo.A) => Foo.B
   f(1: Int)
      ^
 newSource1.scala:3: error: type mismatch;
-  String|Tuple1[String]
+  String┃Tuple1[String]
   val a: Tuple1[String] = "Tuple1": String
                                   ^
 newSource1.scala:7: error: implicit error;

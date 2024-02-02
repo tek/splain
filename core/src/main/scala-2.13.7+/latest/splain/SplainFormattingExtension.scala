@@ -12,6 +12,9 @@ object SplainFormattingExtension {
   import scala.reflect.internal.TypeDebugging.AnsiColor._
 
   val ELLIPSIS: String = "⋮".blue
+
+  val | = "┃"
+  val vertical_| = "━━━━━━━━:"
 }
 
 trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with SplainFormattersExtension {
@@ -476,7 +479,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     override protected def formattedHeader_Body(break: Boolean): (String, Seq[TypeRepr]) = {
 
       lazy val infixText = infixOpt match {
-        case None => "|"
+        case None => |
         case Some(ii) => " " + showFormattedLImpl(ii, break).flat + " "
       }
 
@@ -484,7 +487,7 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
         .split("\n")
         .filter(_ != ";")
 
-      s"(comparing <found>$infixText<required>)" -> indented.map(v => FlatType(v))
+      s"(comparing <found>$infixText<required>)" -> indented.toSeq.map(v => FlatType(v))
     }
   }
 
@@ -672,13 +675,81 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
     }
   }
 
-  override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
+  case class ShowFormattedHelper(break: Boolean) {
+
+    import scala.reflect.internal.TypeDebugging.AnsiColor._
+
+    def _decideBreak(flat: FlatType, broken: BrokenType): TypeRepr = {
+
+      if (break) decideBreak(flat, broken) else flat
+    }
 
     def appendLastLine(lines: List[String], suffix: String): List[String] = {
       lines match {
         case Nil => List(suffix)
         case head :: Nil => List(head + suffix)
         case head :: tail => head :: appendLastLine(tail, suffix)
+      }
+    }
+
+    def withVerticalDelimiter(v: TypeRepr): String = {
+      v.lines
+        .map { ll =>
+          | + ll
+        }
+        .mkString("\n")
+    }
+
+    def showDiff(left: Formatted, right: Formatted): TypeRepr = {
+
+      val (ll, rr) = (left, right) match {
+        case (Qualified(lpath, lname), Qualified(rpath, rname)) if lname == rname =>
+          val prefix = lpath.reverseIterator.zip(rpath.reverseIterator).takeWhile { case (l, r) => l == r }.size + 1
+          FlatType(s"${qualifiedName(lpath.takeRight(prefix), lname).red}") ->
+            FlatType(s"${qualifiedName(rpath.takeRight(prefix), rname).green}")
+
+        case (left, right) =>
+          _showFormattedL(left) ->
+            _showFormattedL(right)
+      }
+
+      lazy val flat =
+        FlatType(s"${ll.flat}${|}${rr.flat}")
+
+      lazy val broken: BrokenType = {
+
+        val Seq(_ll, _rr) = Seq(ll, rr).map { v =>
+          v.indent.indent.indent.indent.indent.joinLines.trim
+        }
+
+        val result =
+          s"""
+             |found   : ${_ll}
+             |${vertical_|}
+             |required: ${_rr}""".stripMargin.trim
+
+        BrokenType(result.split("\n").toList)
+      }
+
+      val result = _decideBreak(flat, broken)
+      result
+    }
+
+    case class Tree(
+        header: String,
+        body: Seq[TypeRepr]
+    ) {
+
+      lazy val flat: String = {
+
+        if (body.isEmpty) header
+        else s"$header { ${body.map(v => v.flat).mkString(";")} }"
+      }
+
+      lazy val broken: Seq[String] = {
+        val result = indentTree(List((header, body.flatMap(_.lines).toList, 0)), 1)
+
+        result
       }
     }
 
@@ -702,7 +773,27 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
 
       def broken = BrokenType(appendLastLine(base.lines, brackets._1) ::: indent(brokenArgs) ::: List(brackets._2))
 
-      if (break) decideBreak(flat, broken) else flat
+      _decideBreak(flat, broken)
+    }
+
+    // TODO: let Based use this?
+    def showTree(
+        base: String,
+        body: Seq[TypeRepr],
+        brackets: (String, String) = "" -> ""
+    ): TypeRepr = {
+
+      def flat = FlatType {
+
+        if (body.isEmpty) base
+        else s"$base ${brackets._1}${body.map(v => v.flat).mkString(";")}${brackets._2}"
+      }
+
+      def broken = BrokenType {
+        indentTree(List((base, body.flatMap(_.lines).toList, 0)), 1)
+      }
+
+      _decideBreak(flat, broken)
     }
 
     def showCompound(
@@ -712,75 +803,100 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
       val infixWithSpace = s" $infixText "
 
       def flat = FlatType(types.map(_.flat).mkString(infixWithSpace))
+
       def broken = BrokenType(
         types.map(_.lines).reduceLeft((z, a) => appendLastLine(z, infixWithSpace) ::: a)
       )
 
-      if (break) decideBreak(flat, broken) else flat
+      _decideBreak(flat, broken)
     }
 
-    def _showFormattedL(v: Formatted) = showFormattedL(v, break)
+    def _showFormattedL(v: Formatted): TypeRepr = showFormattedL(v, break)
 
-    val raw = ft match {
-      case Simple(name) => FlatType(name.name)
-      case Qualified(path, name) => showFormattedQualified(path, name)
-      case Applied(cons, args) => showEnclosed(_showFormattedL(cons), args.map(_showFormattedL))
-      case tpe @ Infix(_, _, _, top) =>
-        wrapParensRepr(
-          if (break) breakInfix(flattenInfix(tpe)) else FlatType(flattenInfix(tpe).map(showFormatted).mkString(" ")),
-          top
-        )
-      case UnitForm => FlatType("Unit")
-      case FunctionForm(args, ret, top) =>
-        FlatType(wrapParens(s"${showFuncParams(args.map(showFormatted))} => ${showFormatted(ret)}", top))
-      case TupleForm(elems) =>
-        val formattedElems = elems.map(_showFormattedL)
+    def showTuple(elems: List[Formatted]): TypeRepr = {
+      val formattedElems = elems.map(_showFormattedL)
 
-        if (elems.size == 1) {
-          FlatType(showTuple(formattedElems.map(_.flat))) // TODO: the name showTuple is obsolete
-        } else {
-          showEnclosed(FlatType(""), formattedElems, brackets = "(" -> ")")
-        }
-
-      case RefinedForm(elems, decls) =>
-        val compound = showCompound(elems.map(_showFormattedL))
-
-        val refined =
-          if (decls.isEmpty)
-            compound
-          else if (truncateDecls(decls))
-            showEnclosed(compound, List(FlatType("...")), brackets = " {" -> "}", splitter = ";")
-          else
-            showEnclosed(compound, decls.map(_showFormattedL), brackets = " {" -> "}", splitter = ";")
-
-        refined
-
-      case Diff(left, right) => FlatType(formattedDiff(left, right))
-      case Decl(sym, rhs) => FlatType(s"type ${showFormatted(sym)} = ${showFormatted(rhs)}")
-      case DeclDiff(sym, left, right) => FlatType(s"type ${showFormatted(sym)} = ${formattedDiff(left, right)}")
-      case ByName(tpe) => FlatType(s"(=> ${showFormatted(tpe)})")
-    }
-
-    val index = FormattedIndex(ft)
-    val basedOn = Based.getAll(index)
-
-    val result = {
-
-      basedOn match {
-        case Nil =>
-          raw
+      elems match {
+        case List(_) =>
+          showEnclosed(FlatType("Tuple1"), formattedElems)
         case _ =>
-          def flat = FlatType(raw.flat + " " + basedOn.map(_.flat).mkString(" "))
-          def broken = BrokenType(raw.lines ++ basedOn.flatMap(_.broken))
-
-          raw match {
-            case _: BrokenType => broken
-            case _ if !break => flat
-            case _ => decideBreak(flat, broken)
-          }
+          showEnclosed(FlatType(""), formattedElems, brackets = "(" -> ")")
       }
     }
 
-    result
+    def apply(ft: Formatted): TypeRepr = {
+
+      val raw = ft match {
+        case Simple(name) => FlatType(name.name)
+        case Qualified(path, name) => showFormattedQualified(path, name)
+        case Applied(cons, args) => showEnclosed(_showFormattedL(cons), args.map(_showFormattedL))
+        case tpe @ Infix(_, _, _, top) =>
+          wrapParensRepr(
+            if (break) breakInfix(flattenInfix(tpe)) else FlatType(flattenInfix(tpe).map(showFormatted).mkString(" ")),
+            top
+          )
+        case UnitForm => FlatType("Unit")
+        case FunctionForm(args, ret, top) =>
+          FlatType(wrapParens(s"${showFuncParams(args.map(showFormatted))} => ${showFormatted(ret)}", top))
+        case TupleForm(elems) =>
+          showTuple(elems)
+
+        case RefinedForm(elems, decls) =>
+          val compound = showCompound(elems.map(_showFormattedL))
+
+          val refined =
+            if (decls.isEmpty)
+              compound
+            else if (truncateDecls(decls))
+              showEnclosed(compound, List(FlatType("...")), brackets = " {" -> "}", splitter = ";")
+            else
+              showEnclosed(compound, decls.map(_showFormattedL), brackets = " {" -> "}", splitter = ";")
+
+          refined
+
+        case Diff(left, right) => showDiff(left, right)
+        case Decl(sym, rhs) =>
+          showTree(
+            s"type ${showFormatted(sym)} =",
+            Seq(_showFormattedL(rhs))
+          )
+
+        case DeclDiff(sym, left, right) =>
+          val diff = showDiff(left, right)
+          showTree(
+            s"type ${showFormatted(sym)} =",
+            Seq(diff)
+          )
+
+        case ByName(tpe) => FlatType(s"(=> ${showFormatted(tpe)})")
+      }
+
+      val index = FormattedIndex(ft)
+      val basedOn = Based.getAll(index)
+
+      val result = {
+
+        basedOn match {
+          case Nil =>
+            raw
+          case _ =>
+            def flat = FlatType(raw.flat + " " + basedOn.map(_.flat).mkString(" "))
+
+            def broken = BrokenType(raw.lines ++ basedOn.flatMap(_.broken))
+
+            raw match {
+              case _: BrokenType => broken
+              case _ => _decideBreak(flat, broken)
+            }
+        }
+      }
+
+      result
+    }
+
+  }
+
+  override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
+    ShowFormattedHelper(break)(ft)
   }
 }

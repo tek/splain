@@ -58,6 +58,7 @@ class TryCompileSpec extends SpecBase {
       """
         |Success
         | ---
+        |
         |""".stripMargin
     }
 

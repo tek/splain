@@ -1,7 +1,5 @@
 package splain.builtin
 
-object BasicFixture extends BasicFixture
-
 trait BasicFixture {
 
   // from scalac tests START HERE
@@ -34,7 +32,7 @@ object FoundReq
 }
   """
 
-  final val LongArg =
+  final val longArg =
     """
 object Long {
   class VeryLong[T]
@@ -42,6 +40,24 @@ object Long {
   implicitly[VeryLong[
     VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
   ]]
+}
+"""
+
+  final val longFoundReq =
+    """
+object Long {
+  class VeryLong[T]
+  class VeryLong2[T]
+
+  type Found = VeryLong[
+    VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ]
+
+  type Req = VeryLong[
+    VeryLong[VeryLong2[VeryLong[VeryLong[VeryLong[VeryLong[VeryLong[String]]]]]]]
+  ]
+
+  val str: Req = ??? : Found
 }
 """
 

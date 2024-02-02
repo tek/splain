@@ -1,20 +1,29 @@
 package splain.acceptance.builtin
 
 import splain.acceptance.Acceptance
+import splain.builtin.BasicFixture
 
-object StaticBasicSpec {}
+object StaticBasicSpec {
+
+  object Delegate extends BasicFixture
+}
 
 class StaticBasicSpec extends Acceptance.SpecBase {
 
   override lazy val suiteCanonicalName: String = "splain.builtin.BasicSpec"
 
-  import splain.builtin.BasicFixture._
+  import StaticBasicSpec.Delegate._
 
   check(chain)
 
-  check(foundReq)
+  describe("#121") {
 
-  check(LongArg)
+    check(foundReq)
+
+    check(longFoundReq)
+  }
+
+  check(longArg)
 
   describe("#34") {
     check(compoundDiff, numberOfErrors = 2)
