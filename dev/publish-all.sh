@@ -5,7 +5,7 @@ CRDIR="$(
   pwd
 )"
 
-for i in $(seq 7 14); do
+for i in $(seq 7 15); do
     echo " [PUBLISHING] -PscalaVersion=2.13.$i"
     $CRDIR/publish.sh -PscalaVersion=2.13.$i
 done
