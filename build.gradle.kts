@@ -142,7 +142,7 @@ allprojects {
 
         val scalaTestV = "3.2.11"
         testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.11.2")
 
         testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
     }
