@@ -50,8 +50,10 @@ project/plugins/project/
 **/.ammonite/
 
 # Compiler
+# Compiler
 output
-*/target/
+**/out
+**/target/
 
 #Misc
 temp

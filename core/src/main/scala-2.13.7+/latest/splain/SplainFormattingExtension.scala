@@ -899,4 +899,6 @@ trait SplainFormattingExtension extends typechecker.splain.SplainFormatting with
   override def showFormattedLImpl(ft: Formatted, break: Boolean): TypeRepr = {
     ShowFormattedHelper(break)(ft)
   }
+
+  override def showFormatted(tpe: Formatted): String                    = showFormattedL(tpe, break = true).joinLines
 }
