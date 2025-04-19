@@ -12,7 +12,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.2") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.3") // suffix is always 2.12, weird
     }
 }
 
@@ -33,9 +33,9 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 
-    id("com.github.ben-manes.versions") version "0.51.0"
+    id("com.github.ben-manes.versions") version "0.52.0"
 
-    id("io.github.cosmicsilence.scalafix") version "0.2.2"
+    id("io.github.cosmicsilence.scalafix") version "0.2.4"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
