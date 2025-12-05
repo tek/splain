@@ -7,7 +7,7 @@ class Versions(private val project: Project) {
     val projectRootID = "splain"
 
     val projectVMajor = "1.2.0"
-    val projectV = projectVMajor + "-SNAPSHOT"
+    val projectV = projectVMajor
 
     inner class Scala {
         val group: String = project.properties["scalaGroup"]?.toString() ?: "org.scala-lang"
