@@ -6,4 +6,5 @@ CRDIR="$(
 )"
 
 echo "[COMPILING]" && \
+  "${CRDIR}"/../gradlew clean && \
   "${CRDIR}"/make-all.sh publishToMavenLocal "${@}"
