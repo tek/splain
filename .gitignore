@@ -63,4 +63,3 @@ foo
 
 #publish
 dev/publish.sh
-dev/publishM2.sh

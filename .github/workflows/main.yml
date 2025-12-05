@@ -31,7 +31,7 @@ jobs:
         with:
           java-version: 17
       - name: Compile
-        run: ./dev/make-all.sh -PscalaVersion=${{matrix.scalaVersion}}
+        run: ./dev/publishM2.sh -PscalaVersion=${{matrix.scalaVersion}}
 
       - name: Pre-release on github
         uses: "marvinpinto/action-automatic-releases@latest"
