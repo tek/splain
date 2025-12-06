@@ -12,7 +12,7 @@ buildscript {
     }
 
     dependencies {
-        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.3") // suffix is always 2.12, weird
+        classpath("ch.epfl.scala:gradle-bloop_2.12:1.6.4") // suffix is always 2.12, weird
     }
 }
 
@@ -33,9 +33,9 @@ plugins {
     `maven-publish`
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 
-    id("com.github.ben-manes.versions") version "0.52.0"
+    id("com.github.ben-manes.versions") version "0.53.0"
 
-    id("io.github.cosmicsilence.scalafix") version "0.2.4"
+    id("io.github.cosmicsilence.scalafix") version "0.2.6"
 }
 
 val sonatypeApiUser = providers.gradleProperty("sonatypeApiUser")
@@ -112,7 +112,7 @@ allprojects {
         }
     }
 
-    val vn = VersionNumber.parse(vs.scalaV)
+    val vn = VersionNumber.parse(vs.scala.v)
     val supportedPatchVs = 7..12
 
     for (from in supportedPatchVs) {
@@ -132,19 +132,22 @@ allprojects {
 
         constraints {}
 
-        // see https://github.com/gradle/gradle/issues/13067
-//        fun bothImpl(constraintNotation: Any) {
-//            implementation(constraintNotation)
-//            testFixturesImplementation(constraintNotation)
-//        }
-
-        implementation("${vs.scalaGroup}:scala-library:${vs.scalaV}")
+        implementation("${vs.scala.group}:scala-library:${vs.scala.v}")
 
         val scalaTestV = "3.2.11"
-        testFixturesApi("org.scalatest:scalatest_${vs.scalaBinaryV}:${scalaTestV}")
-        testImplementation("org.junit.jupiter:junit-jupiter:5.11.2")
+        testFixturesApi("org.scalatest:scalatest_${vs.scala.artifactSuffix}:${scalaTestV}")
+        testImplementation("org.scalatest:scalatest_${vs.scala.artifactSuffix}:${scalaTestV}")
+//        testFixturesApi("org.scalatest:scalatest-core_${vs.scala.artifactSuffix}:${vs.scalaTestV}")
 
-        testRuntimeOnly("co.helmethair:scalatest-junit-runner:0.2.0")
+        val jUnitV = "5.13.4"
+        val jUnitPlatformV = "1.13.4"
+
+        testRuntimeOnly("org.junit.platform:junit-platform-engine:$jUnitPlatformV")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher:$jUnitPlatformV")
+        testImplementation("org.junit.jupiter:junit-jupiter:${jUnitV}")
+//        testRuntimeOnly("org.scalatestplus:junit-5-13_${vs.scala.artifactSuffix}:3.2.19.0")
+        testRuntimeOnly("ai.acyclic.scalatestplus:junit-5-13_${vs.scala.artifactSuffix}:3.2.19.2")
+//        testRuntimeOnly("ai.acyclic.scalatestplus:junit-5-13_${vs.scala.artifactSuffix}:3.3.0.0")
     }
 
     tasks.register("dependencyTree") {
@@ -236,7 +239,7 @@ allprojects {
     apply(plugin = "io.github.cosmicsilence.scalafix")
     scalafix {
         semanticdb.autoConfigure.set(true)
-        semanticdb.version.set("4.8.11")
+        semanticdb.version.set("4.9.0")
     }
 
     idea {
@@ -286,7 +289,7 @@ subprojects {
     }
 
     publishing {
-        val suffix = "_" + vs.scalaV
+        val suffix = "_" + vs.scala.v
 
         val rootID = vs.projectRootID
 

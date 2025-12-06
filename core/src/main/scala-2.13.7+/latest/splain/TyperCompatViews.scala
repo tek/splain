@@ -42,7 +42,7 @@ trait TyperCompatViews {
 
       self match {
         case tt: SingletonType =>
-          tt.termSymbolDirect
+          tt.termSymbol
         case _ =>
           self.typeSymbolDirect
       }
