@@ -1,6 +1,6 @@
 import org.gradle.api.Project
 
-class Versions(self: Project) {
+class Versions(private val project: Project) {
 
     // TODO : how to group them?
     val projectGroup = "io.tryp"
@@ -9,12 +9,25 @@ class Versions(self: Project) {
     val projectVMajor = "1.2.0"
     val projectV = projectVMajor + "-SNAPSHOT"
 
-    val scalaGroup: String = self.properties.get("scalaGroup").toString()
+    inner class Scala {
+        val group: String = project.properties["scalaGroup"]?.toString() ?: "org.scala-lang"
 
-    val scalaV: String = self.properties.get("scalaVersion").toString()
+        val v: String = project.properties["scalaVersion"].toString()
+        protected val vParts: List<String> = v.split('.').also { parts ->
+            require(parts.size == 3) { "Scala version must be in format 'X.Y.Z' but was: $v" }
+        }
 
-    protected val scalaVParts = scalaV.split('.')
+        val majorV: String = vParts[0]
+        val binaryV: String = vParts.subList(0, 2).joinToString(".")
+        val patchV: String = vParts[2]
 
-    val scalaBinaryV: String = scalaVParts.subList(0, 2).joinToString(".")
-    val scalaMinorV: String = scalaVParts[2]
+        val artifactSuffix = run {
+            if (majorV == "3") majorV
+            else binaryV
+        }
+
+        val jsV: String? = project.properties.get("scalaJSVersion")?.toString()
+    }
+
+    val scala: Scala by lazy { Scala() }
 }
