@@ -58,6 +58,11 @@ trait SplainFormattersExtension extends SplainFormatters {
     }
 
     def formatDecl: Symbol => Formatted = {
+      case sym if sym.hasRawInfo && sym.rawInfo.isInstanceOf[TypeBounds] =>
+        val name = sym.simpleName.toString
+        val bounds = formatType(sym.rawInfo, top = true)
+        val boundsStr = self.showFormatted(bounds)
+        Simple(s"type $name$boundsStr")
       case DeclSymbol(n, t) =>
         Decl(n, t)
       case sym =>

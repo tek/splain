@@ -54,6 +54,8 @@ class StaticBasicSpec extends Acceptance.SpecBase {
 
   check(refined2, numberOfErrors = 2)
 
+  check(refined3, numberOfErrors = 2)
+
   check(disambiguateQualified)
 
   check(bynameParam)

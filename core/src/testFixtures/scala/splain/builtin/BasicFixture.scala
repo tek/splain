@@ -243,6 +243,22 @@ object Refined
     type T
   }
 
+  type NodeLt[T0] = Node {type T <: T0}
+
+  implicitly[NodeLt[Int]]
+
+  val k: NodeLt[Int] = 1
+}
+    """
+
+  final val refined3 =
+    """
+object Refined
+{
+  trait Node {
+    type T
+  }
+
   type NodeAux[T0] = Node { type T = T0 }
   type NodeLt[T0] = NodeAux[_ <: T0]
 
